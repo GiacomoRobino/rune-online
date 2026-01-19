@@ -1,0 +1,2 @@
+-low number of players
+-react fronted
