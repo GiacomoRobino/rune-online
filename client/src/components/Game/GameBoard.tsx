@@ -30,7 +30,6 @@ export function GameBoard({
   onLeave,
 }: GameBoardProps) {
   const [selectedAttacker, setSelectedAttacker] = useState<string | null>(null);
-  const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
   // Game ended
   if (phase === "ended") {
@@ -76,7 +75,6 @@ export function GameBoard({
     // For spells that need targets, we'd implement targeting here
     // For now, play directly
     onPlayCard(card.instanceId);
-    setSelectedCard(null);
   };
 
   const handleBattlefieldMinionClick = (card: CardState, isOwn: boolean) => {
