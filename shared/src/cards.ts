@@ -1,4 +1,4 @@
-import { CardDefinition } from "./types";
+import { CardDefinition } from "./types.js";
 
 // Starter card pool for MVP
 export const CARD_POOL: CardDefinition[] = [

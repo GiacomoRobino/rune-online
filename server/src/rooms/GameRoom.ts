@@ -1,6 +1,6 @@
 import { Room, Client } from "@colyseus/core";
 import { ArraySchema } from "@colyseus/schema";
-import { GameState, Player, Card } from "../schema";
+import { GameState, Player, Card } from "../schema/index.js";
 import { generateStarterDeck, shuffleArray, CARD_POOL, type CardDefinition } from "shared";
 
 const MAX_MANA = 10;

@@ -1,5 +1,5 @@
 import { Schema, MapSchema, type } from "@colyseus/schema";
-import { Player } from "./Player";
+import { Player } from "./Player.js";
 
 export class GameState extends Schema {
   @type("string") phase: string = "waiting"; // "waiting" | "playing" | "ended"

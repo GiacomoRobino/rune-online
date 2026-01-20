@@ -2,7 +2,7 @@ import { Server } from "@colyseus/core";
 import { WebSocketTransport } from "@colyseus/ws-transport";
 import { monitor } from "@colyseus/monitor";
 import express from "express";
-import { GameRoom } from "./rooms/GameRoom";
+import { GameRoom } from "./rooms/GameRoom.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 2567;
