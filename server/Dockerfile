@@ -23,6 +23,7 @@ WORKDIR /app
 COPY --from=builder /app/server/dist ./dist
 COPY --from=builder /app/server/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/shared ./shared
+COPY --from=builder /app/shared/dist ./shared/dist
+COPY --from=builder /app/shared/package.json ./shared/
 EXPOSE 8080
 CMD ["node", "dist/index.js"]
