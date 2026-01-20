@@ -14,8 +14,8 @@ RUN npm install
 COPY shared/ ./shared/
 COPY server/ ./server/
 
-# Build server (from root using workspace command)
-RUN npm run build --workspace=server
+# Build shared first, then server (from root using workspace commands)
+RUN npm run build --workspace=shared && npm run build --workspace=server
 
 # Production image
 FROM node:20-slim

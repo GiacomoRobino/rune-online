@@ -137,6 +137,7 @@ export class GameRoom extends Room<GameState> {
     if (cardIndex === -1) return;
 
     const card = player.hand[cardIndex];
+    if (!card) return;
 
     // Check mana cost
     if (player.mana < card.cost) return;
@@ -168,7 +169,7 @@ export class GameRoom extends Room<GameState> {
   }
 
   private handleCardEffect(card: Card, caster: Player, targetId?: string) {
-    const cardDef = CARD_POOL.find((c) => c.id === card.id);
+    const cardDef = CARD_POOL.find((c: CardDefinition) => c.id === card.id);
     if (!cardDef?.effect) return;
 
     const opponent = this.getOpponent(caster.sessionId);
