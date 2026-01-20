@@ -38,7 +38,7 @@ export interface GameStateData {
   winner: string;
 }
 
-const SERVER_URL = "ws://localhost:2567";
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
 
 export function useColyseus() {
   const [room, setRoom] = useState<Room | null>(null);
