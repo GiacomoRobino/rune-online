@@ -20,7 +20,7 @@ export function Lobby({ onJoin, connectionState, error }: LobbyProps) {
     <div className="min-h-screen flex items-center justify-center">
       <div className="bg-gray-800/80 backdrop-blur rounded-xl p-8 w-full max-w-md shadow-2xl">
         <h1 className="text-4xl font-bold text-center text-white mb-2">
-          Sorcery Online
+          Rune Online
         </h1>
         <p className="text-gray-400 text-center mb-8">
           A multiplayer card game

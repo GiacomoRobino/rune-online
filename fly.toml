@@ -1,13 +1,13 @@
-# fly.toml app configuration file generated for sorcery-online on 2026-01-20T10:34:07+01:00
+# fly.toml app configuration file generated for sorcery-online-lively-rain-7257 on 2026-01-21T08:48:54+01:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'sorcery-online'
+app = 'sorcery-online-lively-rain-7257'
 primary_region = 'fra'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'server/Dockerfile'
 
 [env]
   NODE_ENV = 'production'
