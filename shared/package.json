@@ -14,5 +14,8 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@colyseus/schema": "^2.0.0"
   }
 }

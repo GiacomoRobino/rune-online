@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Client, Room } from "colyseus.js";
+import { GameState, Player, Card } from "shared";
 
-// Types matching server schema
+// Plain object types for React state (derived from schema)
 export interface CardState {
   id: string;
   instanceId: string;
@@ -41,7 +42,7 @@ export interface GameStateData {
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
 
 export function useColyseus() {
-  const [room, setRoom] = useState<Room | null>(null);
+  const [room, setRoom] = useState<Room<GameState> | null>(null);
   const [gameState, setGameState] = useState<GameStateData | null>(null);
   const [mySessionId, setMySessionId] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -54,11 +55,36 @@ export function useColyseus() {
     clientRef.current = new Client(SERVER_URL);
   }, []);
 
+  // Helper to convert a card schema to plain object
+  const cardToPlain = (c: Card): CardState => ({
+    id: c.id,
+    instanceId: c.instanceId,
+    name: c.name,
+    cost: c.cost,
+    attack: c.attack,
+    health: c.health,
+    maxHealth: c.maxHealth,
+    description: c.description,
+    cardType: c.cardType,
+    canAttack: c.canAttack,
+    hasAttacked: c.hasAttacked,
+  });
+
   // Convert Colyseus schema to plain object
-  const schemaToPlain = useCallback((state: any): GameStateData => {
+  const schemaToPlain = useCallback((state: GameState): GameStateData => {
     const players = new Map<string, PlayerState>();
 
-    state.players.forEach((player: any, key: string) => {
+    // Debug: Check what methods are available on state.players
+    console.log("[DEBUG] state.players type:", typeof state.players);
+    console.log("[DEBUG] state.players:", state.players);
+    console.log("[DEBUG] state.players.size:", state.players.size);
+    console.log("[DEBUG] state.players keys:", Object.keys(state.players));
+    console.log("[DEBUG] has forEach:", typeof state.players.forEach);
+    console.log("[DEBUG] has entries:", typeof state.players.entries);
+
+    // Try forEach which is the standard MapSchema iteration method
+    state.players.forEach((player: Player, key: string) => {
+      console.log("[DEBUG] forEach iteration - key:", key, "player:", player);
       players.set(key, {
         id: player.id,
         sessionId: player.sessionId,
@@ -67,12 +93,14 @@ export function useColyseus() {
         maxHealth: player.maxHealth,
         mana: player.mana,
         maxMana: player.maxMana,
-        hand: Array.from(player.hand).map((c: any) => ({ ...c })),
-        battlefield: Array.from(player.battlefield).map((c: any) => ({ ...c })),
-        deck: Array.from(player.deck).map((c: any) => ({ ...c })),
+        hand: Array.from(player.hand).filter((c): c is Card => c !== undefined).map(cardToPlain),
+        battlefield: Array.from(player.battlefield).filter((c): c is Card => c !== undefined).map(cardToPlain),
+        deck: Array.from(player.deck).filter((c): c is Card => c !== undefined).map(cardToPlain),
         connected: player.connected,
       });
     });
+
+    console.log("[DEBUG] After forEach, players.size:", players.size);
 
     return {
       phase: state.phase,
@@ -90,15 +118,23 @@ export function useColyseus() {
     setError("");
 
     try {
-      const joinedRoom = await clientRef.current.joinOrCreate("game", { nickname });
+      const joinedRoom = await clientRef.current.joinOrCreate<GameState>("game", { nickname });
 
       setRoom(joinedRoom);
       setMySessionId(joinedRoom.sessionId);
       setConnectionState("connected");
 
       // Listen for state changes
-      joinedRoom.onStateChange((state) => {
-        setGameState(schemaToPlain(state));
+      joinedRoom.onStateChange((state: GameState) => {
+        console.log("[DEBUG] onStateChange fired");
+        console.log("[DEBUG] Players size:", state.players.size);
+        console.log("[DEBUG] Phase:", state.phase);
+        state.players.forEach((player: Player, key: string) => {
+          console.log(`[DEBUG] Player ${key}:`, player.sessionId, player.nickname);
+        });
+        const converted = schemaToPlain(state);
+        console.log("[DEBUG] Converted players size:", converted.players.size);
+        setGameState(converted);
       });
 
       joinedRoom.onLeave((code) => {
