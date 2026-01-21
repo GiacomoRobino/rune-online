@@ -55,7 +55,7 @@ function App() {
         <div className="animate-pulse">
           <h2 className="text-2xl text-white mb-4">Waiting for opponent...</h2>
           <p className="text-gray-400 mb-4">
-            Open another browser tab to test
+            Open another browser tab to test the app
           </p>
           <button
             onClick={leaveGame}
