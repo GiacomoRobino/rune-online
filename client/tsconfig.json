@@ -14,7 +14,12 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "shared": ["../shared/dist/index.d.ts"],
+      "shared/*": ["../shared/dist/*"]
+    }
   },
   "include": ["src"],
   "references": [{ "path": "../shared" }]
