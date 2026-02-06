@@ -5,12 +5,14 @@ export class Player extends Schema {
   @type("string") id: string = "";
   @type("string") sessionId: string = "";
   @type("string") nickname: string = "";
-  @type("number") health: number = 30;
-  @type("number") maxHealth: number = 30;
-  @type("number") mana: number = 0;
-  @type("number") maxMana: number = 0;
+  @type("number") health: number = 20;
+  @type("number") maxHealth: number = 20;
   @type([Card]) hand = new ArraySchema<Card>();
   @type([Card]) battlefield = new ArraySchema<Card>();
-  @type([Card]) deck = new ArraySchema<Card>(); // Note: In production, hide deck from opponent
+  @type([Card]) chaosDeck = new ArraySchema<Card>();
+  @type([Card]) runesDeck = new ArraySchema<Card>();
+  @type([Card]) runeField = new ArraySchema<Card>();
+  @type([Card]) graveyard = new ArraySchema<Card>();
+  @type("number") runesWrittenThisTurn: number = 0;
   @type("boolean") connected: boolean = true;
 }

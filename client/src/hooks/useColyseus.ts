@@ -2,19 +2,28 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { Client, Room } from "colyseus.js";
 import { GameState, Player, Card } from "shared";
 
-// Plain object types for React state (derived from schema)
+// Plain object types for React state
 export interface CardState {
   id: string;
   instanceId: string;
   name: string;
-  cost: number;
+  cardType: string;
   attack: number;
   health: number;
   maxHealth: number;
   description: string;
-  cardType: string;
+  spellName: string;
+  abilities: string;
   canAttack: boolean;
   hasAttacked: boolean;
+  isTapped: boolean;
+  hasAegis: boolean;
+  damageMarked: number;
+  runeType: string;
+  letter: string;
+  etchingCounters: number;
+  attachedToId: string;
+  attachedRuneIds: string[];
 }
 
 export interface PlayerState {
@@ -23,11 +32,13 @@ export interface PlayerState {
   nickname: string;
   health: number;
   maxHealth: number;
-  mana: number;
-  maxMana: number;
   hand: CardState[];
   battlefield: CardState[];
-  deck: CardState[];
+  chaosDeck: CardState[];
+  runesDeck: CardState[];
+  runeField: CardState[];
+  graveyard: CardState[];
+  runesWrittenThisTurn: number;
   connected: boolean;
 }
 
@@ -37,6 +48,10 @@ export interface GameStateData {
   turnNumber: number;
   players: Map<string, PlayerState>;
   winner: string;
+  turnPhase: string;
+  declaredAttackers: string[];
+  blockingAssignments: string[];
+  isFirstTurn: boolean;
 }
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
@@ -50,57 +65,53 @@ export function useColyseus() {
 
   const clientRef = useRef<Client | null>(null);
 
-  // Initialize client
   useEffect(() => {
     clientRef.current = new Client(SERVER_URL);
   }, []);
 
-  // Helper to convert a card schema to plain object
   const cardToPlain = (c: Card): CardState => ({
     id: c.id,
     instanceId: c.instanceId,
     name: c.name,
-    cost: c.cost,
+    cardType: c.cardType,
     attack: c.attack,
     health: c.health,
     maxHealth: c.maxHealth,
     description: c.description,
-    cardType: c.cardType,
+    spellName: c.spellName,
+    abilities: c.abilities,
     canAttack: c.canAttack,
     hasAttacked: c.hasAttacked,
+    isTapped: c.isTapped,
+    hasAegis: c.hasAegis,
+    damageMarked: c.damageMarked,
+    runeType: c.runeType,
+    letter: c.letter,
+    etchingCounters: c.etchingCounters,
+    attachedToId: c.attachedToId,
+    attachedRuneIds: Array.from(c.attachedRuneIds).filter((id): id is string => id !== undefined),
   });
 
-  // Convert Colyseus schema to plain object
   const schemaToPlain = useCallback((state: GameState): GameStateData => {
     const players = new Map<string, PlayerState>();
 
-    // Debug: Check what methods are available on state.players
-    console.log("[DEBUG] state.players type:", typeof state.players);
-    console.log("[DEBUG] state.players:", state.players);
-    console.log("[DEBUG] state.players.size:", state.players.size);
-    console.log("[DEBUG] state.players keys:", Object.keys(state.players));
-    console.log("[DEBUG] has forEach:", typeof state.players.forEach);
-    console.log("[DEBUG] has entries:", typeof state.players.entries);
-
-    // Try forEach which is the standard MapSchema iteration method
     state.players.forEach((player: Player, key: string) => {
-      console.log("[DEBUG] forEach iteration - key:", key, "player:", player);
       players.set(key, {
         id: player.id,
         sessionId: player.sessionId,
         nickname: player.nickname,
         health: player.health,
         maxHealth: player.maxHealth,
-        mana: player.mana,
-        maxMana: player.maxMana,
         hand: Array.from(player.hand).filter((c): c is Card => c !== undefined).map(cardToPlain),
         battlefield: Array.from(player.battlefield).filter((c): c is Card => c !== undefined).map(cardToPlain),
-        deck: Array.from(player.deck).filter((c): c is Card => c !== undefined).map(cardToPlain),
+        chaosDeck: Array.from(player.chaosDeck).filter((c): c is Card => c !== undefined).map(cardToPlain),
+        runesDeck: Array.from(player.runesDeck).filter((c): c is Card => c !== undefined).map(cardToPlain),
+        runeField: Array.from(player.runeField).filter((c): c is Card => c !== undefined).map(cardToPlain),
+        graveyard: Array.from(player.graveyard).filter((c): c is Card => c !== undefined).map(cardToPlain),
+        runesWrittenThisTurn: player.runesWrittenThisTurn,
         connected: player.connected,
       });
     });
-
-    console.log("[DEBUG] After forEach, players.size:", players.size);
 
     return {
       phase: state.phase,
@@ -108,6 +119,10 @@ export function useColyseus() {
       turnNumber: state.turnNumber,
       players,
       winner: state.winner,
+      turnPhase: state.turnPhase,
+      declaredAttackers: Array.from(state.declaredAttackers).filter((id): id is string => id !== undefined),
+      blockingAssignments: Array.from(state.blockingAssignments).filter((id): id is string => id !== undefined),
+      isFirstTurn: state.isFirstTurn,
     };
   }, []);
 
@@ -124,17 +139,8 @@ export function useColyseus() {
       setMySessionId(joinedRoom.sessionId);
       setConnectionState("connected");
 
-      // Listen for state changes
       joinedRoom.onStateChange((state: GameState) => {
-        console.log("[DEBUG] onStateChange fired");
-        console.log("[DEBUG] Players size:", state.players.size);
-        console.log("[DEBUG] Phase:", state.phase);
-        state.players.forEach((player: Player, key: string) => {
-          console.log(`[DEBUG] Player ${key}:`, player.sessionId, player.nickname);
-        });
-        const converted = schemaToPlain(state);
-        console.log("[DEBUG] Converted players size:", converted.players.size);
-        setGameState(converted);
+        setGameState(schemaToPlain(state));
       });
 
       joinedRoom.onLeave((code) => {
@@ -164,14 +170,36 @@ export function useColyseus() {
     }
   }, [room]);
 
-  const playCard = useCallback((cardId: string, targetId?: string) => {
+  // --- Actions ---
+
+  const summonCreature = useCallback((cardId: string, runeIds: string[]) => {
     if (!room) return;
-    room.send("play_card", { cardId, targetId });
+    room.send("summon", { cardId, runeIds });
   }, [room]);
 
-  const attack = useCallback((attackerId: string, targetId: string) => {
+  const playEcho = useCallback((cardId: string, runeIds: string[]) => {
     if (!room) return;
-    room.send("attack", { attackerId, targetId });
+    room.send("play_echo", { cardId, runeIds });
+  }, [room]);
+
+  const playMemory = useCallback((cardId: string, targetId?: string) => {
+    if (!room) return;
+    room.send("play_memory", { cardId, targetId });
+  }, [room]);
+
+  const attachRune = useCallback((runeId: string, targetId: string) => {
+    if (!room) return;
+    room.send("attach_rune", { runeId, targetId });
+  }, [room]);
+
+  const declareAttackers = useCallback((attackerIds: string[]) => {
+    if (!room) return;
+    room.send("declare_attackers", { attackerIds });
+  }, [room]);
+
+  const declareBlockers = useCallback((assignments: string[]) => {
+    if (!room) return;
+    room.send("declare_blockers", { assignments });
   }, [room]);
 
   const endTurn = useCallback(() => {
@@ -187,22 +215,21 @@ export function useColyseus() {
   const isMyTurn = gameState?.currentTurn === mySessionId;
 
   return {
-    // Connection
     connectionState,
     error,
     joinGame,
     leaveGame,
     mySessionId,
-
-    // Game state
     gameState,
     myPlayer,
     opponent,
     isMyTurn,
-
-    // Actions
-    playCard,
-    attack,
+    summonCreature,
+    playEcho,
+    playMemory,
+    attachRune,
+    declareAttackers,
+    declareBlockers,
     endTurn,
   };
 }

@@ -13,8 +13,11 @@ function App() {
     myPlayer,
     opponent,
     isMyTurn,
-    playCard,
-    attack,
+    summonCreature,
+    playEcho,
+    playMemory,
+    declareAttackers,
+    declareBlockers,
     endTurn,
   } = useColyseus();
 
@@ -37,11 +40,16 @@ function App() {
         opponent={opponent}
         isMyTurn={isMyTurn}
         phase={gameState.phase}
+        turnPhase={gameState.turnPhase}
         turnNumber={gameState.turnNumber}
         winner={gameState.winner}
         mySessionId={mySessionId}
-        onPlayCard={playCard}
-        onAttack={attack}
+        declaredAttackers={gameState.declaredAttackers}
+        onSummon={summonCreature}
+        onPlayEcho={playEcho}
+        onPlayMemory={playMemory}
+        onDeclareAttackers={declareAttackers}
+        onDeclareBlockers={declareBlockers}
         onEndTurn={endTurn}
         onLeave={leaveGame}
       />
