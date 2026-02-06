@@ -22,6 +22,7 @@ interface GameBoardProps {
   winner: string;
   mySessionId: string;
   declaredAttackers: string[];
+  onWriteRune: (runeId: string) => void;
   onSummon: (cardId: string, runeIds: string[]) => void;
   onPlayEcho: (cardId: string, runeIds: string[]) => void;
   onPlayMemory: (cardId: string, targetId?: string) => void;
@@ -41,6 +42,7 @@ export function GameBoard({
   winner,
   mySessionId,
   declaredAttackers,
+  onWriteRune,
   onSummon,
   onPlayEcho,
   onPlayMemory,
@@ -382,6 +384,47 @@ export function GameBoard({
           >
             Cancel
           </button>
+        </div>
+      )}
+
+      {/* Rune deck picker (when player has writes remaining) */}
+      {myPlayer.runesWrittenThisTurn < myPlayer.maxRuneWritesThisTurn && myPlayer.runesDeck.length > 0 && (
+        <div className="bg-indigo-950/50 border border-indigo-600 rounded-lg p-3">
+          <div className="text-indigo-300 text-sm mb-2 font-semibold">
+            Choose a rune to write ({myPlayer.maxRuneWritesThisTurn - myPlayer.runesWrittenThisTurn} remaining)
+          </div>
+          <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+            {/* Group runes by letter for cleaner display */}
+            {(() => {
+              const grouped = new Map<string, CardState[]>();
+              for (const rune of myPlayer.runesDeck) {
+                const key = `${rune.letter}-${rune.runeType}`;
+                if (!grouped.has(key)) grouped.set(key, []);
+                grouped.get(key)!.push(rune);
+              }
+              return Array.from(grouped.entries())
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([key, runes]) => {
+                  const rune = runes[0];
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => onWriteRune(rune.instanceId)}
+                      className={`
+                        w-10 h-14 rounded flex flex-col items-center justify-center cursor-pointer
+                        transition-all hover:scale-110 border-2
+                        ${rune.runeType === "blood" ? "bg-red-900 border-red-500 hover:bg-red-800" :
+                          rune.runeType === "stone" ? "bg-gray-700 border-gray-400 hover:bg-gray-600" :
+                          "bg-indigo-900 border-white hover:bg-indigo-800"}
+                      `}
+                    >
+                      <span className="text-white font-bold text-lg">{rune.letter}</span>
+                      <span className="text-gray-300 text-[8px]">x{runes.length}</span>
+                    </button>
+                  );
+                });
+            })()}
+          </div>
         </div>
       )}
 

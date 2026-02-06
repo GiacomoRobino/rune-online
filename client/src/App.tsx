@@ -13,6 +13,7 @@ function App() {
     myPlayer,
     opponent,
     isMyTurn,
+    writeRune,
     summonCreature,
     playEcho,
     playMemory,
@@ -45,6 +46,7 @@ function App() {
         winner={gameState.winner}
         mySessionId={mySessionId}
         declaredAttackers={gameState.declaredAttackers}
+        onWriteRune={writeRune}
         onSummon={summonCreature}
         onPlayEcho={playEcho}
         onPlayMemory={playMemory}

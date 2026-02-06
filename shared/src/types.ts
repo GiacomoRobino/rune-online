@@ -84,6 +84,7 @@ export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "com
 
 // Message types (client -> server)
 export type ClientMessage =
+  | { type: "write_rune"; runeId: string }
   | { type: "summon"; cardId: string; runeIds: string[] }
   | { type: "play_echo"; cardId: string; runeIds: string[] }
   | { type: "play_memory"; cardId: string; targetId?: string }

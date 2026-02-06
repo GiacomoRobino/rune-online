@@ -14,5 +14,6 @@ export class Player extends Schema {
   @type([Card]) runeField = new ArraySchema<Card>();
   @type([Card]) graveyard = new ArraySchema<Card>();
   @type("number") runesWrittenThisTurn: number = 0;
+  @type("number") maxRuneWritesThisTurn: number = 0;
   @type("boolean") connected: boolean = true;
 }

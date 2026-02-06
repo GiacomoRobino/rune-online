@@ -18,6 +18,10 @@ export class GameRoom extends Room<GameState> {
     this.setState(new GameState());
     this.maxClients = 2;
 
+    this.onMessage("write_rune", (client, message) => {
+      this.handleWriteRune(client, message);
+    });
+
     this.onMessage("summon", (client, message) => {
       this.handleSummon(client, message);
     });
@@ -63,8 +67,8 @@ export class GameRoom extends Room<GameState> {
       player.chaosDeck.push(this.createCard(def));
     }
 
-    // Generate and shuffle Runes deck
-    const runeDefs = shuffleArray(generateRunesStarterDeck());
+    // Generate Runes deck (player will choose which to write)
+    const runeDefs = generateRunesStarterDeck();
     for (const def of runeDefs) {
       player.runesDeck.push(this.createCard(def));
     }
@@ -104,14 +108,13 @@ export class GameRoom extends Room<GameState> {
     const firstPlayerIndex = Math.floor(Math.random() * 2);
     this.state.currentTurn = this.playerOrder[firstPlayerIndex];
 
-    // Both players: draw 3 from Chaos deck, write 3 Runes
+    // Both players: draw 3 from Chaos deck, allow 3 rune writes
     this.state.players.forEach((player) => {
       for (let i = 0; i < STARTING_HAND_SIZE; i++) {
         this.drawChaosCard(player);
       }
-      for (let i = 0; i < STARTING_RUNES; i++) {
-        this.autoWriteRune(player);
-      }
+      player.runesWrittenThisTurn = 0;
+      player.maxRuneWritesThisTurn = STARTING_RUNES;
     });
 
     this.state.turnPhase = "main";
@@ -142,9 +145,9 @@ export class GameRoom extends Room<GameState> {
     // Draw 1 from Chaos deck
     this.drawChaosCard(currentPlayer);
 
-    // Write 1 Rune
+    // Allow 1 rune write this turn (player chooses)
     currentPlayer.runesWrittenThisTurn = 0;
-    this.autoWriteRune(currentPlayer);
+    currentPlayer.maxRuneWritesThisTurn = 1;
 
     this.state.turnPhase = "main";
     this.state.turnStartTime = new Date().toISOString();
@@ -167,11 +170,27 @@ export class GameRoom extends Room<GameState> {
 
   // ─── RUNE WRITING ──────────────────────────────────────
 
-  private autoWriteRune(player: Player) {
-    if (player.runesDeck.length === 0) return; // no fatigue for runes
+  private handleWriteRune(client: Client, message: { runeId: string }) {
+    if (this.state.phase !== "playing") return;
 
-    const rune = player.runesDeck.shift();
+    const player = this.state.players.get(client.sessionId);
+    if (!player) return;
+
+    // On first turn both players can write; on later turns only current player
+    if (!this.state.isFirstTurn && this.state.currentTurn !== client.sessionId) return;
+
+    // Check write allowance
+    if (player.runesWrittenThisTurn >= player.maxRuneWritesThisTurn) return;
+
+    // Find the chosen rune in the deck
+    const runeIndex = player.runesDeck.findIndex((r) => r.instanceId === message.runeId);
+    if (runeIndex === -1) return;
+
+    const rune = player.runesDeck.at(runeIndex);
     if (!rune) return;
+
+    // Remove from deck
+    player.runesDeck.splice(runeIndex, 1);
 
     // Blood runes cost 1 life to write
     if (rune.runeType === "blood") {

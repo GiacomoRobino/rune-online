@@ -39,6 +39,7 @@ export interface PlayerState {
   runeField: CardState[];
   graveyard: CardState[];
   runesWrittenThisTurn: number;
+  maxRuneWritesThisTurn: number;
   connected: boolean;
 }
 
@@ -109,6 +110,7 @@ export function useColyseus() {
         runeField: Array.from(player.runeField).filter((c): c is Card => c !== undefined).map(cardToPlain),
         graveyard: Array.from(player.graveyard).filter((c): c is Card => c !== undefined).map(cardToPlain),
         runesWrittenThisTurn: player.runesWrittenThisTurn,
+        maxRuneWritesThisTurn: player.maxRuneWritesThisTurn,
         connected: player.connected,
       });
     });
@@ -172,6 +174,11 @@ export function useColyseus() {
 
   // --- Actions ---
 
+  const writeRune = useCallback((runeId: string) => {
+    if (!room) return;
+    room.send("write_rune", { runeId });
+  }, [room]);
+
   const summonCreature = useCallback((cardId: string, runeIds: string[]) => {
     if (!room) return;
     room.send("summon", { cardId, runeIds });
@@ -224,6 +231,7 @@ export function useColyseus() {
     myPlayer,
     opponent,
     isMyTurn,
+    writeRune,
     summonCreature,
     playEcho,
     playMemory,
