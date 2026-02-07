@@ -18,9 +18,6 @@ export function RuneField({
   requiredLetters = [],
   label,
 }: RuneFieldProps) {
-  const unattached = runes.filter((r) => r.attachedToId === "");
-  const attached = runes.filter((r) => r.attachedToId !== "");
-
   // During summoning mode, highlight runes whose letter is still needed
   const remainingNeeded = [...requiredLetters];
   for (const id of selectedRuneIds) {
@@ -33,7 +30,6 @@ export function RuneField({
 
   const isRuneAvailable = (rune: CardState) => {
     if (rune.etchingCounters > 0) return false;
-    if (rune.attachedToId !== "") return false;
     if (!isSummoningMode) return false;
     if (selectedRuneIds.includes(rune.instanceId)) return true;
     return remainingNeeded.includes(rune.letter);
@@ -45,28 +41,16 @@ export function RuneField({
         <div className="text-gray-400 text-xs mb-1">{label}</div>
       )}
       <div className="flex flex-wrap gap-1 min-h-[28px] bg-gray-900/30 rounded p-2">
-        {unattached.length === 0 && attached.length === 0 && (
+        {runes.length === 0 && (
           <div className="text-gray-600 text-xs">No runes</div>
         )}
-        {/* Unattached runes (available for spelling) */}
-        {unattached.map((rune) => (
+        {runes.map((rune) => (
           <Card
             key={rune.instanceId}
             card={rune}
             onClick={() => onRuneClick?.(rune)}
             isSelected={selectedRuneIds.includes(rune.instanceId)}
             isPlayable={isRuneAvailable(rune)}
-          />
-        ))}
-        {/* Separator if both groups exist */}
-        {unattached.length > 0 && attached.length > 0 && (
-          <div className="w-px bg-gray-600 mx-1 self-stretch" />
-        )}
-        {/* Attached runes (dimmed) */}
-        {attached.map((rune) => (
-          <Card
-            key={rune.instanceId}
-            card={rune}
           />
         ))}
       </div>

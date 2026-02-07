@@ -247,8 +247,9 @@ export class GameRoom extends Room<GameState> {
     // Validate rune spelling
     if (!this.validateRuneSpelling(player, card.spellName, message.runeIds)) return;
 
-    // Attach runes to summoning
+    // Detach runes from old summonings, then attach to new one
     for (const runeId of message.runeIds) {
+      this.detachRuneFromCurrent(player, runeId);
       const rune = player.runeField.find((r) => r.instanceId === runeId);
       if (rune) {
         rune.attachedToId = card.instanceId;
@@ -268,6 +269,9 @@ export class GameRoom extends Room<GameState> {
     }
 
     player.battlefield.push(card);
+
+    // Old summonings may have lost runes → sacrifice
+    this.sacrificeRunelessSummonings(player);
 
     // Handle on_enter effects
     this.handleOnEnterEffect(card, player);
@@ -293,8 +297,9 @@ export class GameRoom extends Room<GameState> {
 
     if (!this.validateRuneSpelling(player, card.spellName, message.runeIds)) return;
 
-    // Attach runes
+    // Detach runes from old summonings, then attach to new one
     for (const runeId of message.runeIds) {
+      this.detachRuneFromCurrent(player, runeId);
       const rune = player.runeField.find((r) => r.instanceId === runeId);
       if (rune) {
         rune.attachedToId = card.instanceId;
@@ -304,6 +309,9 @@ export class GameRoom extends Room<GameState> {
 
     player.hand.splice(cardIndex, 1);
     player.battlefield.push(card);
+
+    // Old summonings may have lost runes → sacrifice
+    this.sacrificeRunelessSummonings(player);
 
     this.checkWinCondition();
   }
@@ -346,13 +354,17 @@ export class GameRoom extends Room<GameState> {
     if (!player) return;
 
     const rune = player.runeField.find((r) => r.instanceId === message.runeId);
-    if (!rune || rune.attachedToId !== "" || rune.etchingCounters > 0) return;
+    if (!rune || rune.etchingCounters > 0) return;
 
     const target = player.battlefield.find((c) => c.instanceId === message.targetId);
     if (!target || (target.cardType !== "summoning" && target.cardType !== "echo")) return;
 
+    this.detachRuneFromCurrent(player, rune.instanceId);
     rune.attachedToId = target.instanceId;
     target.attachedRuneIds.push(rune.instanceId);
+
+    // Old summoning may have lost all runes → sacrifice
+    this.sacrificeRunelessSummonings(player);
   }
 
   // ─── COMBAT: DECLARE ATTACKERS ─────────────────────────
@@ -727,7 +739,6 @@ export class GameRoom extends Room<GameState> {
     for (const runeId of runeIds) {
       const rune = player.runeField.find((r) => r.instanceId === runeId);
       if (!rune) return false;
-      if (rune.attachedToId !== "") return false; // already attached
       if (rune.etchingCounters > 0) return false; // still etching (stone)
       provided.push(rune.letter);
     }
@@ -740,6 +751,41 @@ export class GameRoom extends Room<GameState> {
     }
 
     return true;
+  }
+
+  // ─── RUNE TRANSFER HELPERS ──────────────────────────────
+
+  /** Detach a rune from whatever summoning/echo it's currently attached to. */
+  private detachRuneFromCurrent(player: Player, runeId: string) {
+    const rune = player.runeField.find((r) => r.instanceId === runeId);
+    if (!rune || rune.attachedToId === "") return;
+
+    const oldOwner = player.battlefield.find((c) => c.instanceId === rune.attachedToId);
+    if (oldOwner) {
+      const idx = oldOwner.attachedRuneIds.findIndex((id) => id === runeId);
+      if (idx !== -1) {
+        oldOwner.attachedRuneIds.splice(idx, 1);
+      }
+    }
+    rune.attachedToId = "";
+  }
+
+  /** Sacrifice any summoning that has 0 attached runes (unless Unbounded). */
+  private sacrificeRunelessSummonings(player: Player) {
+    let sacrificed = true;
+    while (sacrificed) {
+      sacrificed = false;
+      for (let i = player.battlefield.length - 1; i >= 0; i--) {
+        const card = player.battlefield.at(i);
+        if (!card) continue;
+        if (card.cardType === "summoning" && card.attachedRuneIds.length === 0 && !this.hasAbility(card, "unbounded")) {
+          player.battlefield.splice(i, 1);
+          this.handleOnDeathEffect(card, player);
+          player.graveyard.push(card);
+          sacrificed = true;
+        }
+      }
+    }
   }
 
   // ─── ABILITY HELPERS ───────────────────────────────────

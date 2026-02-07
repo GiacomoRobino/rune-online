@@ -117,7 +117,7 @@ export function GameBoard({
   // --- Rune click in summoning mode ---
   const handleRuneClick = (rune: CardState) => {
     if (mode.type !== "summoning" && mode.type !== "echo") return;
-    if (rune.etchingCounters > 0 || rune.attachedToId !== "") return;
+    if (rune.etchingCounters > 0) return;
 
     const ids = [...mode.selectedRuneIds];
     const idx = ids.indexOf(rune.instanceId);
@@ -224,7 +224,7 @@ export function GameBoard({
     if (card.cardType !== "summoning" && card.cardType !== "echo") return card.cardType === "memory";
     const needed = card.spellName.split("").sort();
     const available = myPlayer.runeField
-      .filter((r) => r.attachedToId === "" && r.etchingCounters === 0)
+      .filter((r) => r.etchingCounters === 0)
       .map((r) => r.letter)
       .sort();
 
