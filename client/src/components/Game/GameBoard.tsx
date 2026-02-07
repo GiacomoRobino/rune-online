@@ -53,6 +53,7 @@ export function GameBoard({
 }: GameBoardProps) {
   const [mode, setMode] = useState<InteractionMode>({ type: "idle" });
   const [inspectedCardId, setInspectedCardId] = useState<string | null>(null);
+  const [showGraveyard, setShowGraveyard] = useState<"mine" | "opponent" | null>(null);
 
   // Game ended
   if (phase === "ended") {
@@ -295,8 +296,14 @@ export function GameBoard({
             </p>
           </div>
         </div>
-        <div className="text-gray-400 text-xs">
-          Hand: {opponent.hand.length} | Graveyard: {opponent.graveyard.length}
+        <div className="flex items-center gap-2 text-gray-400 text-xs">
+          <span>Hand: {opponent.hand.length}</span>
+          <button
+            onClick={() => setShowGraveyard("opponent")}
+            className="flex items-center gap-1 px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+          >
+            <span>&#x1F480;</span> {opponent.graveyard.length}
+          </button>
         </div>
       </div>
 
@@ -485,6 +492,12 @@ export function GameBoard({
               Chaos: {myPlayer.chaosDeck.length} | Runes: {myPlayer.runesDeck.length}
             </p>
           </div>
+          <button
+            onClick={() => setShowGraveyard("mine")}
+            className="flex items-center gap-1 px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs transition-colors"
+          >
+            <span>&#x1F480;</span> {myPlayer.graveyard.length}
+          </button>
         </div>
 
         <div className="flex items-center gap-2">
@@ -542,6 +555,42 @@ export function GameBoard({
           )}
         </div>
       </div>
+
+      {/* Graveyard overlay */}
+      {showGraveyard && (() => {
+        const cards = showGraveyard === "mine" ? myPlayer.graveyard : opponent.graveyard;
+        const title = showGraveyard === "mine" ? "Your Graveyard" : "Opponent's Graveyard";
+        return (
+          <div
+            className="fixed inset-0 z-20 bg-black/60 flex items-center justify-center"
+            onClick={() => setShowGraveyard(null)}
+          >
+            <div
+              className="bg-gray-800 rounded-xl p-4 max-w-3xl max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-white font-semibold text-lg">{title} ({cards.length})</h2>
+                <button
+                  onClick={() => setShowGraveyard(null)}
+                  className="px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded text-sm"
+                >
+                  Close
+                </button>
+              </div>
+              {cards.length === 0 ? (
+                <p className="text-gray-400 text-sm text-center py-8">No cards in graveyard</p>
+              ) : (
+                <div className="flex flex-wrap gap-3 justify-center">
+                  {cards.map((card) => (
+                    <Card key={card.instanceId} card={card} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
