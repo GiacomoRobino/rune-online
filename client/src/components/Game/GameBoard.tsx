@@ -52,6 +52,7 @@ export function GameBoard({
   onLeave,
 }: GameBoardProps) {
   const [mode, setMode] = useState<InteractionMode>({ type: "idle" });
+  const [inspectedCardId, setInspectedCardId] = useState<string | null>(null);
 
   // Game ended
   if (phase === "ended") {
@@ -93,6 +94,7 @@ export function GameBoard({
   // --- Hand click handlers ---
   const handleCardInHandClick = (card: CardState) => {
     if (!isMyTurn || turnPhase !== "main") return;
+    setInspectedCardId(null);
 
     if (card.cardType === "summoning" || card.cardType === "echo") {
       // Start summoning/echo flow
@@ -148,6 +150,11 @@ export function GameBoard({
 
   // --- Battlefield click ---
   const handleMyCreatureClick = (card: CardState) => {
+    if (mode.type === "idle") {
+      // Toggle inspect to see attached runes
+      setInspectedCardId((prev) => prev === card.instanceId ? null : card.instanceId);
+      return;
+    }
     if (mode.type === "declare_attack") {
       // Toggle attacker
       const ids = [...mode.selectedAttackerIds];
@@ -182,6 +189,8 @@ export function GameBoard({
     } else if (mode.type === "declare_block" && isBlockingPhase) {
       // Click an attacker to assign selected blocker to it
       // For now, handled via my creature click
+    } else if (mode.type === "idle") {
+      setInspectedCardId((prev) => prev === card.instanceId ? null : card.instanceId);
     }
   };
 
@@ -193,6 +202,7 @@ export function GameBoard({
 
   // --- Attack phase controls ---
   const enterAttackMode = () => {
+    setInspectedCardId(null);
     setMode({ type: "declare_attack", selectedAttackerIds: [] });
   };
 
@@ -236,6 +246,13 @@ export function GameBoard({
     }
     return remaining.length === 0;
   };
+
+  // Find the inspected card (on either battlefield) and its attached rune IDs
+  const inspectedCard = inspectedCardId
+    ? myPlayer.battlefield.find((c) => c.instanceId === inspectedCardId)
+      ?? opponent.battlefield.find((c) => c.instanceId === inspectedCardId)
+    : undefined;
+  const inspectedRuneIds = inspectedCard?.attachedRuneIds ?? [];
 
   // Turn phase display
   const phaseLabel = turnPhase === "main" ? "Main Phase" :
@@ -297,6 +314,7 @@ export function GameBoard({
         runes={opponent.runeField}
         selectedRuneIds={[]}
         isSummoningMode={false}
+        highlightedRuneIds={inspectedRuneIds}
         label="Opponent Runes"
       />
 
@@ -312,6 +330,7 @@ export function GameBoard({
               onClick={() => handleEnemyCreatureClick(card)}
               isTarget={mode.type === "targeting_memory"}
               isAttacker={declaredAttackers.includes(card.instanceId)}
+              isSelected={inspectedCardId === card.instanceId}
             />
           ))
         )}
@@ -339,8 +358,9 @@ export function GameBoard({
                 mode.assignments.has(card.instanceId)
               }
               isSelected={
-                mode.type === "declare_attack" &&
-                mode.selectedAttackerIds.includes(card.instanceId)
+                inspectedCardId === card.instanceId ||
+                (mode.type === "declare_attack" &&
+                mode.selectedAttackerIds.includes(card.instanceId))
               }
             />
           ))
@@ -358,6 +378,7 @@ export function GameBoard({
         requiredLetters={
           (mode.type === "summoning" || mode.type === "echo") ? mode.card.spellName.split("") : []
         }
+        highlightedRuneIds={inspectedRuneIds}
         label="My Runes"
       />
 

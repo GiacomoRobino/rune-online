@@ -7,6 +7,7 @@ interface RuneFieldProps {
   onRuneClick?: (rune: CardState) => void;
   isSummoningMode: boolean;
   requiredLetters?: string[];
+  highlightedRuneIds?: string[];
   label?: string;
 }
 
@@ -16,6 +17,7 @@ export function RuneField({
   onRuneClick,
   isSummoningMode,
   requiredLetters = [],
+  highlightedRuneIds = [],
   label,
 }: RuneFieldProps) {
   // During summoning mode, highlight runes whose letter is still needed
@@ -51,6 +53,7 @@ export function RuneField({
             onClick={() => onRuneClick?.(rune)}
             isSelected={selectedRuneIds.includes(rune.instanceId)}
             isPlayable={isRuneAvailable(rune)}
+            isHighlighted={highlightedRuneIds.includes(rune.instanceId)}
           />
         ))}
       </div>

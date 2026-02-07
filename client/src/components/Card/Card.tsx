@@ -9,6 +9,7 @@ interface CardProps {
   isTarget?: boolean;
   isBlockCandidate?: boolean;
   isInHand?: boolean;
+  isHighlighted?: boolean;
   showBack?: boolean;
 }
 
@@ -21,6 +22,7 @@ export function Card({
   isTarget = false,
   isBlockCandidate = false,
   isInHand = false,
+  isHighlighted = false,
   showBack = false,
 }: CardProps) {
   if (showBack) {
@@ -34,7 +36,7 @@ export function Card({
   const { cardType } = card;
 
   if (cardType === "rune") {
-    return <RuneCard card={card} onClick={onClick} isSelected={isSelected} isPlayable={isPlayable} />;
+    return <RuneCard card={card} onClick={onClick} isSelected={isSelected} isPlayable={isPlayable} isHighlighted={isHighlighted} />;
   }
   if (cardType === "memory") {
     return <MemoryCard card={card} onClick={onClick} isPlayable={isPlayable} />;
@@ -141,9 +143,9 @@ function SummoningCard({
 
 // --- RUNE CARD ---
 function RuneCard({
-  card, onClick, isSelected, isPlayable,
+  card, onClick, isSelected, isPlayable, isHighlighted,
 }: {
-  card: CardState; onClick?: () => void; isSelected?: boolean; isPlayable?: boolean;
+  card: CardState; onClick?: () => void; isSelected?: boolean; isPlayable?: boolean; isHighlighted?: boolean;
 }) {
   const borderColor = card.runeType === "blood" ? "border-red-500" :
     card.runeType === "stone" ? "border-gray-400" : "border-white";
@@ -159,8 +161,9 @@ function RuneCard({
         bg-gradient-to-br ${bgColor} border-2 ${borderColor}
         ${isSelected ? "ring-2 ring-blue-400 scale-110" : ""}
         ${isPlayable ? "ring-2 ring-green-400 hover:scale-105" : ""}
+        ${isHighlighted ? "ring-2 ring-amber-400 scale-105 brightness-125" : ""}
         ${isEtching ? "opacity-50" : ""}
-        ${isAttached ? "opacity-70" : ""}
+        ${isAttached && !isHighlighted ? "opacity-70" : ""}
         flex items-center justify-center
       `}
       onClick={onClick}
