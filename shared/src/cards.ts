@@ -1,4 +1,4 @@
-import { SummoningDefinition, MemoryDefinition, RuneDefinition, CardDefinition } from "./types.js";
+import { SummoningDefinition, EchoDefinition, MemoryDefinition, RuneDefinition, CardDefinition } from "./types.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -85,6 +85,53 @@ export function generateRunesStarterDeck(): RuneDefinition[] {
   // 1 copy of each blood rune
   for (const rune of RUNE_POOL.filter((r) => r.runeType === "blood")) {
     deck.push({ ...rune });
+  }
+  return deck;
+}
+
+// --- ECHO POOL ---
+export const ECHO_POOL: EchoDefinition[] = [
+  { id: "echo_arra", name: "Arra", type: "echo", spellName: "ARRA", abilities: "", description: "A resonating echo." },
+];
+
+// --- TEST DECKS ---
+
+const TEST_SUMMONING: SummoningDefinition = {
+  id: "art", name: "Art", type: "summoning", spellName: "ART", attack: 2, health: 2, abilities: "", description: "A living artwork.",
+};
+
+const TEST_MEMORY: MemoryDefinition = {
+  id: "mem_tara", name: "Tara", type: "memory", description: "Draw 1 card from your Chaos deck.",
+  effect: { type: "instant", action: { type: "draw", amount: 1 } },
+};
+
+const TEST_ECHO: EchoDefinition = ECHO_POOL.find((e) => e.id === "echo_arra")!;
+
+export function generateTestChaosDeck(): CardDefinition[] {
+  const deck: CardDefinition[] = [];
+  // 10 copies of Art (summoning)
+  for (let i = 0; i < 10; i++) {
+    deck.push({ ...TEST_SUMMONING });
+  }
+  // 5 copies of Tara (memory)
+  for (let i = 0; i < 5; i++) {
+    deck.push({ ...TEST_MEMORY });
+  }
+  // 5 copies of Arra (echo)
+  for (let i = 0; i < 5; i++) {
+    deck.push({ ...TEST_ECHO });
+  }
+  return deck;
+}
+
+export function generateTestRunesDeck(): RuneDefinition[] {
+  const deck: RuneDefinition[] = [];
+  const testRunes = RUNE_POOL.filter((r) => ["A", "R", "T"].includes(r.letter));
+  // 10 copies of each (A, R, T)
+  for (const rune of testRunes) {
+    for (let i = 0; i < 10; i++) {
+      deck.push({ ...rune });
+    }
   }
   return deck;
 }

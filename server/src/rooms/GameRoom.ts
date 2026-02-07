@@ -2,9 +2,9 @@ import { Room, Client } from "@colyseus/core";
 import { ArraySchema } from "@colyseus/schema";
 import {
   GameState, Player, Card,
-  generateChaosStarterDeck, generateRunesStarterDeck, shuffleArray,
-  SUMMONING_POOL, MEMORY_POOL,
-  type CardDefinition, type SummoningDefinition, type MemoryDefinition, type RuneDefinition,
+  generateTestChaosDeck, generateTestRunesDeck, shuffleArray,
+  SUMMONING_POOL, MEMORY_POOL, ECHO_POOL,
+  type CardDefinition, type SummoningDefinition, type MemoryDefinition, type RuneDefinition, type EchoDefinition,
 } from "shared";
 
 const STARTING_HAND_SIZE = 3;
@@ -61,14 +61,14 @@ export class GameRoom extends Room<GameState> {
     player.health = 20;
     player.maxHealth = 20;
 
-    // Generate and shuffle Chaos deck
-    const chaosDefs = shuffleArray(generateChaosStarterDeck());
+    // Generate and shuffle Chaos deck (using test deck)
+    const chaosDefs = shuffleArray(generateTestChaosDeck());
     for (const def of chaosDefs) {
       player.chaosDeck.push(this.createCard(def));
     }
 
-    // Generate Runes deck (player will choose which to write)
-    const runeDefs = generateRunesStarterDeck();
+    // Generate Runes deck (using test deck — A, R, T only)
+    const runeDefs = generateTestRunesDeck();
     for (const def of runeDefs) {
       player.runesDeck.push(this.createCard(def));
     }
@@ -800,6 +800,8 @@ export class GameRoom extends Room<GameState> {
     if (summoning) return summoning;
     const memory = MEMORY_POOL.find((d) => d.id === card.id);
     if (memory) return memory;
+    const echo = ECHO_POOL.find((d) => d.id === card.id);
+    if (echo) return echo;
     return undefined;
   }
 
