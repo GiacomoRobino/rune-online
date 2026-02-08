@@ -248,12 +248,38 @@ export function GameBoard({
     return remaining.length === 0;
   };
 
-  // Find the inspected card (on either battlefield) and its attached rune IDs
-  const inspectedCard = inspectedCardId
-    ? myPlayer.battlefield.find((c) => c.instanceId === inspectedCardId)
-      ?? opponent.battlefield.find((c) => c.instanceId === inspectedCardId)
-    : undefined;
-  const inspectedRuneIds = inspectedCard?.attachedRuneIds ?? [];
+  // Compute remainingNeeded once from ALL runes for correct highlighting
+  const isSummoning = mode.type === "summoning" || mode.type === "echo";
+  const selectedRuneIds = isSummoning ? mode.selectedRuneIds : [];
+  const remainingNeeded = (() => {
+    if (!isSummoning) return [];
+    const needed = [...mode.card.spellName.split("")];
+    for (const id of mode.selectedRuneIds) {
+      const rune = myPlayer.runeField.find((r) => r.instanceId === id);
+      if (rune) {
+        const idx = needed.indexOf(rune.letter);
+        if (idx !== -1) needed.splice(idx, 1);
+      }
+    }
+    return needed;
+  })();
+
+  // Split runes into attached (per creature) and unattached
+  const getAttachedRunes = (player: PlayerState, card: CardState) =>
+    player.runeField.filter((r) => card.attachedRuneIds.includes(r.instanceId));
+  const getUnattachedRunes = (player: PlayerState) =>
+    player.runeField.filter((r) => !r.attachedToId);
+
+  const myUnattachedRunes = getUnattachedRunes(myPlayer);
+  const opponentUnattachedRunes = getUnattachedRunes(opponent);
+
+  // Helper: is a rune available for summoning selection?
+  const isRuneAvailable = (rune: CardState) => {
+    if (rune.etchingCounters > 0) return false;
+    if (!isSummoning) return false;
+    if (selectedRuneIds.includes(rune.instanceId)) return true;
+    return remainingNeeded.includes(rune.letter);
+  };
 
   // Turn phase display
   const phaseLabel = turnPhase === "main" ? "Main Phase" :
@@ -316,78 +342,117 @@ export function GameBoard({
         ))}
       </div>
 
-      {/* Opponent rune field */}
-      <RuneField
-        runes={opponent.runeField}
-        selectedRuneIds={[]}
-        isSummoningMode={false}
-        highlightedRuneIds={inspectedRuneIds}
-        label="Opponent Runes"
-      />
+      {/* Board: battlefield area + vertical divider + unattached runes column */}
+      <div className="flex gap-0 flex-1">
+        {/* Battlefield area */}
+        <div className="flex-1 flex flex-col">
+          {/* Opponent creatures with attached runes below */}
+          <div className="flex justify-center gap-4 flex-wrap min-h-[150px] bg-gray-900/30 rounded-lg p-3 items-start">
+            {opponent.battlefield.length === 0 ? (
+              <div className="text-gray-600 flex items-center text-sm self-center">No creatures</div>
+            ) : (
+              opponent.battlefield.map((card) => (
+                <div key={card.instanceId} className="flex flex-col items-center gap-1">
+                  <Card
+                    card={card}
+                    onClick={() => handleEnemyCreatureClick(card)}
+                    isTarget={mode.type === "targeting_memory"}
+                    isAttacker={declaredAttackers.includes(card.instanceId)}
+                    isSelected={inspectedCardId === card.instanceId}
+                  />
+                  {/* Attached runes below creature */}
+                  {getAttachedRunes(opponent, card).length > 0 && (
+                    <div className="flex flex-wrap gap-1 justify-center max-w-[100px]">
+                      {getAttachedRunes(opponent, card).map((rune) => (
+                        <Card key={rune.instanceId} card={rune} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
 
-      {/* Opponent battlefield */}
-      <div className="flex justify-center gap-3 min-h-[150px] bg-gray-900/30 rounded-lg p-3">
-        {opponent.battlefield.length === 0 ? (
-          <div className="text-gray-600 flex items-center text-sm">No creatures</div>
-        ) : (
-          opponent.battlefield.map((card) => (
-            <Card
-              key={card.instanceId}
-              card={card}
-              onClick={() => handleEnemyCreatureClick(card)}
-              isTarget={mode.type === "targeting_memory"}
-              isAttacker={declaredAttackers.includes(card.instanceId)}
-              isSelected={inspectedCardId === card.instanceId}
+          {/* Horizontal divider */}
+          <div className="border-t border-gray-700 my-1" />
+
+          {/* My creatures with attached runes below */}
+          <div className="flex justify-center gap-4 flex-wrap min-h-[150px] bg-gray-900/30 rounded-lg p-3 items-start">
+            {myPlayer.battlefield.length === 0 ? (
+              <div className="text-gray-600 flex items-center text-sm self-center">Summon creatures here</div>
+            ) : (
+              myPlayer.battlefield.map((card) => (
+                <div key={card.instanceId} className="flex flex-col items-center gap-1">
+                  <Card
+                    card={card}
+                    onClick={() => handleMyCreatureClick(card)}
+                    isAttacker={
+                      mode.type === "declare_attack" &&
+                      mode.selectedAttackerIds.includes(card.instanceId)
+                    }
+                    isBlockCandidate={
+                      mode.type === "declare_block" &&
+                      mode.assignments.has(card.instanceId)
+                    }
+                    isSelected={
+                      inspectedCardId === card.instanceId ||
+                      (mode.type === "declare_attack" &&
+                      mode.selectedAttackerIds.includes(card.instanceId))
+                    }
+                  />
+                  {/* Attached runes below creature — clickable during summoning */}
+                  {getAttachedRunes(myPlayer, card).length > 0 && (
+                    <div className="flex flex-wrap gap-1 justify-center max-w-[100px]">
+                      {getAttachedRunes(myPlayer, card).map((rune) => (
+                        <Card
+                          key={rune.instanceId}
+                          card={rune}
+                          onClick={() => handleRuneClick(rune)}
+                          isSelected={selectedRuneIds.includes(rune.instanceId)}
+                          isPlayable={isRuneAvailable(rune)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Vertical divider */}
+        <div className="border-l border-gray-700 mx-2" />
+
+        {/* Unattached runes column */}
+        <div className="w-24 flex flex-col">
+          {/* Opponent unattached runes */}
+          <div className="flex-1 min-h-[150px]">
+            <RuneField
+              runes={opponentUnattachedRunes}
+              selectedRuneIds={[]}
+              isSummoningMode={false}
+              label="Free Runes"
+              layout="vertical"
             />
-          ))
-        )}
-      </div>
+          </div>
 
-      {/* Divider */}
-      <div className="border-t border-gray-700" />
+          {/* Horizontal divider */}
+          <div className="border-t border-gray-700 my-1" />
 
-      {/* My battlefield */}
-      <div className="flex justify-center gap-3 min-h-[150px] bg-gray-900/30 rounded-lg p-3">
-        {myPlayer.battlefield.length === 0 ? (
-          <div className="text-gray-600 flex items-center text-sm">Summon creatures here</div>
-        ) : (
-          myPlayer.battlefield.map((card) => (
-            <Card
-              key={card.instanceId}
-              card={card}
-              onClick={() => handleMyCreatureClick(card)}
-              isAttacker={
-                mode.type === "declare_attack" &&
-                mode.selectedAttackerIds.includes(card.instanceId)
-              }
-              isBlockCandidate={
-                mode.type === "declare_block" &&
-                mode.assignments.has(card.instanceId)
-              }
-              isSelected={
-                inspectedCardId === card.instanceId ||
-                (mode.type === "declare_attack" &&
-                mode.selectedAttackerIds.includes(card.instanceId))
-              }
+          {/* My unattached runes */}
+          <div className="flex-1 min-h-[150px]">
+            <RuneField
+              runes={myUnattachedRunes}
+              selectedRuneIds={selectedRuneIds}
+              onRuneClick={handleRuneClick}
+              isSummoningMode={isSummoning}
+              remainingLetters={remainingNeeded}
+              label="Free Runes"
+              layout="vertical"
             />
-          ))
-        )}
+          </div>
+        </div>
       </div>
-
-      {/* My rune field */}
-      <RuneField
-        runes={myPlayer.runeField}
-        selectedRuneIds={
-          (mode.type === "summoning" || mode.type === "echo") ? mode.selectedRuneIds : []
-        }
-        onRuneClick={handleRuneClick}
-        isSummoningMode={mode.type === "summoning" || mode.type === "echo"}
-        requiredLetters={
-          (mode.type === "summoning" || mode.type === "echo") ? mode.card.spellName.split("") : []
-        }
-        highlightedRuneIds={inspectedRuneIds}
-        label="My Runes"
-      />
 
       {/* Spell name checker (when summoning/echo) */}
       {(mode.type === "summoning" || mode.type === "echo") && (

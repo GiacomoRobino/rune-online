@@ -7,8 +7,10 @@ interface RuneFieldProps {
   onRuneClick?: (rune: CardState) => void;
   isSummoningMode: boolean;
   requiredLetters?: string[];
+  remainingLetters?: string[];
   highlightedRuneIds?: string[];
   label?: string;
+  layout?: "horizontal" | "vertical";
 }
 
 export function RuneField({
@@ -17,18 +19,24 @@ export function RuneField({
   onRuneClick,
   isSummoningMode,
   requiredLetters = [],
+  remainingLetters,
   highlightedRuneIds = [],
   label,
+  layout = "horizontal",
 }: RuneFieldProps) {
-  // During summoning mode, highlight runes whose letter is still needed
-  const remainingNeeded = [...requiredLetters];
-  for (const id of selectedRuneIds) {
-    const rune = runes.find((r) => r.instanceId === id);
-    if (rune) {
-      const idx = remainingNeeded.indexOf(rune.letter);
-      if (idx !== -1) remainingNeeded.splice(idx, 1);
+  // If remainingLetters is provided (pre-computed from ALL runes), use it directly.
+  // Otherwise, compute from this instance's runes only (backward compat).
+  const remainingNeeded = remainingLetters ?? (() => {
+    const needed = [...requiredLetters];
+    for (const id of selectedRuneIds) {
+      const rune = runes.find((r) => r.instanceId === id);
+      if (rune) {
+        const idx = needed.indexOf(rune.letter);
+        if (idx !== -1) needed.splice(idx, 1);
+      }
     }
-  }
+    return needed;
+  })();
 
   const isRuneAvailable = (rune: CardState) => {
     if (rune.etchingCounters > 0) return false;
@@ -42,7 +50,11 @@ export function RuneField({
       {label && (
         <div className="text-gray-400 text-xs mb-1">{label}</div>
       )}
-      <div className="flex flex-wrap gap-1 min-h-[28px] bg-gray-900/30 rounded p-2">
+      <div className={`${
+        layout === "vertical"
+          ? "flex flex-col gap-1 overflow-y-auto bg-gray-900/30 rounded p-2"
+          : "flex flex-wrap gap-1 min-h-[28px] bg-gray-900/30 rounded p-2"
+      }`}>
         {runes.length === 0 && (
           <div className="text-gray-600 text-xs">No runes</div>
         )}
