@@ -75,7 +75,7 @@ export type EffectAction =
   | { type: "damage"; amount: number; target: "enemy" | "all_enemies" | "random_enemy" | "any" }
   | { type: "heal"; amount: number; target: "self" | "friendly" | "any" }
   | { type: "draw"; amount: number }
-  | { type: "buff"; attack: number; health: number; target: "friendly" | "all_friendly" }
+  | { type: "buff"; attack: number; health: number; target: "friendly" | "all_friendly" | "all_enemy" }
   | { type: "destroy_rune"; target: "enemy" }
   | { type: "return_to_hand"; target: "any" };
 

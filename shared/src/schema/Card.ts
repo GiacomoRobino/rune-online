@@ -10,6 +10,8 @@ export class Card extends Schema {
   @type("number") attack: number = 0;
   @type("number") health: number = 0;
   @type("number") maxHealth: number = 0;
+  @type("number") baseAttack: number = 0;
+  @type("number") baseHealth: number = 0;
   @type("string") description: string = "";
   @type("string") spellName: string = ""; // letters needed to summon (e.g. "ERA")
   @type("string") abilities: string = ""; // comma-separated keywords

@@ -91,7 +91,8 @@ export function generateRunesStarterDeck(): RuneDefinition[] {
 
 // --- ECHO POOL ---
 export const ECHO_POOL: EchoDefinition[] = [
-  { id: "echo_arra", name: "Arra", type: "echo", spellName: "ARRA", abilities: "", description: "A resonating echo." },
+  { id: "echo_arra", name: "Arra", type: "echo", spellName: "ARRA", abilities: "", description: "+1/+1 to all friendly summonings.",
+    effect: { type: "ongoing", action: { type: "buff", attack: 1, health: 1, target: "all_friendly" } } },
 ];
 
 // --- TEST DECKS ---

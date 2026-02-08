@@ -276,6 +276,7 @@ export class GameRoom extends Room<GameState> {
     // Handle on_enter effects
     this.handleOnEnterEffect(card, player);
 
+    this.recalculateOngoingEffects();
     this.checkWinCondition();
   }
 
@@ -313,6 +314,7 @@ export class GameRoom extends Room<GameState> {
     // Old summonings may have lost runes → sacrifice
     this.sacrificeRunelessSummonings(player);
 
+    this.recalculateOngoingEffects();
     this.checkWinCondition();
   }
 
@@ -341,6 +343,7 @@ export class GameRoom extends Room<GameState> {
     // Send to graveyard
     player.graveyard.push(card);
 
+    this.recalculateOngoingEffects();
     this.checkWinCondition();
   }
 
@@ -541,6 +544,9 @@ export class GameRoom extends Room<GameState> {
     this.cleanupDeadCreatures(attackingPlayer);
     this.cleanupDeadCreatures(defendingPlayer);
 
+    // Recalculate ongoing effects (echoes may have died)
+    this.recalculateOngoingEffects();
+
     // Clear combat state
     this.state.declaredAttackers.clear();
     this.state.blockingAssignments.clear();
@@ -595,6 +601,79 @@ export class GameRoom extends Room<GameState> {
         }
       }
     }
+  }
+
+  // ─── ONGOING EFFECTS (ECHO AURAS) ─────────────────────
+
+  /** Recalculate all ongoing buff effects from echoes on the battlefield. */
+  private recalculateOngoingEffects() {
+    this.state.players.forEach((player) => {
+      // Sum friendly ongoing buffs from this player's echoes
+      let buffAttack = 0;
+      let buffHealth = 0;
+
+      player.battlefield.forEach((card) => {
+        if (card.cardType !== "echo") return;
+        const def = this.findDefinition(card);
+        if (!def || !("effect" in def) || !def.effect) return;
+        if (def.effect.type !== "ongoing" || def.effect.action.type !== "buff") return;
+        if (def.effect.action.target === "all_friendly") {
+          buffAttack += def.effect.action.attack;
+          buffHealth += def.effect.action.health;
+        }
+      });
+
+      // Sum debuffs from opponent's echoes targeting "all_enemy"
+      const opponent = this.getOpponent(player.sessionId);
+      if (opponent) {
+        opponent.battlefield.forEach((card) => {
+          if (card.cardType !== "echo") return;
+          const def = this.findDefinition(card);
+          if (!def || !("effect" in def) || !def.effect) return;
+          if (def.effect.type !== "ongoing" || def.effect.action.type !== "buff") return;
+          if (def.effect.action.target === "all_enemy") {
+            buffAttack += def.effect.action.attack;
+            buffHealth += def.effect.action.health;
+          }
+        });
+      }
+
+      // Apply to all summonings
+      player.battlefield.forEach((card) => {
+        if (card.cardType !== "summoning") return;
+        const damageTaken = card.maxHealth - card.health;
+        card.attack = Math.max(0, card.baseAttack + buffAttack);
+        card.maxHealth = Math.max(1, card.baseHealth + buffHealth);
+        card.health = Math.max(0, card.maxHealth - damageTaken);
+      });
+    });
+
+    // Clean up summonings killed by buff removal
+    this.state.players.forEach((player) => {
+      const dead: Card[] = [];
+      for (let i = player.battlefield.length - 1; i >= 0; i--) {
+        const card = player.battlefield.at(i);
+        if (!card || card.cardType !== "summoning") continue;
+        if (card.health <= 0) {
+          dead.push(card);
+          player.battlefield.splice(i, 1);
+        }
+      }
+      for (const card of dead) {
+        for (let j = 0; j < card.attachedRuneIds.length; j++) {
+          const runeId = card.attachedRuneIds.at(j);
+          if (!runeId) continue;
+          const rune = player.runeField.find((r) => r.instanceId === runeId);
+          if (rune) rune.attachedToId = "";
+        }
+        card.attachedRuneIds.clear();
+        this.handleOnDeathEffect(card, player);
+        player.graveyard.push(card);
+      }
+      if (dead.length > 0) {
+        this.sacrificeRunelessSummonings(player);
+      }
+    });
   }
 
   // ─── EFFECTS ───────────────────────────────────────────
@@ -863,6 +942,8 @@ export class GameRoom extends Room<GameState> {
       card.attack = def.attack;
       card.health = def.health;
       card.maxHealth = def.health;
+      card.baseAttack = def.attack;
+      card.baseHealth = def.health;
       card.spellName = def.spellName;
       card.abilities = def.abilities;
       card.description = def.description || "";
