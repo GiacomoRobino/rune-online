@@ -102,20 +102,24 @@ export class GameRoom extends Room<GameState> {
   private startGame() {
     this.state.phase = "playing";
     this.state.turnNumber = 1;
-    this.state.isFirstTurn = true;
 
     // Random first player
     const firstPlayerIndex = Math.floor(Math.random() * 2);
     this.state.currentTurn = this.playerOrder[firstPlayerIndex];
 
-    // Both players: draw 3 from Chaos deck, allow 3 rune writes
+    // Both players: draw 3 from Chaos deck
     this.state.players.forEach((player) => {
       for (let i = 0; i < STARTING_HAND_SIZE; i++) {
         this.drawChaosCard(player);
       }
-      player.runesWrittenThisTurn = 0;
-      player.maxRuneWritesThisTurn = STARTING_RUNES;
     });
+
+    // First player gets 3 starting rune writes
+    const firstPlayer = this.state.players.get(this.state.currentTurn);
+    if (firstPlayer) {
+      firstPlayer.runesWrittenThisTurn = 0;
+      firstPlayer.maxRuneWritesThisTurn = STARTING_RUNES;
+    }
 
     this.state.turnPhase = "main";
     this.state.turnStartTime = new Date().toISOString();
@@ -145,9 +149,9 @@ export class GameRoom extends Room<GameState> {
     // Draw 1 from Chaos deck
     this.drawChaosCard(currentPlayer);
 
-    // Allow 1 rune write this turn (player chooses)
+    // Allow rune writes: 3 on player's first turn, 1 otherwise
     currentPlayer.runesWrittenThisTurn = 0;
-    currentPlayer.maxRuneWritesThisTurn = 1;
+    currentPlayer.maxRuneWritesThisTurn = this.state.turnNumber <= 2 ? STARTING_RUNES : 1;
 
     this.state.turnPhase = "main";
     this.state.turnStartTime = new Date().toISOString();
@@ -163,7 +167,6 @@ export class GameRoom extends Room<GameState> {
     const nextIndex = (currentIndex + 1) % 2;
     this.state.currentTurn = this.playerOrder[nextIndex];
     this.state.turnNumber++;
-    this.state.isFirstTurn = false;
 
     this.startTurn();
   }
@@ -176,8 +179,8 @@ export class GameRoom extends Room<GameState> {
     const player = this.state.players.get(client.sessionId);
     if (!player) return;
 
-    // On first turn both players can write; on later turns only current player
-    if (!this.state.isFirstTurn && this.state.currentTurn !== client.sessionId) return;
+    // Only current player can write runes
+    if (this.state.currentTurn !== client.sessionId) return;
 
     // Check write allowance
     if (player.runesWrittenThisTurn >= player.maxRuneWritesThisTurn) return;
