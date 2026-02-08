@@ -320,7 +320,7 @@ export class GameRoom extends Room<GameState> {
 
   // ─── MEMORY PLAY ───────────────────────────────────────
 
-  private handlePlayMemory(client: Client, message: { cardId: string; targetId?: string }) {
+  private handlePlayMemory(client: Client, message: { cardId: string; runeIds: string[]; targetId?: string }) {
     if (this.state.phase !== "playing") return;
     if (this.state.currentTurn !== client.sessionId) return;
     if (this.state.turnPhase !== "main") return;
@@ -333,6 +333,21 @@ export class GameRoom extends Room<GameState> {
 
     const card = player.hand.at(cardIndex);
     if (!card || card.cardType !== "memory") return;
+
+    // Validate rune spelling
+    if (!this.validateRuneSpelling(player, card.spellName, message.runeIds)) return;
+
+    // Cancel (remove) selected runes from rune field
+    for (const runeId of message.runeIds) {
+      this.detachRuneFromCurrent(player, runeId);
+      const runeIndex = player.runeField.findIndex((r) => r.instanceId === runeId);
+      if (runeIndex !== -1) {
+        player.runeField.splice(runeIndex, 1);
+      }
+    }
+
+    // Rune removal may orphan summonings
+    this.sacrificeRunelessSummonings(player);
 
     // Remove from hand
     player.hand.splice(cardIndex, 1);
@@ -952,6 +967,7 @@ export class GameRoom extends Room<GameState> {
       card.description = def.description;
       card.abilities = def.abilities;
     } else if (def.type === "memory") {
+      card.spellName = def.spellName;
       card.description = def.description;
     } else if (def.type === "rune") {
       card.letter = def.letter;

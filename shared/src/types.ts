@@ -46,6 +46,7 @@ export interface MemoryDefinition {
   id: string;
   name: string;
   type: "memory";
+  spellName: string;
   description: string;
   effect: CardEffect;
 }
@@ -87,7 +88,7 @@ export type ClientMessage =
   | { type: "write_rune"; runeId: string }
   | { type: "summon"; cardId: string; runeIds: string[] }
   | { type: "play_echo"; cardId: string; runeIds: string[] }
-  | { type: "play_memory"; cardId: string; targetId?: string }
+  | { type: "play_memory"; cardId: string; runeIds: string[]; targetId?: string }
   | { type: "attach_rune"; runeId: string; targetId: string }
   | { type: "declare_attackers"; attackerIds: string[] }
   | { type: "declare_blockers"; assignments: string[] } // "blockerId:attackerId" pairs

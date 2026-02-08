@@ -189,9 +189,9 @@ export function useColyseus() {
     room.send("play_echo", { cardId, runeIds });
   }, [room]);
 
-  const playMemory = useCallback((cardId: string, targetId?: string) => {
+  const playMemory = useCallback((cardId: string, runeIds: string[], targetId?: string) => {
     if (!room) return;
-    room.send("play_memory", { cardId, targetId });
+    room.send("play_memory", { cardId, runeIds, targetId });
   }, [room]);
 
   const attachRune = useCallback((runeId: string, targetId: string) => {

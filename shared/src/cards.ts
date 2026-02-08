@@ -22,11 +22,11 @@ export const SUMMONING_POOL: SummoningDefinition[] = [
 
 // --- MEMORY POOL ---
 export const MEMORY_POOL: MemoryDefinition[] = [
-  { id: "mem_bolt", name: "Bolt", type: "memory", description: "Deal 3 damage to any target.",
+  { id: "mem_bolt", name: "Bolt", type: "memory", spellName: "BOLT", description: "Deal 3 damage to any target.",
     effect: { type: "instant", action: { type: "damage", amount: 3, target: "any" } } },
-  { id: "mem_mend", name: "Mend", type: "memory", description: "Restore 4 health to your hero.",
+  { id: "mem_mend", name: "Mend", type: "memory", spellName: "MEND", description: "Restore 4 health to your hero.",
     effect: { type: "instant", action: { type: "heal", amount: 4, target: "self" } } },
-  { id: "mem_insight", name: "Insight", type: "memory", description: "Draw 2 cards from your Chaos deck.",
+  { id: "mem_insight", name: "Insight", type: "memory", spellName: "INSIGHT", description: "Draw 2 cards from your Chaos deck.",
     effect: { type: "instant", action: { type: "draw", amount: 2 } } },
 ];
 
@@ -102,7 +102,7 @@ const TEST_SUMMONING: SummoningDefinition = {
 };
 
 const TEST_MEMORY: MemoryDefinition = {
-  id: "mem_tara", name: "Tara", type: "memory", description: "Draw 1 card from your Chaos deck.",
+  id: "mem_tara", name: "Tara", type: "memory", spellName: "TARA", description: "Draw 1 card from your Chaos deck.",
   effect: { type: "instant", action: { type: "draw", amount: 1 } },
 };
 

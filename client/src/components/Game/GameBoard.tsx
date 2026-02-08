@@ -8,7 +8,8 @@ type InteractionMode =
   | { type: "idle" }
   | { type: "summoning"; card: CardState; selectedRuneIds: string[] }
   | { type: "echo"; card: CardState; selectedRuneIds: string[] }
-  | { type: "targeting_memory"; card: CardState }
+  | { type: "memory"; card: CardState; selectedRuneIds: string[] }
+  | { type: "targeting_memory"; card: CardState; selectedRuneIds: string[] }
   | { type: "declare_attack"; selectedAttackerIds: string[] }
   | { type: "declare_block"; assignments: Map<string, string> }; // blockerId -> attackerId
 
@@ -25,7 +26,7 @@ interface GameBoardProps {
   onWriteRune: (runeId: string) => void;
   onSummon: (cardId: string, runeIds: string[]) => void;
   onPlayEcho: (cardId: string, runeIds: string[]) => void;
-  onPlayMemory: (cardId: string, targetId?: string) => void;
+  onPlayMemory: (cardId: string, runeIds: string[], targetId?: string) => void;
   onDeclareAttackers: (attackerIds: string[]) => void;
   onDeclareBlockers: (assignments: string[]) => void;
   onEndTurn: () => void;
@@ -105,21 +106,18 @@ export function GameBoard({
         selectedRuneIds: [],
       });
     } else if (card.cardType === "memory") {
-      // Check if memory needs a target
-      const needsTarget = card.description.toLowerCase().includes("any target") ||
-        card.description.toLowerCase().includes("damage");
-      if (needsTarget) {
-        setMode({ type: "targeting_memory", card });
-      } else {
-        onPlayMemory(card.instanceId);
-        setMode({ type: "idle" });
-      }
+      // Start memory rune selection flow
+      setMode({
+        type: "memory",
+        card,
+        selectedRuneIds: [],
+      });
     }
   };
 
-  // --- Rune click in summoning mode ---
+  // --- Rune click in summoning/echo/memory mode ---
   const handleRuneClick = (rune: CardState) => {
-    if (mode.type !== "summoning" && mode.type !== "echo") return;
+    if (mode.type !== "summoning" && mode.type !== "echo" && mode.type !== "memory") return;
     if (rune.etchingCounters > 0) return;
 
     const ids = [...mode.selectedRuneIds];
@@ -132,12 +130,22 @@ export function GameBoard({
     setMode({ ...mode, selectedRuneIds: ids });
   };
 
-  // --- Confirm summoning/echo ---
+  // --- Confirm summoning/echo/memory ---
   const handleConfirmSummon = () => {
     if (mode.type === "summoning") {
       onSummon(mode.card.instanceId, mode.selectedRuneIds);
     } else if (mode.type === "echo") {
       onPlayEcho(mode.card.instanceId, mode.selectedRuneIds);
+    } else if (mode.type === "memory") {
+      // Check if memory needs a target
+      const needsTarget = mode.card.description.toLowerCase().includes("any target") ||
+        mode.card.description.toLowerCase().includes("damage");
+      if (needsTarget) {
+        setMode({ type: "targeting_memory", card: mode.card, selectedRuneIds: mode.selectedRuneIds });
+        return;
+      } else {
+        onPlayMemory(mode.card.instanceId, mode.selectedRuneIds);
+      }
     }
     setMode({ type: "idle" });
   };
@@ -145,7 +153,7 @@ export function GameBoard({
   // --- Memory targeting ---
   const handleMemoryTarget = (targetId: string) => {
     if (mode.type !== "targeting_memory") return;
-    onPlayMemory(mode.card.instanceId, targetId);
+    onPlayMemory(mode.card.instanceId, mode.selectedRuneIds, targetId);
     setMode({ type: "idle" });
   };
 
@@ -232,7 +240,7 @@ export function GameBoard({
 
   // Check if a card can be played (has available runes to spell it)
   const canSpellCard = (card: CardState) => {
-    if (card.cardType !== "summoning" && card.cardType !== "echo") return card.cardType === "memory";
+    if (card.cardType !== "summoning" && card.cardType !== "echo" && card.cardType !== "memory") return false;
     const needed = card.spellName.split("").sort();
     const available = myPlayer.runeField
       .filter((r) => r.etchingCounters === 0)
@@ -249,10 +257,10 @@ export function GameBoard({
   };
 
   // Compute remainingNeeded once from ALL runes for correct highlighting
-  const isSummoning = mode.type === "summoning" || mode.type === "echo";
-  const selectedRuneIds = isSummoning ? mode.selectedRuneIds : [];
+  const isSpelling = mode.type === "summoning" || mode.type === "echo" || mode.type === "memory";
+  const selectedRuneIds = isSpelling ? mode.selectedRuneIds : [];
   const remainingNeeded = (() => {
-    if (!isSummoning) return [];
+    if (!isSpelling) return [];
     const needed = [...mode.card.spellName.split("")];
     for (const id of mode.selectedRuneIds) {
       const rune = myPlayer.runeField.find((r) => r.instanceId === id);
@@ -273,10 +281,10 @@ export function GameBoard({
   const myUnattachedRunes = getUnattachedRunes(myPlayer);
   const opponentUnattachedRunes = getUnattachedRunes(opponent);
 
-  // Helper: is a rune available for summoning selection?
+  // Helper: is a rune available for spelling selection?
   const isRuneAvailable = (rune: CardState) => {
     if (rune.etchingCounters > 0) return false;
-    if (!isSummoning) return false;
+    if (!isSpelling) return false;
     if (selectedRuneIds.includes(rune.instanceId)) return true;
     return remainingNeeded.includes(rune.letter);
   };
@@ -445,7 +453,7 @@ export function GameBoard({
               runes={myUnattachedRunes}
               selectedRuneIds={selectedRuneIds}
               onRuneClick={handleRuneClick}
-              isSummoningMode={isSummoning}
+              isSummoningMode={isSpelling}
               remainingLetters={remainingNeeded}
               label="Free Runes"
               layout="vertical"
@@ -454,8 +462,8 @@ export function GameBoard({
         </div>
       </div>
 
-      {/* Spell name checker (when summoning/echo) */}
-      {(mode.type === "summoning" || mode.type === "echo") && (
+      {/* Spell name checker (when summoning/echo/memory) */}
+      {(mode.type === "summoning" || mode.type === "echo" || mode.type === "memory") && (
         <SpellNameChecker
           spellName={mode.card.spellName}
           selectedRunes={mode.selectedRuneIds
@@ -533,7 +541,7 @@ export function GameBoard({
               onClick={() => handleCardInHandClick(card)}
               isPlayable={isMyTurn && turnPhase === "main" && canSpellCard(card)}
               isSelected={
-                (mode.type === "summoning" || mode.type === "echo") &&
+                (mode.type === "summoning" || mode.type === "echo" || mode.type === "memory") &&
                 mode.card.instanceId === card.instanceId
               }
               isInHand
