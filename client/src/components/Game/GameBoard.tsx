@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card } from "../Card/Card";
 import { RuneField } from "./RuneField";
+import { RuneLinks } from "./RuneLinks";
 import { SpellNameChecker } from "./SpellNameChecker";
 import { PlayerState, CardState } from "../../hooks/useColyseus";
 
@@ -546,10 +547,12 @@ export function GameBoard({
 
       {/* My hand */}
       <div className="flex justify-center gap-2 mb-2">
-        {myPlayer.hand.map((card) => (
+        {myPlayer.hand.map((card) => {
+          const isSelectedInHand = isSpelling && mode.card.instanceId === card.instanceId;
+          return (
           <div
             key={card.instanceId}
-            className="transform hover:-translate-y-2 transition-transform"
+            className={`transform transition-transform ${isSelectedInHand ? "-translate-y-2" : "hover:-translate-y-2"}`}
           >
             <Card
               card={card}
@@ -562,7 +565,8 @@ export function GameBoard({
               isInHand
             />
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* My info + action buttons */}
@@ -684,6 +688,11 @@ export function GameBoard({
           </div>
         );
       })()}
+
+      {/* Rune-to-card visual links */}
+      {isSpelling && selectedRuneIds.length > 0 && (
+        <RuneLinks selectedRuneIds={selectedRuneIds} targetCardId={mode.card.instanceId} />
+      )}
     </div>
   );
 }

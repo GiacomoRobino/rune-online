@@ -82,6 +82,7 @@ function SummoningCard({
 
   return (
     <div
+      data-card-instance-id={card.instanceId}
       className={`
         w-24 h-36 rounded-lg relative cursor-pointer transition-all duration-200
         parchment border-2 border-stone-700 shadow-card
@@ -178,6 +179,7 @@ function RuneCard({
 
   return (
     <div
+      data-card-instance-id={card.instanceId}
       className={`
         w-14 h-20 rounded-lg relative cursor-pointer transition-all duration-200
         ${isSelected ? "scale-110" : ""}
@@ -218,6 +220,7 @@ function MemoryCard({
 
   return (
     <div
+      data-card-instance-id={card.instanceId}
       className={`
         w-24 h-36 rounded-lg relative cursor-pointer transition-all duration-200
         ${isPlayable ? "hover:scale-105" : ""}
@@ -268,6 +271,7 @@ function EchoCard({
 
   return (
     <div
+      data-card-instance-id={card.instanceId}
       className={`
         w-24 h-36 rounded-lg relative cursor-pointer transition-all duration-200
         ${isSelected ? "scale-105" : ""}
