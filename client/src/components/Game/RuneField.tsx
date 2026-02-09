@@ -48,15 +48,15 @@ export function RuneField({
   return (
     <div className="w-full">
       {label && (
-        <div className="text-gray-400 text-xs mb-1">{label}</div>
+        <div className="text-gold-dim text-xs mb-1 font-medieval">{label}</div>
       )}
       <div className={`${
         layout === "vertical"
-          ? "flex flex-col gap-1 overflow-y-auto bg-gray-900/30 rounded p-2"
-          : "flex flex-wrap gap-1 min-h-[28px] bg-gray-900/30 rounded p-2"
+          ? "flex flex-col gap-1 overflow-y-auto bg-stone-900/40 border border-stone-700/30 rounded p-2"
+          : "flex flex-wrap gap-1 min-h-[28px] bg-stone-900/40 border border-stone-700/30 rounded p-2"
       }`}>
         {runes.length === 0 && (
-          <div className="text-gray-600 text-xs">No runes</div>
+          <div className="text-stone-500 text-xs font-body italic">No runes</div>
         )}
         {runes.map((rune) => (
           <Card

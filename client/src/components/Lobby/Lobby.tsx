@@ -18,17 +18,17 @@ export function Lobby({ onJoin, connectionState, error }: LobbyProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="bg-gray-800/80 backdrop-blur rounded-xl p-8 w-full max-w-md shadow-2xl">
-        <h1 className="text-4xl font-bold text-center text-white mb-2">
+      <div className="stone-panel ornate-border rounded-xl p-8 w-full max-w-md">
+        <h1 className="text-4xl font-bold text-center text-gold-glow font-medieval-decorative mb-2">
           Rune Online
         </h1>
-        <p className="text-gray-400 text-center mb-8">
+        <p className="text-parchment-muted text-center mb-8 font-body italic">
           A multiplayer card game
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="nickname" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="nickname" className="block text-sm font-medium text-parchment-muted mb-2 font-medieval">
               Enter your nickname
             </label>
             <input
@@ -37,20 +37,20 @@ export function Lobby({ onJoin, connectionState, error }: LobbyProps) {
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               placeholder="Player name..."
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-stone-850 border border-stone-600 rounded-lg text-parchment-light placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-gold-dark focus:border-gold-dark font-body"
               disabled={connectionState === "connecting"}
               maxLength={20}
             />
           </div>
 
           {error && (
-            <div className="text-red-400 text-sm text-center">{error}</div>
+            <div className="text-blood-light text-sm text-center font-body">{error}</div>
           )}
 
           <button
             type="submit"
             disabled={!nickname.trim() || connectionState === "connecting"}
-            className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-semibold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 btn-stone rounded-lg text-sm"
           >
             {connectionState === "connecting" ? (
               <span className="flex items-center justify-center gap-2">
@@ -66,7 +66,7 @@ export function Lobby({ onJoin, connectionState, error }: LobbyProps) {
           </button>
         </form>
 
-        <div className="mt-8 text-center text-gray-500 text-sm">
+        <div className="mt-8 text-center text-stone-500 text-sm font-body">
           <p>Open this page in another tab to test multiplayer</p>
         </div>
       </div>

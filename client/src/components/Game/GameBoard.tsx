@@ -61,14 +61,16 @@ export function GameBoard({
     const didWin = winner === mySessionId;
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-gray-800/90 backdrop-blur rounded-xl p-8 text-center">
-          <h1 className={`text-5xl font-bold mb-4 ${didWin ? "text-green-400" : "text-red-400"}`}>
+        <div className="stone-panel ornate-border rounded-xl p-8 text-center">
+          <h1 className={`text-5xl font-bold mb-4 font-medieval-decorative ${didWin ? "text-gold-glow" : "text-blood-light"}`}
+            style={didWin ? { textShadow: '0 0 20px rgba(201,168,76,0.6)' } : { textShadow: '0 0 20px rgba(139,0,0,0.6)' }}
+          >
             {didWin ? "Victory!" : "Defeat"}
           </h1>
-          <p className="text-gray-300 mb-6">
+          <p className="text-parchment-muted mb-6 font-body text-lg">
             {didWin ? "Congratulations, you won!" : "Better luck next time!"}
           </p>
-          <button onClick={onLeave} className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-semibold">
+          <button onClick={onLeave} className="px-6 py-3 btn-stone rounded-lg text-sm">
             Play Again
           </button>
         </div>
@@ -80,10 +82,10 @@ export function GameBoard({
   if (phase === "waiting") {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-gray-800/90 backdrop-blur rounded-xl p-8 text-center">
+        <div className="stone-panel ornate-border rounded-xl p-8 text-center">
           <div className="animate-pulse">
-            <h2 className="text-2xl text-white mb-4">Waiting for opponent...</h2>
-            <p className="text-gray-400">Share this page to play with a friend</p>
+            <h2 className="text-2xl text-gold font-medieval mb-4">Waiting for opponent...</h2>
+            <p className="text-parchment-muted font-body">Share this page to play with a friend</p>
           </div>
         </div>
       </div>
@@ -295,16 +297,24 @@ export function GameBoard({
     turnPhase === "declare_blockers" ? "Blocking Phase" :
     turnPhase === "combat_damage" ? "Combat!" : turnPhase;
 
+  const bannerClip = { clipPath: 'polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%)' };
+
   return (
     <div className="min-h-screen flex flex-col p-3 gap-2">
       {/* Turn indicator */}
       <div className="fixed top-3 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-        <div className={`px-4 py-1.5 rounded-full font-semibold text-sm ${
-          isMyTurn ? "bg-green-600 text-white" : "bg-gray-700 text-gray-300"
-        }`}>
+        <div
+          className={`px-6 py-1.5 font-semibold text-sm font-medieval ${
+            isMyTurn ? "btn-stone text-gold shadow-gold-glow" : "stone-panel text-stone-400"
+          }`}
+          style={bannerClip}
+        >
           {isMyTurn ? "Your Turn" : "Opponent's Turn"} - Turn {turnNumber}
         </div>
-        <div className="px-3 py-1.5 rounded-full bg-gray-800 text-gray-400 text-sm">
+        <div
+          className="px-5 py-1.5 stone-panel text-parchment-muted text-sm font-medieval"
+          style={bannerClip}
+        >
           {phaseLabel}
         </div>
       </div>
@@ -317,24 +327,29 @@ export function GameBoard({
         <div className="flex items-center gap-3">
           <div
             onClick={() => handleHeroClick(false)}
-            className={`w-14 h-14 rounded-full bg-gradient-to-br from-red-800 to-red-600 border-3 border-red-500 flex items-center justify-center cursor-pointer hover:border-red-400 transition-colors ${
-              mode.type === "targeting_memory" ? "ring-2 ring-yellow-400" : ""
+            className={`w-14 h-14 rounded-full flex items-center justify-center cursor-pointer transition-colors ${
+              mode.type === "targeting_memory" ? "ring-target" : ""
             }`}
+            style={{
+              background: 'linear-gradient(135deg, #8b0000, #5c0000)',
+              border: '3px solid #b22222',
+              boxShadow: '0 0 8px rgba(139,0,0,0.4)',
+            }}
           >
-            <span className="text-white font-bold">{opponent.health}</span>
+            <span className="text-parchment-light font-bold font-medieval">{opponent.health}</span>
           </div>
           <div>
-            <p className="text-white font-semibold text-sm">{opponent.nickname}</p>
-            <p className="text-gray-400 text-xs">
+            <p className="text-parchment font-medieval text-sm">{opponent.nickname}</p>
+            <p className="text-stone-400 text-xs font-body">
               Chaos: {opponent.chaosDeck.length} | Runes: {opponent.runesDeck.length}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-gray-400 text-xs">
+        <div className="flex items-center gap-2 text-stone-400 text-xs font-body">
           <span>Hand: {opponent.hand.length}</span>
           <button
             onClick={() => setShowGraveyard("opponent")}
-            className="flex items-center gap-1 px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded btn-stone text-xs"
           >
             <span>&#x1F480;</span> {opponent.graveyard.length}
           </button>
@@ -355,9 +370,9 @@ export function GameBoard({
         {/* Battlefield area */}
         <div className="flex-1 flex flex-col">
           {/* Opponent creatures with attached runes below */}
-          <div className="flex justify-center gap-4 flex-wrap min-h-[150px] bg-gray-900/30 rounded-lg p-3 items-start">
+          <div className="flex justify-center gap-4 flex-wrap min-h-[150px] stone-panel rounded-lg p-3 items-start">
             {opponent.battlefield.length === 0 ? (
-              <div className="text-gray-600 flex items-center text-sm self-center">No creatures</div>
+              <div className="text-stone-500 flex items-center text-sm self-center font-body italic">No creatures</div>
             ) : (
               opponent.battlefield.map((card) => (
                 <div key={card.instanceId} className="flex flex-col items-center gap-1">
@@ -382,12 +397,12 @@ export function GameBoard({
           </div>
 
           {/* Horizontal divider */}
-          <div className="border-t border-gray-700 my-1" />
+          <div className="divider-ornate my-1" />
 
           {/* My creatures with attached runes below */}
-          <div className="flex justify-center gap-4 flex-wrap min-h-[150px] bg-gray-900/30 rounded-lg p-3 items-start">
+          <div className="flex justify-center gap-4 flex-wrap min-h-[150px] stone-panel rounded-lg p-3 items-start">
             {myPlayer.battlefield.length === 0 ? (
-              <div className="text-gray-600 flex items-center text-sm self-center">Summon creatures here</div>
+              <div className="text-stone-500 flex items-center text-sm self-center font-body italic">Summon creatures here</div>
             ) : (
               myPlayer.battlefield.map((card) => (
                 <div key={card.instanceId} className="flex flex-col items-center gap-1">
@@ -429,7 +444,7 @@ export function GameBoard({
         </div>
 
         {/* Vertical divider */}
-        <div className="border-l border-gray-700 mx-2" />
+        <div className="mx-2 w-px" style={{ background: 'linear-gradient(180deg, transparent 0%, #c9a84c 30%, #c9a84c 70%, transparent 100%)' }} />
 
         {/* Unattached runes column */}
         <div className="w-24 flex flex-col">
@@ -445,7 +460,7 @@ export function GameBoard({
           </div>
 
           {/* Horizontal divider */}
-          <div className="border-t border-gray-700 my-1" />
+          <div className="divider-ornate my-1" />
 
           {/* My unattached runes */}
           <div className="flex-1 min-h-[150px]">
@@ -477,11 +492,11 @@ export function GameBoard({
 
       {/* Targeting indicator */}
       {mode.type === "targeting_memory" && (
-        <div className="bg-yellow-900/50 border border-yellow-600 rounded-lg p-2 text-center text-yellow-300 text-sm">
+        <div className="stone-panel metal-border rounded-lg p-2 text-center text-gold text-sm font-medieval">
           Select a target for {mode.card.name}
           <button
             onClick={() => setMode({ type: "idle" })}
-            className="ml-3 px-2 py-0.5 bg-gray-600 hover:bg-gray-500 text-white rounded text-xs"
+            className="ml-3 px-2 py-0.5 btn-stone rounded text-xs"
           >
             Cancel
           </button>
@@ -490,8 +505,8 @@ export function GameBoard({
 
       {/* Rune deck picker (when player has writes remaining) */}
       {myPlayer.runesWrittenThisTurn < myPlayer.maxRuneWritesThisTurn && myPlayer.runesDeck.length > 0 && (
-        <div className="bg-indigo-950/50 border border-indigo-600 rounded-lg p-3">
-          <div className="text-indigo-300 text-sm mb-2 font-semibold">
+        <div className="stone-panel metal-border rounded-lg p-3">
+          <div className="text-gold text-sm mb-2 font-medieval">
             Choose a rune to write ({myPlayer.maxRuneWritesThisTurn - myPlayer.runesWrittenThisTurn} remaining)
           </div>
           <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
@@ -511,16 +526,16 @@ export function GameBoard({
                     <button
                       key={key}
                       onClick={() => onWriteRune(rune.instanceId)}
-                      className={`
-                        w-10 h-14 rounded flex flex-col items-center justify-center cursor-pointer
-                        transition-all hover:scale-110 border-2
-                        ${rune.runeType === "blood" ? "bg-red-900 border-red-500 hover:bg-red-800" :
-                          rune.runeType === "stone" ? "bg-gray-700 border-gray-400 hover:bg-gray-600" :
-                          "bg-indigo-900 border-white hover:bg-indigo-800"}
-                      `}
+                      className="w-10 h-14 rounded flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-110"
+                      style={{
+                        background: rune.runeType === "blood" ? 'linear-gradient(135deg, #5c0000, #3a0000)' :
+                          rune.runeType === "stone" ? 'linear-gradient(135deg, #4a3c30, #2a2018)' :
+                          'linear-gradient(135deg, #1e170f, #14100a)',
+                        border: `2px solid ${rune.runeType === "blood" ? '#8b0000' : rune.runeType === "stone" ? '#6b5c4e' : '#4a3c30'}`,
+                      }}
                     >
-                      <span className="text-white font-bold text-lg">{rune.letter}</span>
-                      <span className="text-gray-300 text-[8px]">x{runes.length}</span>
+                      <span className="text-gold font-bold text-lg font-medieval">{rune.letter}</span>
+                      <span className="text-stone-400 text-[8px] font-body">x{runes.length}</span>
                     </button>
                   );
                 });
@@ -555,19 +570,24 @@ export function GameBoard({
         <div className="flex items-center gap-3">
           <div
             onClick={() => handleHeroClick(true)}
-            className="w-14 h-14 rounded-full bg-gradient-to-br from-green-800 to-green-600 border-3 border-green-500 flex items-center justify-center"
+            className="w-14 h-14 rounded-full flex items-center justify-center cursor-pointer"
+            style={{
+              background: 'linear-gradient(135deg, #2d5a27, #1a3a15)',
+              border: '3px solid #3d7a35',
+              boxShadow: '0 0 6px rgba(61,122,53,0.3)',
+            }}
           >
-            <span className="text-white font-bold">{myPlayer.health}</span>
+            <span className="text-parchment-light font-bold font-medieval">{myPlayer.health}</span>
           </div>
           <div>
-            <p className="text-white font-semibold text-sm">{myPlayer.nickname}</p>
-            <p className="text-gray-400 text-xs">
+            <p className="text-parchment font-medieval text-sm">{myPlayer.nickname}</p>
+            <p className="text-stone-400 text-xs font-body">
               Chaos: {myPlayer.chaosDeck.length} | Runes: {myPlayer.runesDeck.length}
             </p>
           </div>
           <button
             onClick={() => setShowGraveyard("mine")}
-            className="flex items-center gap-1 px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded btn-stone text-xs"
           >
             <span>&#x1F480;</span> {myPlayer.graveyard.length}
           </button>
@@ -578,7 +598,7 @@ export function GameBoard({
           {isMyTurn && turnPhase === "main" && mode.type === "idle" && (
             <button
               onClick={enterAttackMode}
-              className="px-4 py-2 bg-red-700 hover:bg-red-600 text-white rounded-lg font-semibold text-sm transition-colors"
+              className="px-4 py-2 btn-blood rounded-lg text-sm"
             >
               Attack
             </button>
@@ -589,17 +609,17 @@ export function GameBoard({
             <div className="flex gap-2">
               <button
                 onClick={() => setMode({ type: "idle" })}
-                className="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm"
+                className="px-3 py-2 btn-stone rounded-lg text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmAttackers}
                 disabled={mode.selectedAttackerIds.length === 0}
-                className={`px-4 py-2 rounded-lg font-semibold text-sm ${
+                className={`px-4 py-2 rounded-lg text-sm ${
                   mode.selectedAttackerIds.length > 0
-                    ? "bg-red-600 hover:bg-red-500 text-white"
-                    : "bg-gray-700 text-gray-500 cursor-not-allowed"
+                    ? "btn-blood"
+                    : "btn-stone opacity-50"
                 }`}
               >
                 Confirm Attackers ({mode.selectedAttackerIds.length})
@@ -611,7 +631,7 @@ export function GameBoard({
           {isBlockingPhase && mode.type === "declare_block" && (
             <button
               onClick={confirmBlockers}
-              className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-semibold text-sm transition-colors"
+              className="px-4 py-2 btn-stone rounded-lg text-sm"
             >
               Confirm Blockers ({mode.assignments.size})
             </button>
@@ -621,7 +641,7 @@ export function GameBoard({
           {isMyTurn && turnPhase === "main" && mode.type === "idle" && (
             <button
               onClick={onEndTurn}
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-semibold text-sm transition-colors"
+              className="px-4 py-2 btn-stone rounded-lg text-sm"
             >
               End Turn
             </button>
@@ -635,24 +655,24 @@ export function GameBoard({
         const title = showGraveyard === "mine" ? "Your Graveyard" : "Opponent's Graveyard";
         return (
           <div
-            className="fixed inset-0 z-20 bg-black/60 flex items-center justify-center"
+            className="fixed inset-0 z-20 bg-black/70 flex items-center justify-center"
             onClick={() => setShowGraveyard(null)}
           >
             <div
-              className="bg-gray-800 rounded-xl p-4 max-w-3xl max-h-[80vh] overflow-y-auto"
+              className="stone-panel ornate-border rounded-xl p-4 max-w-3xl max-h-[80vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-white font-semibold text-lg">{title} ({cards.length})</h2>
+                <h2 className="text-parchment font-medieval text-lg">{title} ({cards.length})</h2>
                 <button
                   onClick={() => setShowGraveyard(null)}
-                  className="px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded text-sm"
+                  className="px-3 py-1 btn-stone rounded text-sm"
                 >
                   Close
                 </button>
               </div>
               {cards.length === 0 ? (
-                <p className="text-gray-400 text-sm text-center py-8">No cards in graveyard</p>
+                <p className="text-stone-400 text-sm text-center py-8 font-body italic">No cards in graveyard</p>
               ) : (
                 <div className="flex flex-wrap gap-3 justify-center">
                   {cards.map((card) => (

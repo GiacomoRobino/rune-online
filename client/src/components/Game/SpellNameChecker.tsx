@@ -26,8 +26,8 @@ export function SpellNameChecker({
   const isComplete = remaining.length === 0 && provided.length === needed.length;
 
   return (
-    <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 flex items-center gap-3">
-      <div className="text-gray-400 text-sm">Spell:</div>
+    <div className="stone-panel metal-border rounded-lg p-3 flex items-center gap-3">
+      <div className="text-gold-dim text-sm font-medieval">Spell:</div>
       <div className="flex gap-1">
         {needed.map((letter, i) => {
           // Check if this letter slot is filled
@@ -43,10 +43,11 @@ export function SpellNameChecker({
             <div
               key={i}
               className={`
-                w-8 h-8 rounded flex items-center justify-center font-bold text-lg
-                ${isFilled ? "bg-green-700 text-green-200" : "bg-gray-700 text-gray-400"}
-                border ${isFilled ? "border-green-500" : "border-gray-500"}
+                w-8 h-8 rounded flex items-center justify-center font-bold text-lg font-medieval
+                ${isFilled ? "text-gold border-gold-dark shadow-metal" : "text-stone-500 border-stone-600 shadow-stone-inset"}
+                border
               `}
+              style={isFilled ? { background: 'linear-gradient(135deg, #2a2018, #1e170f)' } : { background: '#14100a' }}
             >
               {letter}
             </div>
@@ -56,7 +57,7 @@ export function SpellNameChecker({
       <div className="flex gap-2 ml-auto">
         <button
           onClick={onCancel}
-          className="px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded text-sm"
+          className="px-3 py-1 btn-stone rounded text-sm"
         >
           Cancel
         </button>
@@ -65,8 +66,8 @@ export function SpellNameChecker({
           disabled={!isComplete}
           className={`px-3 py-1 rounded text-sm font-semibold ${
             isComplete
-              ? "bg-green-600 hover:bg-green-500 text-white"
-              : "bg-gray-700 text-gray-500 cursor-not-allowed"
+              ? "btn-stone shadow-gold-glow"
+              : "btn-stone opacity-50"
           }`}
         >
           Summon

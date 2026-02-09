@@ -61,15 +61,15 @@ function App() {
   // Waiting state (connected but game not started)
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="bg-gray-800/90 backdrop-blur rounded-xl p-8 text-center">
+      <div className="stone-panel ornate-border rounded-xl p-8 text-center">
         <div className="animate-pulse">
-          <h2 className="text-2xl text-white mb-4">Waiting for opponent...</h2>
-          <p className="text-gray-400 mb-4">
+          <h2 className="text-2xl text-gold font-medieval mb-4">Waiting for opponent...</h2>
+          <p className="text-parchment-muted font-body mb-4">
             Open another browser tab to test the app
           </p>
           <button
             onClick={leaveGame}
-            className="text-gray-400 hover:text-white underline"
+            className="text-stone-400 hover:text-gold underline font-medieval text-sm"
           >
             Cancel
           </button>
