@@ -98,18 +98,19 @@ export function GameBoard({
 
   // --- Hand click handlers ---
   const handleCardInHandClick = (card: CardState) => {
-    if (!isMyTurn || turnPhase !== "main") return;
     setInspectedCardId(null);
 
     if (card.cardType === "summoning" || card.cardType === "echo") {
-      // Start summoning/echo flow
+      // Sorcery speed: your turn, main phase only
+      if (!isMyTurn || turnPhase !== "main") return;
       setMode({
         type: card.cardType === "summoning" ? "summoning" : "echo",
         card,
         selectedRuneIds: [],
       });
     } else if (card.cardType === "memory") {
-      // Start memory rune selection flow
+      // Memories can be played during main phase on either turn
+      if (turnPhase !== "main") return;
       setMode({
         type: "memory",
         card,
@@ -557,7 +558,7 @@ export function GameBoard({
             <Card
               card={card}
               onClick={() => handleCardInHandClick(card)}
-              isPlayable={isMyTurn && turnPhase === "main" && canSpellCard(card)}
+              isPlayable={turnPhase === "main" && canSpellCard(card) && (isMyTurn || card.cardType === "memory")}
               isSelected={
                 (mode.type === "summoning" || mode.type === "echo" || mode.type === "memory") &&
                 mode.card.instanceId === card.instanceId

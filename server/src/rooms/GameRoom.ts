@@ -325,7 +325,6 @@ export class GameRoom extends Room<GameState> {
 
   private handlePlayMemory(client: Client, message: { cardId: string; runeIds: string[]; targetId?: string }) {
     if (this.state.phase !== "playing") return;
-    if (this.state.currentTurn !== client.sessionId) return;
     if (this.state.turnPhase !== "main") return;
 
     const player = this.state.players.get(client.sessionId);
