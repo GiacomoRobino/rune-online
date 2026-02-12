@@ -1,4 +1,8 @@
 import { SummoningDefinition, EchoDefinition, MemoryDefinition, RuneDefinition, CardDefinition } from "./types.js";
+import { card as oer } from "./cards/1/card.js";
+import { card as runeO } from "./cards/2/card.js";
+import { card as runeE } from "./cards/3/card.js";
+import { card as runeR } from "./cards/4/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -97,38 +101,19 @@ export const ECHO_POOL: EchoDefinition[] = [
 
 // --- TEST DECKS ---
 
-const TEST_SUMMONING: SummoningDefinition = {
-  id: "art", name: "Art", type: "summoning", spellName: "ART", attack: 2, health: 2, abilities: "", description: "A living artwork.",
-};
-
-const TEST_MEMORY: MemoryDefinition = {
-  id: "mem_tara", name: "Tara", type: "memory", spellName: "TARA", description: "Draw 1 card from your Chaos deck.",
-  effect: { type: "instant", action: { type: "draw", amount: 1 } },
-};
-
-const TEST_ECHO: EchoDefinition = ECHO_POOL.find((e) => e.id === "echo_arra")!;
-
 export function generateTestChaosDeck(): CardDefinition[] {
   const deck: CardDefinition[] = [];
-  // 10 copies of Art (summoning)
-  for (let i = 0; i < 10; i++) {
-    deck.push({ ...TEST_SUMMONING });
-  }
-  // 5 copies of Tara (memory)
-  for (let i = 0; i < 5; i++) {
-    deck.push({ ...TEST_MEMORY });
-  }
-  // 5 copies of Arra (echo)
-  for (let i = 0; i < 5; i++) {
-    deck.push({ ...TEST_ECHO });
+  // 20 copies of Oer (summoning)
+  for (let i = 0; i < 20; i++) {
+    deck.push({ ...oer });
   }
   return deck;
 }
 
 export function generateTestRunesDeck(): RuneDefinition[] {
   const deck: RuneDefinition[] = [];
-  const testRunes = RUNE_POOL.filter((r) => ["A", "R", "T"].includes(r.letter));
-  // 10 copies of each (A, R, T)
+  const testRunes = [runeO, runeE, runeR];
+  // 10 copies of each (O, E, R)
   for (const rune of testRunes) {
     for (let i = 0; i < 10; i++) {
       deck.push({ ...rune });

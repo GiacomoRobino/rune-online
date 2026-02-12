@@ -1,3 +1,9 @@
-let card = {
-  id: "2", type: "rune", subtype: "base", rune_type: "blood", symbol: "O"
-}
+import type { RuneDefinition } from "../../types.js";
+
+export const card: RuneDefinition = {
+  id: "2",
+  name: "Rune of O",
+  type: "rune",
+  letter: "O",
+  runeType: "blood",
+};

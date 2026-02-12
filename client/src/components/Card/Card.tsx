@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { CardState } from "../../hooks/useColyseus";
 
 interface CardProps {
@@ -68,6 +69,7 @@ function SummoningCard({
   isSelected?: boolean; isPlayable?: boolean; isAttacker?: boolean;
   isTarget?: boolean; isBlockCandidate?: boolean; isInHand?: boolean;
 }) {
+  const [imgError, setImgError] = useState(false);
   const isDamaged = card.health < card.maxHealth;
   const canAct = card.canAttack && !card.hasAttacked && !card.isTapped;
   const spellDisplay = card.spellName.split("").join("\u00B7");
@@ -103,11 +105,18 @@ function SummoningCard({
         <span className="text-stone-800 text-xs font-semibold leading-tight block truncate font-medieval">{card.name}</span>
       </div>
 
-      {/* Card art placeholder */}
-      <div className="mx-2 mt-1 h-10 bg-stone-900/50 rounded flex items-center justify-center" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6)' }}>
-        <span className="text-xl">
-          {card.attack >= 4 ? "\u2694\uFE0F" : card.health >= 4 ? "\u{1F6E1}\uFE0F" : "\u2694\uFE0F"}
-        </span>
+      {/* Card art */}
+      <div className="mx-2 mt-1 h-10 bg-stone-900/50 rounded flex items-center justify-center overflow-hidden" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6)' }}>
+        {imgError ? (
+          <span className="text-xl">{"\u2694\uFE0F"}</span>
+        ) : (
+          <img
+            src={`/cards/${card.id}/card.png`}
+            alt={card.name}
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)}
+          />
+        )}
       </div>
 
       {/* Ability badges */}
@@ -161,6 +170,7 @@ function RuneCard({
 }: {
   card: CardState; onClick?: () => void; isSelected?: boolean; isPlayable?: boolean; isHighlighted?: boolean;
 }) {
+  const [imgError, setImgError] = useState(false);
   const isEtching = card.etchingCounters > 0;
   const isAttached = card.attachedToId !== "";
 
@@ -193,7 +203,16 @@ function RuneCard({
       style={{ ...bgStyle, border: `2px solid ${borderColor}` }}
       onClick={onClick}
     >
-      <span className="text-gold font-bold text-2xl font-medieval text-embossed">{card.letter}</span>
+      {/* Background image */}
+      {!imgError && (
+        <img
+          src={`/cards/${card.id}/card.png`}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover rounded-md opacity-40"
+          onError={() => setImgError(true)}
+        />
+      )}
+      <span className="relative text-gold font-bold text-2xl font-medieval text-embossed">{card.letter}</span>
 
       {/* Etching counter badge */}
       {isEtching && (
@@ -216,6 +235,7 @@ function MemoryCard({
 }: {
   card: CardState; onClick?: () => void; isPlayable?: boolean;
 }) {
+  const [imgError, setImgError] = useState(false);
   const ringClass = isPlayable ? "ring-playable" : "";
 
   return (
@@ -243,9 +263,18 @@ function MemoryCard({
         <span className="text-parchment-light text-xs font-semibold leading-tight block truncate font-medieval">{card.name}</span>
       </div>
 
-      {/* Art placeholder */}
-      <div className="mx-2 mt-1 h-12 rounded flex items-center justify-center" style={{ background: 'rgba(74, 45, 110, 0.4)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}>
-        <span className="text-2xl">{"\u2728"}</span>
+      {/* Card art */}
+      <div className="mx-2 mt-1 h-12 rounded flex items-center justify-center overflow-hidden" style={{ background: 'rgba(74, 45, 110, 0.4)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}>
+        {imgError ? (
+          <span className="text-2xl">{"\u2728"}</span>
+        ) : (
+          <img
+            src={`/cards/${card.id}/card.png`}
+            alt={card.name}
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)}
+          />
+        )}
       </div>
 
       {/* Description */}
@@ -264,6 +293,7 @@ function EchoCard({
 }: {
   card: CardState; onClick?: () => void; isPlayable?: boolean; isSelected?: boolean;
 }) {
+  const [imgError, setImgError] = useState(false);
   const spellDisplay = card.spellName.split("").join("\u00B7");
 
   const ringClass = isSelected ? "ring-selected" :
@@ -295,9 +325,18 @@ function EchoCard({
         <span className="text-parchment-light text-xs font-semibold leading-tight block truncate font-medieval">{card.name}</span>
       </div>
 
-      {/* Art placeholder */}
-      <div className="mx-2 mt-1 h-12 rounded flex items-center justify-center" style={{ background: 'rgba(42, 92, 82, 0.4)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}>
-        <span className="text-xl">{"\u{1F300}"}</span>
+      {/* Card art */}
+      <div className="mx-2 mt-1 h-12 rounded flex items-center justify-center overflow-hidden" style={{ background: 'rgba(42, 92, 82, 0.4)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}>
+        {imgError ? (
+          <span className="text-xl">{"\u{1F300}"}</span>
+        ) : (
+          <img
+            src={`/cards/${card.id}/card.png`}
+            alt={card.name}
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)}
+          />
+        )}
       </div>
 
       {/* Description */}

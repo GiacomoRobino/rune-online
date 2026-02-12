@@ -3,7 +3,7 @@ import { ArraySchema } from "@colyseus/schema";
 import {
   GameState, Player, Card,
   generateTestChaosDeck, generateTestRunesDeck, shuffleArray,
-  SUMMONING_POOL, MEMORY_POOL, ECHO_POOL,
+  SUMMONING_POOL, MEMORY_POOL, ECHO_POOL, CARD_REGISTRY,
   type CardDefinition, type SummoningDefinition, type MemoryDefinition, type RuneDefinition, type EchoDefinition,
 } from "shared";
 
@@ -898,6 +898,8 @@ export class GameRoom extends Room<GameState> {
     if (memory) return memory;
     const echo = ECHO_POOL.find((d) => d.id === card.id);
     if (echo) return echo;
+    const registry = CARD_REGISTRY.find((d) => d.id === card.id);
+    if (registry) return registry;
     return undefined;
   }
 

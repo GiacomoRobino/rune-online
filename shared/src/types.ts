@@ -17,7 +17,8 @@ export type AbilityKeyword =
   | "veil"
   | "blink"
   | "warden"
-  | "unbounded";
+  | "unbounded"
+  | "bloodmaster";
 
 // Card definitions
 export interface SummoningDefinition {
