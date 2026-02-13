@@ -8,7 +8,7 @@ export type InteractionMode =
   | { type: "memory"; card: CardState; selectedRuneIds: string[] }
   | { type: "targeting_memory"; card: CardState; selectedRuneIds: string[] }
   | { type: "declare_attack"; selectedAttackerIds: string[] }
-  | { type: "declare_block"; assignments: Map<string, string> }; // blockerId -> attackerId
+  | { type: "declare_block"; assignments: Map<string, string>; selectedBlockerId: string | null }; // blockerId -> attackerId
 
 export interface GameInteractionsProps {
   myPlayer: PlayerState;
@@ -119,21 +119,30 @@ export function useGameInteractions({
     } else if (mode.type === "declare_block" && isBlockingPhase) {
       const currentAssignments = new Map(mode.assignments);
       if (currentAssignments.has(card.instanceId)) {
+        // Already assigned — unassign (toggle off)
         currentAssignments.delete(card.instanceId);
-      } else {
-        const blockedAttackers = new Set(currentAssignments.values());
-        const unblockedAttacker = declaredAttackers.find((a) => !blockedAttackers.has(a));
-        if (unblockedAttacker && !card.isTapped) {
-          currentAssignments.set(card.instanceId, unblockedAttacker);
+        setMode({ type: "declare_block", assignments: currentAssignments, selectedBlockerId: null });
+      } else if (!card.isTapped) {
+        if (declaredAttackers.length === 1) {
+          // Only one attacker — auto-assign
+          currentAssignments.set(card.instanceId, declaredAttackers[0]);
+          setMode({ type: "declare_block", assignments: currentAssignments, selectedBlockerId: null });
+        } else {
+          // Multiple attackers — select blocker and wait for attacker click
+          setMode({ type: "declare_block", assignments: currentAssignments, selectedBlockerId: card.instanceId });
         }
       }
-      setMode({ type: "declare_block", assignments: currentAssignments });
     }
   };
 
   const handleEnemyCreatureClick = (card: CardState) => {
     if (mode.type === "targeting_memory") {
       handleMemoryTarget(card.instanceId);
+    } else if (mode.type === "declare_block" && mode.selectedBlockerId && declaredAttackers.includes(card.instanceId)) {
+      // Assign the pending blocker to this attacker
+      const currentAssignments = new Map(mode.assignments);
+      currentAssignments.set(mode.selectedBlockerId, card.instanceId);
+      setMode({ type: "declare_block", assignments: currentAssignments, selectedBlockerId: null });
     } else if (mode.type === "idle") {
       setInspectedCardId((prev) => prev === card.instanceId ? null : card.instanceId);
     }
@@ -173,7 +182,7 @@ export function useGameInteractions({
   // Auto-enter blocking mode when blocking phase starts
   useEffect(() => {
     if (isBlockingPhase && mode.type === "idle") {
-      setMode({ type: "declare_block", assignments: new Map() });
+      setMode({ type: "declare_block", assignments: new Map(), selectedBlockerId: null });
     }
   }, [isBlockingPhase]);
 

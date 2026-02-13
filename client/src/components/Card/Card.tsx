@@ -257,7 +257,7 @@ function SummoningCard({
     isAttacker ? "ring-attacker" :
     isTarget ? "ring-target" :
     isBlockCandidate ? "ring-blocker" :
-    (canAct && !isInHand) ? "ring-can-act" : "";
+    (canAct && !isInHand) ? "ring-can-act" : "shadow-card";
 
   const baseClasses = `
     ${s.w} ${s.h} rounded-lg relative cursor-pointer transition-all duration-200
@@ -270,7 +270,7 @@ function SummoningCard({
   return (
     <div
       data-card-instance-id={card.instanceId}
-      className={`${baseClasses} overflow-hidden border-2 border-stone-700 shadow-card flex flex-col`}
+      className={`${baseClasses} overflow-hidden border-2 border-stone-700 flex flex-col`}
       onClick={onClick}
     >
       {/* Image fills ~80% */}

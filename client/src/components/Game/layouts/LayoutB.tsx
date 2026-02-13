@@ -156,7 +156,9 @@ export function LayoutB({
                     isSelected={
                       gi.inspectedCardId === card.instanceId ||
                       (gi.mode.type === "declare_attack" &&
-                      gi.mode.selectedAttackerIds.includes(card.instanceId))
+                      gi.mode.selectedAttackerIds.includes(card.instanceId)) ||
+                      (gi.mode.type === "declare_block" &&
+                      gi.mode.selectedBlockerId === card.instanceId)
                     }
                     size="lg"
                   />
@@ -191,6 +193,13 @@ export function LayoutB({
             onConfirm={gi.handleConfirmSummon}
             onCancel={gi.cancelMode}
           />
+        )}
+
+        {/* Blocker selection prompt */}
+        {gi.mode.type === "declare_block" && gi.mode.selectedBlockerId && (
+          <div className="stone-panel metal-border rounded-lg p-2 text-center text-gold text-sm font-medieval">
+            Select an attacker to block
+          </div>
         )}
 
         {/* Targeting indicator */}
