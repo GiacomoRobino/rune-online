@@ -162,6 +162,13 @@ export class GameRoom extends Room<GameState> {
     if (this.state.currentTurn !== client.sessionId) return;
     if (this.state.turnPhase !== "main") return;
 
+    // Heal all summonings for both players
+    this.state.players.forEach((player) => {
+      player.battlefield.forEach((card) => {
+        card.health = card.maxHealth;
+      });
+    });
+
     // Switch player
     const currentIndex = this.playerOrder.indexOf(this.state.currentTurn);
     const nextIndex = (currentIndex + 1) % 2;
