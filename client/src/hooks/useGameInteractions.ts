@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlayerState, CardState } from "./useColyseus";
 
 export type InteractionMode =
@@ -170,10 +170,19 @@ export function useGameInteractions({
 
   const cancelMode = () => setMode({ type: "idle" });
 
-  // Start blocking mode automatically when it's blocking phase
-  if (isBlockingPhase && mode.type === "idle") {
-    setTimeout(() => setMode({ type: "declare_block", assignments: new Map() }), 0);
-  }
+  // Auto-enter blocking mode when blocking phase starts
+  useEffect(() => {
+    if (isBlockingPhase && mode.type === "idle") {
+      setMode({ type: "declare_block", assignments: new Map() });
+    }
+  }, [isBlockingPhase]);
+
+  // Auto-exit blocking mode when blocking phase ends
+  useEffect(() => {
+    if (!isBlockingPhase && mode.type === "declare_block") {
+      setMode({ type: "idle" });
+    }
+  }, [isBlockingPhase, mode.type]);
 
   // Check if a card can be played
   const canSpellCard = (card: CardState) => {
