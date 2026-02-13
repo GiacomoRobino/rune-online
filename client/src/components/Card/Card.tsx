@@ -55,7 +55,7 @@ const ABILITY_DESCRIPTIONS: Record<string, string> = {
   blink: "Returns to hand at end of turn",
   warden: "Adjacent creatures gain +0/+1",
   unbounded: "Ignores defender when attacking",
-  bloodmaster: "Heals you when dealing combat damage",
+  bloodmaster: "+1/+1 for each blood rune attached to this creature",
 };
 
 export function Card({

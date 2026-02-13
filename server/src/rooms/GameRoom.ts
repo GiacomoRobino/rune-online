@@ -659,8 +659,25 @@ export class GameRoom extends Room<GameState> {
       player.battlefield.forEach((card) => {
         if (card.cardType !== "summoning") return;
         const damageTaken = card.maxHealth - card.health;
-        card.attack = Math.max(0, card.baseAttack + buffAttack);
-        card.maxHealth = Math.max(1, card.baseHealth + buffHealth);
+
+        let extraAttack = buffAttack;
+        let extraHealth = buffHealth;
+
+        // Bloodmaster: +1/+1 per attached blood rune
+        if (this.hasAbility(card, "bloodmaster")) {
+          for (let i = 0; i < card.attachedRuneIds.length; i++) {
+            const runeId = card.attachedRuneIds.at(i);
+            if (!runeId) continue;
+            const rune = player.runeField.find((r) => r.instanceId === runeId);
+            if (rune && rune.runeType === "blood") {
+              extraAttack++;
+              extraHealth++;
+            }
+          }
+        }
+
+        card.attack = Math.max(0, card.baseAttack + extraAttack);
+        card.maxHealth = Math.max(1, card.baseHealth + extraHealth);
         card.health = Math.max(0, card.maxHealth - damageTaken);
       });
     });
