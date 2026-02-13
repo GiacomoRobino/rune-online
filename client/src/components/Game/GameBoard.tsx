@@ -1,10 +1,6 @@
 import { PlayerState } from "../../hooks/useColyseus";
 import { useGameInteractions } from "../../hooks/useGameInteractions";
-import { useLayout } from "../../contexts/LayoutContext";
-import { LayoutToggle } from "./LayoutToggle";
-import { LayoutA } from "./layouts/LayoutA";
 import { LayoutB } from "./layouts/LayoutB";
-import { LayoutC } from "./layouts/LayoutC";
 
 interface GameBoardProps {
   myPlayer: PlayerState;
@@ -45,8 +41,6 @@ export function GameBoard({
   onEndTurn,
   onLeave,
 }: GameBoardProps) {
-  const { layout } = useLayout();
-
   const interactions = useGameInteractions({
     myPlayer,
     isMyTurn,
@@ -107,12 +101,5 @@ export function GameBoard({
     onEndTurn,
   };
 
-  return (
-    <>
-      <LayoutToggle />
-      {layout === "A" && <LayoutA {...layoutProps} />}
-      {layout === "B" && <LayoutB {...layoutProps} />}
-      {layout === "C" && <LayoutC {...layoutProps} />}
-    </>
-  );
+  return <LayoutB {...layoutProps} />;
 }

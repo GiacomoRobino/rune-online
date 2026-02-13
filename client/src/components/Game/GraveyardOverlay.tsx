@@ -1,6 +1,6 @@
 import { Card } from "../Card/Card";
 import { CardState, PlayerState } from "../../hooks/useColyseus";
-import { CardSize, ArtStyle } from "../Card/Card";
+import { CardSize } from "../Card/Card";
 
 interface GraveyardOverlayProps {
   which: "mine" | "opponent";
@@ -8,10 +8,9 @@ interface GraveyardOverlayProps {
   opponent: PlayerState;
   onClose: () => void;
   cardSize?: CardSize;
-  artStyle?: ArtStyle;
 }
 
-export function GraveyardOverlay({ which, myPlayer, opponent, onClose, cardSize = "sm", artStyle = "framed" }: GraveyardOverlayProps) {
+export function GraveyardOverlay({ which, myPlayer, opponent, onClose, cardSize = "sm" }: GraveyardOverlayProps) {
   const cards: CardState[] = which === "mine" ? myPlayer.graveyard : opponent.graveyard;
   const title = which === "mine" ? "Your Graveyard" : "Opponent's Graveyard";
 
@@ -35,7 +34,7 @@ export function GraveyardOverlay({ which, myPlayer, opponent, onClose, cardSize 
         ) : (
           <div className="flex flex-wrap gap-3 justify-center">
             {cards.map((card) => (
-              <Card key={card.instanceId} card={card} size={cardSize} artStyle={artStyle} />
+              <Card key={card.instanceId} card={card} size={cardSize} />
             ))}
           </div>
         )}

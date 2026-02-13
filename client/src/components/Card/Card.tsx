@@ -2,7 +2,6 @@ import { useState } from "react";
 import { CardState } from "../../hooks/useColyseus";
 
 export type CardSize = "sm" | "md" | "lg";
-export type ArtStyle = "framed" | "fullbleed";
 
 // Size configs for main cards (summoning, echo, memory)
 const CARD_SIZES = {
@@ -37,7 +36,6 @@ interface CardProps {
   isHighlighted?: boolean;
   showBack?: boolean;
   size?: CardSize;
-  artStyle?: ArtStyle;
 }
 
 export function Card({
@@ -52,7 +50,6 @@ export function Card({
   isHighlighted = false,
   showBack = false,
   size = "md",
-  artStyle = "framed",
 }: CardProps) {
   if (showBack) {
     const bs = BACK_SIZES[size];
@@ -69,10 +66,10 @@ export function Card({
     return <RuneCard card={card} onClick={onClick} isSelected={isSelected} isPlayable={isPlayable} isHighlighted={isHighlighted} size={size} />;
   }
   if (cardType === "memory") {
-    return <MemoryCard card={card} onClick={onClick} isPlayable={isPlayable} size={size} artStyle={artStyle} />;
+    return <MemoryCard card={card} onClick={onClick} isPlayable={isPlayable} size={size} />;
   }
   if (cardType === "echo") {
-    return <EchoCard card={card} onClick={onClick} isPlayable={isPlayable} isSelected={isSelected} size={size} artStyle={artStyle} />;
+    return <EchoCard card={card} onClick={onClick} isPlayable={isPlayable} isSelected={isSelected} size={size} />;
   }
 
   return (
@@ -86,19 +83,18 @@ export function Card({
       isBlockCandidate={isBlockCandidate}
       isInHand={isInHand}
       size={size}
-      artStyle={artStyle}
     />
   );
 }
 
 // --- SUMMONING CARD ---
 function SummoningCard({
-  card, onClick, isSelected, isPlayable, isAttacker, isTarget, isBlockCandidate, isInHand, size = "md", artStyle = "framed",
+  card, onClick, isSelected, isPlayable, isAttacker, isTarget, isBlockCandidate, isInHand, size = "md",
 }: {
   card: CardState; onClick?: () => void;
   isSelected?: boolean; isPlayable?: boolean; isAttacker?: boolean;
   isTarget?: boolean; isBlockCandidate?: boolean; isInHand?: boolean;
-  size?: CardSize; artStyle?: ArtStyle;
+  size?: CardSize;
 }) {
   const [imgError, setImgError] = useState(false);
   const isDamaged = card.health < card.maxHealth;
@@ -114,86 +110,6 @@ function SummoningCard({
     isBlockCandidate ? "ring-blocker" :
     (canAct && !isInHand) ? "ring-can-act" : "";
 
-  // Fullbleed: art fills entire card, info overlaid
-  if (artStyle === "fullbleed") {
-    return (
-      <div
-        data-card-instance-id={card.instanceId}
-        className={`
-          ${s.w} ${s.h} rounded-lg relative cursor-pointer transition-all duration-200
-          overflow-hidden border-2 border-stone-600 shadow-card
-          ${card.isTapped ? "rotate-12 opacity-80" : ""}
-          ${isSelected ? "scale-105" : ""}
-          ${isPlayable ? "hover:scale-105" : ""}
-          ${ringClass}
-        `}
-        onClick={onClick}
-      >
-        {/* Full-bleed art */}
-        {!imgError ? (
-          <img
-            src={`/cards/${card.id}/card.png`}
-            alt={card.name}
-            className="absolute inset-0 w-full h-full object-cover"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div className="absolute inset-0 bg-stone-900 flex items-center justify-center">
-            <span className="text-2xl">{"\u2694\uFE0F"}</span>
-          </div>
-        )}
-
-        {/* Aegis indicator */}
-        {card.hasAegis && (
-          <div className={`absolute top-1 right-1 ${s.aegis} bg-gold rounded-full flex items-center justify-center text-stone-900 font-bold shadow-metal z-10`}>
-            A
-          </div>
-        )}
-
-        {/* Bottom overlay bar */}
-        <div className="absolute bottom-0 left-0 right-0 backdrop-blur-sm bg-black/60 px-1.5 py-1">
-          <div className="text-parchment-light font-medieval font-semibold leading-tight truncate" style={{ fontSize: size === "lg" ? "12px" : "10px" }}>
-            {card.name}
-          </div>
-          {abilities.length > 0 && (
-            <div className="flex flex-wrap gap-0.5 mt-0.5">
-              {abilities.slice(0, 3).map((a) => (
-                <span key={a} className={`${s.badge} bg-black/40 text-parchment-light px-1 rounded`}>
-                  {a}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Attack badge */}
-        <div
-          className={`absolute ${s.statOffset} ${s.stat} rounded-full flex items-center justify-center z-10`}
-          style={{
-            background: 'linear-gradient(135deg, #c9a84c, #a08030)',
-            border: '2px solid #e0c878',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2)',
-          }}
-        >
-          <span className="text-stone-900 font-bold font-medieval">{card.attack}</span>
-        </div>
-
-        {/* Health badge */}
-        <div
-          className={`absolute ${s.statOffsetR} ${s.stat} rounded-full flex items-center justify-center z-10`}
-          style={{
-            background: isDamaged ? 'linear-gradient(135deg, #b22222, #8b0000)' : 'linear-gradient(135deg, #8b0000, #5c0000)',
-            border: isDamaged ? '2px solid #ff4444' : '2px solid #b22222',
-            boxShadow: isDamaged ? '0 0 6px rgba(178,34,34,0.6)' : '0 1px 3px rgba(0,0,0,0.5)',
-          }}
-        >
-          <span className="text-parchment-light font-bold font-medieval">{card.health}</span>
-        </div>
-      </div>
-    );
-  }
-
-  // Framed (default): classic card frame with art window
   return (
     <div
       data-card-instance-id={card.instanceId}
@@ -346,51 +262,13 @@ function RuneCard({
 
 // --- MEMORY CARD ---
 function MemoryCard({
-  card, onClick, isPlayable, size = "md", artStyle = "framed",
+  card, onClick, isPlayable, size = "md",
 }: {
-  card: CardState; onClick?: () => void; isPlayable?: boolean; size?: CardSize; artStyle?: ArtStyle;
+  card: CardState; onClick?: () => void; isPlayable?: boolean; size?: CardSize;
 }) {
   const [imgError, setImgError] = useState(false);
   const s = CARD_SIZES[size];
   const ringClass = isPlayable ? "ring-playable" : "";
-
-  if (artStyle === "fullbleed") {
-    return (
-      <div
-        data-card-instance-id={card.instanceId}
-        className={`
-          ${s.w} ${s.h} rounded-lg relative cursor-pointer transition-all duration-200
-          overflow-hidden border-2 shadow-card
-          ${isPlayable ? "hover:scale-105" : ""}
-          ${ringClass}
-        `}
-        style={{ borderColor: '#7b5ea7', boxShadow: '0 0 8px rgba(155, 109, 255, 0.2)' }}
-        onClick={onClick}
-      >
-        {!imgError ? (
-          <img
-            src={`/cards/${card.id}/card.png`}
-            alt={card.name}
-            className="absolute inset-0 w-full h-full object-cover"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4a2d6e 0%, #2a2018 100%)' }}>
-            <span className="text-2xl">{"\u2728"}</span>
-          </div>
-        )}
-        <div className="absolute bottom-0 left-0 right-0 backdrop-blur-sm bg-black/60 px-1.5 py-1">
-          <div className="text-[9px] font-bold uppercase tracking-wider font-medieval" style={{ color: '#9b6dff' }}>Memory</div>
-          <div className="text-parchment-light font-medieval font-semibold leading-tight truncate" style={{ fontSize: size === "lg" ? "12px" : "10px" }}>
-            {card.name}
-          </div>
-          <p className={`text-stone-300 ${s.desc} leading-tight line-clamp-2 font-body mt-0.5`}>
-            {card.description}
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -436,9 +314,9 @@ function MemoryCard({
 
 // --- ECHO CARD ---
 function EchoCard({
-  card, onClick, isPlayable, isSelected, size = "md", artStyle = "framed",
+  card, onClick, isPlayable, isSelected, size = "md",
 }: {
-  card: CardState; onClick?: () => void; isPlayable?: boolean; isSelected?: boolean; size?: CardSize; artStyle?: ArtStyle;
+  card: CardState; onClick?: () => void; isPlayable?: boolean; isSelected?: boolean; size?: CardSize;
 }) {
   const [imgError, setImgError] = useState(false);
   const spellDisplay = card.spellName.split("").join("\u00B7");
@@ -446,45 +324,6 @@ function EchoCard({
 
   const ringClass = isSelected ? "ring-selected" :
     isPlayable ? "ring-playable" : "";
-
-  if (artStyle === "fullbleed") {
-    return (
-      <div
-        data-card-instance-id={card.instanceId}
-        className={`
-          ${s.w} ${s.h} rounded-lg relative cursor-pointer transition-all duration-200
-          overflow-hidden border-2 shadow-card
-          ${isSelected ? "scale-105" : ""}
-          ${isPlayable ? "hover:scale-105" : ""}
-          ${ringClass}
-        `}
-        style={{ borderColor: '#4a8b7f', boxShadow: '0 0 8px rgba(93, 224, 200, 0.15)' }}
-        onClick={onClick}
-      >
-        {!imgError ? (
-          <img
-            src={`/cards/${card.id}/card.png`}
-            alt={card.name}
-            className="absolute inset-0 w-full h-full object-cover"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #2a5c52 0%, #1e170f 100%)' }}>
-            <span className="text-xl">{"\u{1F300}"}</span>
-          </div>
-        )}
-        <div className="absolute bottom-0 left-0 right-0 backdrop-blur-sm bg-black/60 px-1.5 py-1">
-          <div className="text-[10px] font-bold tracking-wider font-medieval" style={{ color: '#5de0c8' }}>{spellDisplay}</div>
-          <div className="text-parchment-light font-medieval font-semibold leading-tight truncate" style={{ fontSize: size === "lg" ? "12px" : "10px" }}>
-            {card.name}
-          </div>
-          <p className={`text-stone-300 ${s.desc} leading-tight line-clamp-2 font-body mt-0.5`}>
-            {card.description}
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
