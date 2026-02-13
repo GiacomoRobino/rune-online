@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Card } from "../../Card/Card";
 import { CardState } from "../../../hooks/useColyseus";
@@ -19,6 +20,22 @@ export function LayoutCompact({
   interactions: gi, onWriteRune, onEndTurn, gameEvents,
 }: LayoutProps) {
   const opponentUnattachedRunes = gi.getUnattachedRunes(opponent);
+
+  const [handOpen, setHandOpen] = useState(false);
+  const [handLocked, setHandLocked] = useState(false);
+
+  // Auto-open hand when spelling
+  useEffect(() => {
+    if (gi.isSpelling) {
+      setHandOpen(true);
+    }
+  }, [gi.isSpelling]);
+
+  const closeHandIfUnlocked = () => {
+    if (!handLocked && !gi.isSpelling) {
+      setHandOpen(false);
+    }
+  };
 
   return (
     <div className="h-screen overflow-hidden flex">
@@ -102,6 +119,7 @@ export function LayoutCompact({
 
         {/* Opponent battlefield */}
         <div className="flex-1 min-h-0 overflow-y-auto flex justify-center gap-4 flex-wrap rounded-lg p-3 items-start content-start"
+          onClick={closeHandIfUnlocked}
           style={{
             background: 'linear-gradient(145deg, rgba(30,23,15,0.6) 0%, rgba(20,16,10,0.8) 100%)',
             border: '1px solid rgba(107,92,78,0.2)',
@@ -139,6 +157,7 @@ export function LayoutCompact({
 
         {/* My battlefield */}
         <div className="flex-1 min-h-0 overflow-y-auto flex justify-center gap-4 flex-wrap rounded-lg p-3 items-start content-start"
+          onClick={closeHandIfUnlocked}
           style={{
             background: 'linear-gradient(145deg, rgba(30,23,15,0.6) 0%, rgba(20,16,10,0.8) 100%)',
             border: '1px solid rgba(107,92,78,0.2)',
@@ -191,7 +210,47 @@ export function LayoutCompact({
         </div>
 
         {/* Bottom fixed section */}
-        <div className="shrink-0">
+        <div className="shrink-0 relative">
+          {/* Hand popup overlay */}
+          {handOpen && (
+            <div className="absolute bottom-full left-0 right-0 bg-stone-900/90 rounded-t-lg p-3 z-10">
+              {/* Lock button */}
+              <button
+                onClick={() => setHandLocked((l) => !l)}
+                className="absolute top-2 right-2 px-1.5 py-0.5 btn-stone rounded text-xs"
+                title={handLocked ? "Unlock hand" : "Lock hand open"}
+              >
+                {handLocked ? "\u{1F512}" : "\u{1F513}"}
+              </button>
+
+              <div className="flex justify-center gap-1.5">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {myPlayer.hand.map((card) => {
+                    const isSelectedInHand = gi.isSpelling && gi.mode.type !== "idle" && "card" in gi.mode && gi.mode.card.instanceId === card.instanceId;
+                    return (
+                      <div
+                        key={card.instanceId}
+                        className={`transform transition-transform ${isSelectedInHand ? "-translate-y-2" : "hover:-translate-y-2"}`}
+                      >
+                        <Card
+                          card={card}
+                          onClick={() => gi.handleCardInHandClick(card)}
+                          isPlayable={turnPhase === "main" && gi.canSpellCard(card) && (isMyTurn || card.cardType === "memory")}
+                          isSelected={
+                            (gi.mode.type === "summoning" || gi.mode.type === "echo" || gi.mode.type === "memory") &&
+                            gi.mode.card.instanceId === card.instanceId
+                          }
+                          isInHand
+                          size="sm"
+                        />
+                      </div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+            </div>
+          )}
+
           {/* Spell name checker */}
           {(gi.mode.type === "summoning" || gi.mode.type === "echo" || gi.mode.type === "memory") && (
             <SpellNameChecker
@@ -225,35 +284,8 @@ export function LayoutCompact({
           {/* Rune picker */}
           <RunePicker myPlayer={myPlayer} onWriteRune={onWriteRune} />
 
-          {/* My hand */}
-          <div className="flex justify-center gap-1.5 mb-1">
-            <AnimatePresence mode="popLayout" initial={false}>
-              {myPlayer.hand.map((card) => {
-                const isSelectedInHand = gi.isSpelling && gi.mode.type !== "idle" && "card" in gi.mode && gi.mode.card.instanceId === card.instanceId;
-                return (
-                  <div
-                    key={card.instanceId}
-                    className={`transform transition-transform ${isSelectedInHand ? "-translate-y-2" : "hover:-translate-y-2"}`}
-                  >
-                    <Card
-                      card={card}
-                      onClick={() => gi.handleCardInHandClick(card)}
-                      isPlayable={turnPhase === "main" && gi.canSpellCard(card) && (isMyTurn || card.cardType === "memory")}
-                      isSelected={
-                        (gi.mode.type === "summoning" || gi.mode.type === "echo" || gi.mode.type === "memory") &&
-                        gi.mode.card.instanceId === card.instanceId
-                      }
-                      isInHand
-                      size="sm"
-                    />
-                  </div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex justify-center">
+          {/* Action buttons + hand toggle */}
+          <div className="flex justify-center items-center gap-2">
             <ActionBar
               mode={gi.mode}
               isMyTurn={isMyTurn}
@@ -265,6 +297,12 @@ export function LayoutCompact({
               cancelMode={gi.cancelMode}
               onEndTurn={onEndTurn}
             />
+            <button
+              onClick={() => setHandOpen((o) => !o)}
+              className="btn-stone px-3 py-1.5 rounded text-sm font-medieval"
+            >
+              Hand ({myPlayer.hand.length})
+            </button>
           </div>
         </div>
       </div>
