@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { CardState } from "../../hooks/useColyseus";
 
 export type CardSize = "sm" | "md" | "lg";
@@ -38,6 +38,26 @@ interface CardProps {
   size?: CardSize;
 }
 
+// Ability keyword descriptions
+const ABILITY_DESCRIPTIONS: Record<string, string> = {
+  skyrunner: "Can only be blocked by other Skyrunners",
+  fury: "Can attack the turn it's summoned",
+  rage: "Deals excess combat damage to the opponent",
+  aegis: "Blocks the first damage or destroy effect",
+  defender: "Cannot attack, but can block",
+  duelist: "Deals damage before the opponent in combat",
+  shadowwalker: "Can't be blocked",
+  revenge: "Triggers an effect when destroyed",
+  shatter: "Destroys a rune when dealing combat damage",
+  pack: "Gets +1/+1 for each other friendly creature",
+  master: "Buffs all other friendly creatures",
+  veil: "Can't be targeted by spells",
+  blink: "Returns to hand at end of turn",
+  warden: "Adjacent creatures gain +0/+1",
+  unbounded: "Ignores defender when attacking",
+  bloodmaster: "Heals you when dealing combat damage",
+};
+
 export function Card({
   card,
   onClick,
@@ -62,28 +82,156 @@ export function Card({
 
   const { cardType } = card;
 
+  let cardElement: React.ReactNode;
+
   if (cardType === "rune") {
-    return <RuneCard card={card} onClick={onClick} isSelected={isSelected} isPlayable={isPlayable} isHighlighted={isHighlighted} size={size} />;
-  }
-  if (cardType === "memory") {
-    return <MemoryCard card={card} onClick={onClick} isPlayable={isPlayable} size={size} />;
-  }
-  if (cardType === "echo") {
-    return <EchoCard card={card} onClick={onClick} isPlayable={isPlayable} isSelected={isSelected} size={size} />;
+    cardElement = <RuneCard card={card} onClick={onClick} isSelected={isSelected} isPlayable={isPlayable} isHighlighted={isHighlighted} size={size} />;
+  } else if (cardType === "memory") {
+    cardElement = <MemoryCard card={card} onClick={onClick} isPlayable={isPlayable} size={size} />;
+  } else if (cardType === "echo") {
+    cardElement = <EchoCard card={card} onClick={onClick} isPlayable={isPlayable} isSelected={isSelected} size={size} />;
+  } else {
+    cardElement = (
+      <SummoningCard
+        card={card}
+        onClick={onClick}
+        isSelected={isSelected}
+        isPlayable={isPlayable}
+        isAttacker={isAttacker}
+        isTarget={isTarget}
+        isBlockCandidate={isBlockCandidate}
+        isInHand={isInHand}
+        size={size}
+      />
+    );
   }
 
   return (
-    <SummoningCard
-      card={card}
-      onClick={onClick}
-      isSelected={isSelected}
-      isPlayable={isPlayable}
-      isAttacker={isAttacker}
-      isTarget={isTarget}
-      isBlockCandidate={isBlockCandidate}
-      isInHand={isInHand}
-      size={size}
-    />
+    <div className="group/tooltip relative">
+      {cardElement}
+      <CardTooltip card={card} />
+    </div>
+  );
+}
+
+// --- CARD TOOLTIP ---
+function CardTooltip({ card }: { card: CardState }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [side, setSide] = useState<"right" | "left">("right");
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const parent = el.parentElement;
+    if (!parent) return;
+    const rect = parent.getBoundingClientRect();
+    // Show on left if card is in the right half of the viewport
+    setSide(rect.left + rect.width / 2 > window.innerWidth / 2 ? "left" : "right");
+  }, []);
+
+  const { cardType } = card;
+  const abilities = card.abilities ? card.abilities.split(",").filter(Boolean) : [];
+  const spellDisplay = card.spellName ? card.spellName.split("").join(" · ") : "";
+
+  // Rune type label
+  const runeTypeLabel = card.runeType === "blood" ? "Blood Rune" : card.runeType === "stone" ? "Stone Rune" : "Standard Rune";
+
+  const posClass = side === "right"
+    ? "left-full ml-2"
+    : "right-full mr-2";
+
+  return (
+    <div
+      ref={ref}
+      className={`
+        absolute ${posClass} top-0
+        w-48 rounded-lg p-2.5 pointer-events-none
+        opacity-0 group-hover/tooltip:opacity-100
+        transition-opacity duration-200 delay-300
+        z-[100]
+      `}
+      style={{
+        background: 'linear-gradient(135deg, rgba(20,16,10,0.95) 0%, rgba(30,23,15,0.95) 100%)',
+        border: '1px solid rgba(107,92,78,0.5)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
+      }}
+    >
+      {/* Card name */}
+      <div className="text-gold font-medieval font-semibold text-sm mb-1">{card.name}</div>
+
+      {/* Card type badge */}
+      <div className="text-[10px] uppercase tracking-wider font-medieval mb-1.5"
+        style={{
+          color: cardType === "summoning" ? '#e0c878'
+            : cardType === "echo" ? '#5de0c8'
+            : cardType === "memory" ? '#9b6dff'
+            : '#a08030',
+        }}
+      >
+        {cardType === "rune" ? runeTypeLabel : cardType}
+      </div>
+
+      {/* Spell cost */}
+      {spellDisplay && (
+        <div className="text-xs text-stone-400 font-body mb-1.5">
+          <span className="text-stone-500">Cost:</span> <span className="text-parchment-light font-medieval tracking-wide">{spellDisplay}</span>
+        </div>
+      )}
+
+      {/* Stats for summoning */}
+      {cardType === "summoning" && (
+        <div className="flex items-center gap-2 text-xs font-medieval mb-1.5">
+          <span style={{ color: '#e0c878' }}>{card.attack} ATK</span>
+          <span className="text-stone-600">/</span>
+          <span className={card.health < card.maxHealth ? "text-red-400" : "text-red-600"}>
+            {card.health}{card.health < card.maxHealth ? `/${card.maxHealth}` : ""} HP
+          </span>
+        </div>
+      )}
+
+      {/* Rune letter */}
+      {cardType === "rune" && (
+        <div className="text-xs text-stone-400 font-body mb-1.5">
+          <span className="text-stone-500">Letter:</span> <span className="text-gold font-medieval text-base font-bold">{card.letter}</span>
+        </div>
+      )}
+
+      {/* Etching counter */}
+      {card.etchingCounters > 0 && (
+        <div className="text-xs text-stone-400 font-body mb-1.5">
+          <span className="text-stone-500">Etching:</span> {card.etchingCounters} turn{card.etchingCounters > 1 ? "s" : ""} left
+        </div>
+      )}
+
+      {/* Abilities */}
+      {abilities.length > 0 && (
+        <div className="mb-1.5">
+          {abilities.map((a) => (
+            <div key={a} className="mb-1 last:mb-0">
+              <span className="text-gold text-[11px] font-medieval font-semibold">{a}</span>
+              {ABILITY_DESCRIPTIONS[a] && (
+                <p className="text-stone-400 text-[10px] font-body leading-tight">{ABILITY_DESCRIPTIONS[a]}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Aegis indicator */}
+      {card.hasAegis && !abilities.includes("aegis") && (
+        <div className="mb-1">
+          <span className="text-gold text-[11px] font-medieval font-semibold">aegis</span>
+          <p className="text-stone-400 text-[10px] font-body leading-tight">{ABILITY_DESCRIPTIONS["aegis"]}</p>
+        </div>
+      )}
+
+      {/* Description */}
+      {card.description && (
+        <p className="text-stone-300 text-[11px] font-body leading-snug border-t border-stone-700/50 pt-1.5 mt-1">
+          {card.description}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -110,9 +258,9 @@ function SummoningCard({
 
   const baseClasses = `
     ${s.w} ${s.h} rounded-lg relative cursor-pointer transition-all duration-200
+    hover:scale-[1.4] hover:z-50
     ${card.isTapped ? "rotate-12 opacity-80" : ""}
     ${isSelected ? "scale-105" : ""}
-    ${isPlayable ? "hover:scale-105" : ""}
     ${ringClass}
   `;
 
@@ -186,8 +334,8 @@ function RuneCard({
       data-card-instance-id={card.instanceId}
       className={`
         ${rs.w} ${rs.h} rounded-lg relative cursor-pointer transition-all duration-200 overflow-hidden
+        hover:scale-[1.5] hover:z-50
         ${isSelected ? "scale-110" : ""}
-        ${isPlayable ? "hover:scale-105" : ""}
         ${isHighlighted ? "scale-105 brightness-125" : ""}
         ${isEtching ? "opacity-50" : ""}
         ${isAttached && !isHighlighted ? "opacity-70" : ""}
@@ -241,7 +389,7 @@ function MemoryCard({
 
   const baseClasses = `
     ${s.w} ${s.h} rounded-lg relative cursor-pointer transition-all duration-200
-    ${isPlayable ? "hover:scale-105" : ""}
+    hover:scale-[1.4] hover:z-50
     ${ringClass}
   `;
 
@@ -282,8 +430,8 @@ function EchoCard({
 
   const baseClasses = `
     ${s.w} ${s.h} rounded-lg relative cursor-pointer transition-all duration-200
+    hover:scale-[1.4] hover:z-50
     ${isSelected ? "scale-105" : ""}
-    ${isPlayable ? "hover:scale-105" : ""}
     ${ringClass}
   `;
 
