@@ -1,7 +1,7 @@
 import { PlayerState } from "../../hooks/useColyseus";
 import { useGameInteractions } from "../../hooks/useGameInteractions";
 import { GameEvent } from "../../types/animations";
-import { LayoutB } from "./layouts/LayoutB";
+import { LayoutCompact } from "./layouts/LayoutCompact";
 
 interface GameBoardProps {
   myPlayer: PlayerState;
@@ -92,18 +92,18 @@ export function GameBoard({
     );
   }
 
-  const layoutProps = {
-    myPlayer,
-    opponent,
-    isMyTurn,
-    turnPhase,
-    turnNumber,
-    declaredAttackers,
-    interactions,
-    onWriteRune,
-    onEndTurn,
-    gameEvents,
-  };
-
-  return <LayoutB {...layoutProps} />;
+  return (
+    <LayoutCompact
+      myPlayer={myPlayer}
+      opponent={opponent}
+      isMyTurn={isMyTurn}
+      turnPhase={turnPhase}
+      turnNumber={turnNumber}
+      declaredAttackers={declaredAttackers}
+      interactions={interactions}
+      onWriteRune={onWriteRune}
+      onEndTurn={onEndTurn}
+      gameEvents={gameEvents}
+    />
+  );
 }
