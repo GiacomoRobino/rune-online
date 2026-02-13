@@ -58,16 +58,24 @@ export function RuneField({
         {runes.length === 0 && (
           <div className="text-stone-500 text-xs font-body italic">No runes</div>
         )}
-        {runes.map((rune) => (
-          <Card
-            key={rune.instanceId}
-            card={rune}
-            onClick={() => onRuneClick?.(rune)}
-            isSelected={selectedRuneIds.includes(rune.instanceId)}
-            isPlayable={isRuneAvailable(rune)}
-            isHighlighted={highlightedRuneIds.includes(rune.instanceId)}
-          />
-        ))}
+        {runes.map((rune) => {
+          const available = isRuneAvailable(rune);
+          return (
+            <div
+              key={rune.instanceId}
+              className="transition-transform duration-200 origin-center"
+              style={isSummoningMode && available ? { transform: "scale(1.2)" } : undefined}
+            >
+              <Card
+                card={rune}
+                onClick={() => onRuneClick?.(rune)}
+                isSelected={selectedRuneIds.includes(rune.instanceId)}
+                isPlayable={available}
+                isHighlighted={highlightedRuneIds.includes(rune.instanceId)}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
