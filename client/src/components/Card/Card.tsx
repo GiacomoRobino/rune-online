@@ -225,12 +225,6 @@ function CardTooltip({ card }: { card: CardState }) {
         </div>
       )}
 
-      {/* Description */}
-      {card.description && (
-        <p className="text-stone-300 text-[11px] font-body leading-snug border-t border-stone-700/50 pt-1.5 mt-1">
-          {card.description}
-        </p>
-      )}
     </div>
   );
 }
