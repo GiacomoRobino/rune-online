@@ -7,6 +7,7 @@ import { TurnBanner } from "../TurnBanner";
 import { ActionBar } from "../ActionBar";
 import { GraveyardOverlay } from "../GraveyardOverlay";
 import { RunePicker } from "../RunePicker";
+
 import { LayoutProps } from "./types";
 
 export function LayoutB({
@@ -109,7 +110,7 @@ export function LayoutB({
                   size="lg"
                 />
                 {gi.getAttachedRunes(opponent, card).length > 0 && (
-                  <div className="flex flex-wrap gap-1 justify-center max-w-[130px]">
+                  <div className="grid grid-cols-2 gap-1 max-w-[130px]">
                     {gi.getAttachedRunes(opponent, card).map((rune) => (
                       <Card key={rune.instanceId} card={rune} size="sm" />
                     ))}
@@ -154,7 +155,7 @@ export function LayoutB({
                   size="lg"
                 />
                 {gi.getAttachedRunes(myPlayer, card).length > 0 && (
-                  <div className="flex flex-wrap gap-1 justify-center max-w-[130px]">
+                  <div className="grid grid-cols-2 gap-1 max-w-[130px]">
                     {gi.getAttachedRunes(myPlayer, card).map((rune) => (
                       <Card
                         key={rune.instanceId}

@@ -2,6 +2,7 @@ import { useColyseus } from "./hooks/useColyseus";
 import { Lobby } from "./components/Lobby/Lobby";
 import { GameBoard } from "./components/Game/GameBoard";
 
+
 function App() {
   const {
     connectionState,
