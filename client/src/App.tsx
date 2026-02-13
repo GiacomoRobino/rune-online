@@ -1,6 +1,7 @@
 import { useColyseus } from "./hooks/useColyseus";
 import { Lobby } from "./components/Lobby/Lobby";
 import { GameBoard } from "./components/Game/GameBoard";
+import { LayoutProvider } from "./contexts/LayoutContext";
 
 function App() {
   const {
@@ -79,4 +80,12 @@ function App() {
   );
 }
 
-export default App;
+function AppWithProviders() {
+  return (
+    <LayoutProvider>
+      <App />
+    </LayoutProvider>
+  );
+}
+
+export default AppWithProviders;
