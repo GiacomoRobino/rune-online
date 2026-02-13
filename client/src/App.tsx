@@ -21,6 +21,7 @@ function App() {
     declareAttackers,
     declareBlockers,
     endTurn,
+    gameEvents,
   } = useColyseus();
 
   // Show lobby if not connected or no game state
@@ -55,6 +56,7 @@ function App() {
         onDeclareBlockers={declareBlockers}
         onEndTurn={endTurn}
         onLeave={leaveGame}
+        gameEvents={gameEvents}
       />
     );
   }

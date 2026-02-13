@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
 import { CardState } from "../../hooks/useColyseus";
+import { AnimatedStat } from "./AnimatedStat";
 
 export type CardSize = "sm" | "md" | "lg";
 
@@ -107,10 +109,17 @@ export function Card({
   }
 
   return (
-    <div className="group/tooltip relative">
+    <motion.div
+      className="group/tooltip relative"
+      layoutId={`card-${card.instanceId}`}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+    >
       {cardElement}
       <CardTooltip card={card} />
-    </div>
+    </motion.div>
   );
 }
 
@@ -287,9 +296,9 @@ function SummoningCard({
       <div className="bg-stone-900/90 px-1 py-0.5 flex items-center justify-between min-h-[20px]">
         <span className={`text-parchment-light ${s.name} font-semibold truncate font-medieval flex-1`}>{card.name}</span>
         <div className="flex items-center gap-1 ml-1">
-          <span className={`${s.text} font-bold font-medieval`} style={{ color: '#e0c878' }}>{card.attack}</span>
+          <AnimatedStat value={card.attack} className={`${s.text} font-bold font-medieval`} style={{ color: '#e0c878' }} />
           <span className={`${s.text} text-stone-500`}>/</span>
-          <span className={`${s.text} font-bold font-medieval ${isDamaged ? "text-red-400" : "text-red-600"}`}>{card.health}</span>
+          <AnimatedStat value={card.health} className={`${s.text} font-bold font-medieval ${isDamaged ? "text-red-400" : "text-red-600"}`} />
         </div>
       </div>
     </div>

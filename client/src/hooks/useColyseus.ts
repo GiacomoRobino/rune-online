@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Client, Room } from "colyseus.js";
 import { GameState, Player, Card } from "shared";
+import { useGameEvents } from "./useGameEvents";
 
 // Plain object types for React state
 export interface CardState {
@@ -221,6 +222,8 @@ export function useColyseus() {
     : undefined;
   const isMyTurn = gameState?.currentTurn === mySessionId;
 
+  const gameEvents = useGameEvents(gameState);
+
   return {
     connectionState,
     error,
@@ -231,6 +234,7 @@ export function useColyseus() {
     myPlayer,
     opponent,
     isMyTurn,
+    gameEvents,
     writeRune,
     summonCreature,
     playEcho,

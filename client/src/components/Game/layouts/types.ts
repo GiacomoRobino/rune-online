@@ -1,5 +1,6 @@
 import { PlayerState } from "../../../hooks/useColyseus";
 import { GameInteractions } from "../../../hooks/useGameInteractions";
+import { GameEvent } from "../../../types/animations";
 
 export interface LayoutProps {
   myPlayer: PlayerState;
@@ -11,4 +12,5 @@ export interface LayoutProps {
   interactions: GameInteractions;
   onWriteRune: (runeId: string) => void;
   onEndTurn: () => void;
+  gameEvents: GameEvent[];
 }

@@ -1,5 +1,6 @@
 import { PlayerState } from "../../hooks/useColyseus";
 import { useGameInteractions } from "../../hooks/useGameInteractions";
+import { GameEvent } from "../../types/animations";
 import { LayoutB } from "./layouts/LayoutB";
 
 interface GameBoardProps {
@@ -20,6 +21,7 @@ interface GameBoardProps {
   onDeclareBlockers: (assignments: string[]) => void;
   onEndTurn: () => void;
   onLeave: () => void;
+  gameEvents: GameEvent[];
 }
 
 export function GameBoard({
@@ -40,6 +42,7 @@ export function GameBoard({
   onDeclareBlockers,
   onEndTurn,
   onLeave,
+  gameEvents,
 }: GameBoardProps) {
   const interactions = useGameInteractions({
     myPlayer,
@@ -99,6 +102,7 @@ export function GameBoard({
     interactions,
     onWriteRune,
     onEndTurn,
+    gameEvents,
   };
 
   return <LayoutB {...layoutProps} />;

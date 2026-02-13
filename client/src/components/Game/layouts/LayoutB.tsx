@@ -1,3 +1,4 @@
+import { AnimatePresence } from "framer-motion";
 import { Card } from "../../Card/Card";
 import { CardState } from "../../../hooks/useColyseus";
 import { RuneField } from "../RuneField";
@@ -7,12 +8,14 @@ import { TurnBanner } from "../TurnBanner";
 import { ActionBar } from "../ActionBar";
 import { GraveyardOverlay } from "../GraveyardOverlay";
 import { RunePicker } from "../RunePicker";
+import { AnimationOverlay } from "../AnimationOverlay";
+import { RuneAttachEffect } from "../RuneAttachEffect";
 
 import { LayoutProps } from "./types";
 
 export function LayoutB({
   myPlayer, opponent, isMyTurn, turnPhase, turnNumber, declaredAttackers,
-  interactions: gi, onWriteRune, onEndTurn,
+  interactions: gi, onWriteRune, onEndTurn, gameEvents,
 }: LayoutProps) {
   const opponentUnattachedRunes = gi.getUnattachedRunes(opponent);
 
@@ -99,25 +102,27 @@ export function LayoutB({
           {opponent.battlefield.length === 0 ? (
             <div className="text-stone-500 flex items-center text-sm self-center font-body italic">No creatures</div>
           ) : (
-            opponent.battlefield.map((card) => (
-              <div key={card.instanceId} className="flex flex-col items-center gap-1">
-                <Card
-                  card={card}
-                  onClick={() => gi.handleEnemyCreatureClick(card)}
-                  isTarget={gi.mode.type === "targeting_memory"}
-                  isAttacker={declaredAttackers.includes(card.instanceId)}
-                  isSelected={gi.inspectedCardId === card.instanceId}
-                  size="lg"
-                />
-                {gi.getAttachedRunes(opponent, card).length > 0 && (
-                  <div className="grid grid-cols-2 gap-1 max-w-[130px]">
-                    {gi.getAttachedRunes(opponent, card).map((rune) => (
-                      <Card key={rune.instanceId} card={rune} size="sm" />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))
+            <AnimatePresence mode="popLayout" initial={false}>
+              {opponent.battlefield.map((card) => (
+                <div key={card.instanceId} className="flex flex-col items-center gap-1">
+                  <Card
+                    card={card}
+                    onClick={() => gi.handleEnemyCreatureClick(card)}
+                    isTarget={gi.mode.type === "targeting_memory"}
+                    isAttacker={declaredAttackers.includes(card.instanceId)}
+                    isSelected={gi.inspectedCardId === card.instanceId}
+                    size="lg"
+                  />
+                  {gi.getAttachedRunes(opponent, card).length > 0 && (
+                    <div className="grid grid-cols-2 gap-1 max-w-[130px]">
+                      {gi.getAttachedRunes(opponent, card).map((rune) => (
+                        <Card key={rune.instanceId} card={rune} size="sm" />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </AnimatePresence>
           )}
         </div>
 
@@ -134,42 +139,44 @@ export function LayoutB({
           {myPlayer.battlefield.length === 0 ? (
             <div className="text-stone-500 flex items-center text-sm self-center font-body italic">Summon creatures here</div>
           ) : (
-            myPlayer.battlefield.map((card) => (
-              <div key={card.instanceId} className="flex flex-col items-center gap-1">
-                <Card
-                  card={card}
-                  onClick={() => gi.handleMyCreatureClick(card)}
-                  isAttacker={
-                    gi.mode.type === "declare_attack" &&
-                    gi.mode.selectedAttackerIds.includes(card.instanceId)
-                  }
-                  isBlockCandidate={
-                    gi.mode.type === "declare_block" &&
-                    gi.mode.assignments.has(card.instanceId)
-                  }
-                  isSelected={
-                    gi.inspectedCardId === card.instanceId ||
-                    (gi.mode.type === "declare_attack" &&
-                    gi.mode.selectedAttackerIds.includes(card.instanceId))
-                  }
-                  size="lg"
-                />
-                {gi.getAttachedRunes(myPlayer, card).length > 0 && (
-                  <div className="grid grid-cols-2 gap-1 max-w-[130px]">
-                    {gi.getAttachedRunes(myPlayer, card).map((rune) => (
-                      <Card
-                        key={rune.instanceId}
-                        card={rune}
-                        onClick={() => gi.handleRuneClick(rune)}
-                        isSelected={gi.selectedRuneIds.includes(rune.instanceId)}
-                        isPlayable={gi.isRuneAvailable(rune)}
-                        size="sm"
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))
+            <AnimatePresence mode="popLayout" initial={false}>
+              {myPlayer.battlefield.map((card) => (
+                <div key={card.instanceId} className="flex flex-col items-center gap-1">
+                  <Card
+                    card={card}
+                    onClick={() => gi.handleMyCreatureClick(card)}
+                    isAttacker={
+                      gi.mode.type === "declare_attack" &&
+                      gi.mode.selectedAttackerIds.includes(card.instanceId)
+                    }
+                    isBlockCandidate={
+                      gi.mode.type === "declare_block" &&
+                      gi.mode.assignments.has(card.instanceId)
+                    }
+                    isSelected={
+                      gi.inspectedCardId === card.instanceId ||
+                      (gi.mode.type === "declare_attack" &&
+                      gi.mode.selectedAttackerIds.includes(card.instanceId))
+                    }
+                    size="lg"
+                  />
+                  {gi.getAttachedRunes(myPlayer, card).length > 0 && (
+                    <div className="grid grid-cols-2 gap-1 max-w-[130px]">
+                      {gi.getAttachedRunes(myPlayer, card).map((rune) => (
+                        <Card
+                          key={rune.instanceId}
+                          card={rune}
+                          onClick={() => gi.handleRuneClick(rune)}
+                          isSelected={gi.selectedRuneIds.includes(rune.instanceId)}
+                          isPlayable={gi.isRuneAvailable(rune)}
+                          size="sm"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </AnimatePresence>
           )}
         </div>
 
@@ -201,27 +208,29 @@ export function LayoutB({
 
         {/* My hand */}
         <div className="flex justify-center gap-2 mb-2">
-          {myPlayer.hand.map((card) => {
-            const isSelectedInHand = gi.isSpelling && gi.mode.type !== "idle" && "card" in gi.mode && gi.mode.card.instanceId === card.instanceId;
-            return (
-              <div
-                key={card.instanceId}
-                className={`transform transition-transform ${isSelectedInHand ? "-translate-y-2" : "hover:-translate-y-2"}`}
-              >
-                <Card
-                  card={card}
-                  onClick={() => gi.handleCardInHandClick(card)}
-                  isPlayable={turnPhase === "main" && gi.canSpellCard(card) && (isMyTurn || card.cardType === "memory")}
-                  isSelected={
-                    (gi.mode.type === "summoning" || gi.mode.type === "echo" || gi.mode.type === "memory") &&
-                    gi.mode.card.instanceId === card.instanceId
-                  }
-                  isInHand
-                  size="md"
-                />
-              </div>
-            );
-          })}
+          <AnimatePresence mode="popLayout" initial={false}>
+            {myPlayer.hand.map((card) => {
+              const isSelectedInHand = gi.isSpelling && gi.mode.type !== "idle" && "card" in gi.mode && gi.mode.card.instanceId === card.instanceId;
+              return (
+                <div
+                  key={card.instanceId}
+                  className={`transform transition-transform ${isSelectedInHand ? "-translate-y-2" : "hover:-translate-y-2"}`}
+                >
+                  <Card
+                    card={card}
+                    onClick={() => gi.handleCardInHandClick(card)}
+                    isPlayable={turnPhase === "main" && gi.canSpellCard(card) && (isMyTurn || card.cardType === "memory")}
+                    isSelected={
+                      (gi.mode.type === "summoning" || gi.mode.type === "echo" || gi.mode.type === "memory") &&
+                      gi.mode.card.instanceId === card.instanceId
+                    }
+                    isInHand
+                    size="md"
+                  />
+                </div>
+              );
+            })}
+          </AnimatePresence>
         </div>
 
         {/* Action buttons */}
@@ -284,6 +293,10 @@ export function LayoutB({
       {gi.isSpelling && gi.selectedRuneIds.length > 0 && gi.mode.type !== "idle" && "card" in gi.mode && (
         <RuneLinks selectedRuneIds={gi.selectedRuneIds} targetCardId={gi.mode.card.instanceId} />
       )}
+
+      {/* Animation overlays */}
+      <AnimationOverlay gameEvents={gameEvents} />
+      <RuneAttachEffect gameEvents={gameEvents} />
     </div>
   );
 }
