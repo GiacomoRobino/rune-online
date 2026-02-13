@@ -10,6 +10,7 @@ import { GraveyardOverlay } from "../GraveyardOverlay";
 import { RunePicker } from "../RunePicker";
 import { AnimationOverlay } from "../AnimationOverlay";
 import { RuneAttachEffect } from "../RuneAttachEffect";
+import { BlockerLinks } from "../BlockerLinks";
 
 import { LayoutProps } from "./types";
 
@@ -301,6 +302,11 @@ export function LayoutB({
       {/* Rune links */}
       {gi.isSpelling && gi.selectedRuneIds.length > 0 && gi.mode.type !== "idle" && "card" in gi.mode && (
         <RuneLinks selectedRuneIds={gi.selectedRuneIds} targetCardId={gi.mode.card.instanceId} />
+      )}
+
+      {/* Blocker → attacker links */}
+      {gi.mode.type === "declare_block" && gi.mode.assignments.size > 0 && (
+        <BlockerLinks assignments={gi.mode.assignments} />
       )}
 
       {/* Animation overlays */}
