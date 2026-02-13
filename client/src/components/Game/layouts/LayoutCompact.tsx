@@ -86,10 +86,17 @@ export function LayoutCompact({
 
       {/* Center arena */}
       <div className="flex-1 flex flex-col p-3 gap-2 pt-14 min-h-0 overflow-hidden">
-        {/* Opponent hand (face down) */}
-        <div className="flex justify-center gap-1 mb-1 shrink-0">
+        {/* Opponent hand (small icons) */}
+        <div className="flex justify-center gap-1 shrink-0">
           {opponent.hand.map((_, i) => (
-            <Card key={i} card={{} as CardState} showBack size="sm" />
+            <div
+              key={i}
+              className="w-5 h-7 rounded-sm"
+              style={{
+                background: 'linear-gradient(135deg, #4a3728, #2a1f16)',
+                border: '1px solid #6b5c4e',
+              }}
+            />
           ))}
         </div>
 
