@@ -255,6 +255,7 @@ export function LayoutCompact({
           {(gi.mode.type === "summoning" || gi.mode.type === "echo" || gi.mode.type === "memory") && (
             <SpellNameChecker
               spellName={gi.mode.card.spellName}
+              bloodCost={gi.mode.card.bloodCost}
               selectedRunes={gi.selectedRuneIds
                 .map((id) => myPlayer.runeField.find((r) => r.instanceId === id))
                 .filter((r): r is CardState => r !== undefined)

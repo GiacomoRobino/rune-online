@@ -255,7 +255,7 @@ export class GameRoom extends Room<GameState> {
     if (player.battlefield.length >= MAX_BATTLEFIELD_SIZE) return;
 
     // Validate rune spelling
-    if (!this.validateRuneSpelling(player, card.spellName, message.runeIds)) return;
+    if (!this.validateRuneSpelling(player, card.spellName, message.runeIds, card.bloodCost)) return;
 
     // Detach runes from old summonings, then attach to new one
     for (const runeId of message.runeIds) {
@@ -306,7 +306,7 @@ export class GameRoom extends Room<GameState> {
     const card = player.hand.at(cardIndex);
     if (!card || card.cardType !== "echo") return;
 
-    if (!this.validateRuneSpelling(player, card.spellName, message.runeIds)) return;
+    if (!this.validateRuneSpelling(player, card.spellName, message.runeIds, card.bloodCost)) return;
 
     // Detach runes from old summonings, then attach to new one
     for (const runeId of message.runeIds) {
@@ -344,7 +344,7 @@ export class GameRoom extends Room<GameState> {
     if (!card || card.cardType !== "memory") return;
 
     // Validate rune spelling
-    if (!this.validateRuneSpelling(player, card.spellName, message.runeIds)) return;
+    if (!this.validateRuneSpelling(player, card.spellName, message.runeIds, card.bloodCost)) return;
 
     // Cancel (remove) selected runes from rune field
     for (const runeId of message.runeIds) {
@@ -848,7 +848,34 @@ export class GameRoom extends Room<GameState> {
 
   // ─── VALIDATION ────────────────────────────────────────
 
-  private validateRuneSpelling(player: Player, spellName: string, runeIds: string[]): boolean {
+  private validateRuneSpelling(player: Player, spellName: string, runeIds: string[], bloodCost: number = 0): boolean {
+    if (bloodCost > 0) {
+      // Blood cost: pick any N runes whose letters are in the spell name pool
+      if (runeIds.length !== bloodCost) return false;
+
+      // Build frequency map of available letters in spellName
+      const nameFreq = new Map<string, number>();
+      for (const ch of spellName) {
+        nameFreq.set(ch, (nameFreq.get(ch) || 0) + 1);
+      }
+
+      // Check each selected rune
+      const usedFreq = new Map<string, number>();
+      for (const runeId of runeIds) {
+        const rune = player.runeField.find((r) => r.instanceId === runeId);
+        if (!rune) return false;
+        if (rune.etchingCounters > 0) return false;
+        const letter = rune.letter;
+        if (!nameFreq.has(letter)) return false;
+        const used = (usedFreq.get(letter) || 0) + 1;
+        if (used > nameFreq.get(letter)!) return false;
+        usedFreq.set(letter, used);
+      }
+
+      return true;
+    }
+
+    // Standard spelling: must provide ALL letters exactly
     if (runeIds.length !== spellName.length) return false;
 
     // Collect letters needed
@@ -988,14 +1015,17 @@ export class GameRoom extends Room<GameState> {
       card.baseAttack = def.attack;
       card.baseHealth = def.health;
       card.spellName = def.spellName;
+      card.bloodCost = def.bloodCost || 0;
       card.abilities = def.abilities;
       card.description = def.description || "";
     } else if (def.type === "echo") {
       card.spellName = def.spellName;
+      card.bloodCost = def.bloodCost || 0;
       card.description = def.description;
       card.abilities = def.abilities;
     } else if (def.type === "memory") {
       card.spellName = def.spellName;
+      card.bloodCost = def.bloodCost || 0;
       card.description = def.description;
     } else if (def.type === "rune") {
       card.letter = def.letter;

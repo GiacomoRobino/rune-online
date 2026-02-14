@@ -2,6 +2,7 @@ import { CardState } from "../../hooks/useColyseus";
 
 interface SpellNameCheckerProps {
   spellName: string;
+  bloodCost: number;
   selectedRunes: CardState[];
   onConfirm: () => void;
   onCancel: () => void;
@@ -9,12 +10,58 @@ interface SpellNameCheckerProps {
 
 export function SpellNameChecker({
   spellName,
+  bloodCost,
   selectedRunes,
   onConfirm,
   onCancel,
 }: SpellNameCheckerProps) {
-  const needed = spellName.split("");
   const provided = selectedRunes.map((r) => r.letter);
+
+  if (bloodCost > 0) {
+    // Blood cost mode: generic rune slots
+    const isComplete = selectedRunes.length === bloodCost;
+    const validLetters = [...new Set(spellName.split(""))].join(", ");
+
+    return (
+      <div className="stone-panel metal-border rounded-lg p-3 flex items-center gap-3">
+        <div className="text-gold-dim text-sm font-medieval">Blood Cost:</div>
+        <div className="flex gap-1">
+          {Array.from({ length: bloodCost }).map((_, i) => {
+            const rune = selectedRunes[i];
+            const isFilled = !!rune;
+
+            return (
+              <div
+                key={i}
+                className={`
+                  w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg font-medieval
+                  ${isFilled ? "text-red-400 border-red-700 shadow-metal" : "text-stone-500 border-stone-600 shadow-stone-inset"}
+                  border
+                `}
+                style={isFilled ? { background: 'linear-gradient(135deg, #3a1010, #2a0808)' } : { background: '#14100a' }}
+              >
+                {rune ? rune.letter : "?"}
+              </div>
+            );
+          })}
+        </div>
+        <div className="text-stone-500 text-xs font-body">({validLetters})</div>
+        <div className="flex gap-2 ml-auto">
+          <button onClick={onCancel} className="px-3 py-1 btn-stone rounded text-sm">Cancel</button>
+          <button
+            onClick={onConfirm}
+            disabled={!isComplete}
+            className={`px-3 py-1 rounded text-sm font-semibold ${isComplete ? "btn-stone shadow-gold-glow" : "btn-stone opacity-50"}`}
+          >
+            Cast
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Standard spell name mode
+  const needed = spellName.split("");
 
   // Check which letters are fulfilled
   const remaining = [...needed];

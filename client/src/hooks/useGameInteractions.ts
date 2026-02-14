@@ -70,6 +70,8 @@ export function useGameInteractions({
     if (idx !== -1) {
       ids.splice(idx, 1);
     } else {
+      // Cap at bloodCost if applicable
+      if (mode.card.bloodCost > 0 && ids.length >= mode.card.bloodCost) return;
       ids.push(rune.instanceId);
     }
     setMode({ ...mode, selectedRuneIds: ids });
@@ -196,14 +198,33 @@ export function useGameInteractions({
   // Check if a card can be played
   const canSpellCard = (card: CardState) => {
     if (card.cardType !== "summoning" && card.cardType !== "echo" && card.cardType !== "memory") return false;
+    const available = myPlayer.runeField.filter((r) => r.etchingCounters === 0);
+
+    if (card.bloodCost > 0) {
+      // Blood cost: need at least bloodCost runes whose letters are in spellName (respecting frequency)
+      const nameFreq = new Map<string, number>();
+      for (const ch of card.spellName) {
+        nameFreq.set(ch, (nameFreq.get(ch) || 0) + 1);
+      }
+      let matchCount = 0;
+      const usedFreq = new Map<string, number>();
+      for (const rune of available) {
+        const maxForLetter = nameFreq.get(rune.letter) || 0;
+        const usedForLetter = usedFreq.get(rune.letter) || 0;
+        if (maxForLetter > usedForLetter) {
+          matchCount++;
+          usedFreq.set(rune.letter, usedForLetter + 1);
+        }
+      }
+      return matchCount >= card.bloodCost;
+    }
+
+    // Standard spelling
     const needed = card.spellName.split("").sort();
-    const available = myPlayer.runeField
-      .filter((r) => r.etchingCounters === 0)
-      .map((r) => r.letter)
-      .sort();
+    const availableLetters = available.map((r) => r.letter).sort();
 
     const remaining = [...needed];
-    for (const letter of available) {
+    for (const letter of availableLetters) {
       const idx = remaining.indexOf(letter);
       if (idx !== -1) remaining.splice(idx, 1);
     }
@@ -215,6 +236,11 @@ export function useGameInteractions({
   const selectedRuneIds = isSpelling ? mode.selectedRuneIds : [];
   const remainingNeeded = (() => {
     if (!isSpelling) return [];
+    if (mode.card.bloodCost > 0) {
+      // For blood cost, return placeholder slots for remaining picks
+      const remaining = mode.card.bloodCost - mode.selectedRuneIds.length;
+      return Array(Math.max(0, remaining)).fill("*");
+    }
     const needed = [...mode.card.spellName.split("")];
     for (const id of mode.selectedRuneIds) {
       const rune = myPlayer.runeField.find((r) => r.instanceId === id);
@@ -238,6 +264,24 @@ export function useGameInteractions({
     if (rune.etchingCounters > 0) return false;
     if (!isSpelling) return false;
     if (selectedRuneIds.includes(rune.instanceId)) return true;
+
+    if (mode.card.bloodCost > 0) {
+      // Blood cost: rune letter must be in spellName, respecting frequency
+      if (mode.selectedRuneIds.length >= mode.card.bloodCost) return false;
+      const nameFreq = new Map<string, number>();
+      for (const ch of mode.card.spellName) {
+        nameFreq.set(ch, (nameFreq.get(ch) || 0) + 1);
+      }
+      if (!nameFreq.has(rune.letter)) return false;
+      // Count how many of this letter are already selected
+      let usedCount = 0;
+      for (const id of mode.selectedRuneIds) {
+        const sel = myPlayer.runeField.find((r) => r.instanceId === id);
+        if (sel && sel.letter === rune.letter) usedCount++;
+      }
+      return usedCount < nameFreq.get(rune.letter)!;
+    }
+
     return remainingNeeded.includes(rune.letter);
   };
 

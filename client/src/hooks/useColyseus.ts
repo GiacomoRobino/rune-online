@@ -14,6 +14,7 @@ export interface CardState {
   maxHealth: number;
   description: string;
   spellName: string;
+  bloodCost: number;
   abilities: string;
   canAttack: boolean;
   hasAttacked: boolean;
@@ -81,6 +82,7 @@ export function useColyseus() {
     maxHealth: c.maxHealth,
     description: c.description,
     spellName: c.spellName,
+    bloodCost: c.bloodCost,
     abilities: c.abilities,
     canAttack: c.canAttack,
     hasAttacked: c.hasAttacked,

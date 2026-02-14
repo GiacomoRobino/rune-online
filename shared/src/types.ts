@@ -26,6 +26,7 @@ export interface SummoningDefinition {
   name: string;
   type: "summoning";
   spellName: string; // letters needed (e.g. "ERA")
+  bloodCost?: number; // pick any N runes from spellName pool
   attack: number;
   health: number;
   abilities: string; // comma-separated keywords
@@ -38,6 +39,7 @@ export interface EchoDefinition {
   name: string;
   type: "echo";
   spellName: string;
+  bloodCost?: number; // pick any N runes from spellName pool
   description: string;
   abilities: string;
   effect?: CardEffect;
@@ -48,6 +50,7 @@ export interface MemoryDefinition {
   name: string;
   type: "memory";
   spellName: string;
+  bloodCost?: number; // pick any N runes from spellName pool
   description: string;
   effect: CardEffect;
 }

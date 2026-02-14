@@ -183,7 +183,12 @@ function CardTooltip({ card }: { card: CardState }) {
       {/* Spell cost */}
       {spellDisplay && (
         <div className="text-xs text-stone-400 font-body mb-1.5">
-          <span className="text-stone-500">Cost:</span> <span className="text-parchment-light font-medieval tracking-wide">{spellDisplay}</span>
+          <span className="text-stone-500">Cost:</span>{" "}
+          {card.bloodCost > 0 ? (
+            <span className="text-red-400 font-medieval tracking-wide">Blood {card.bloodCost} <span className="text-stone-500 text-[10px]">({spellDisplay})</span></span>
+          ) : (
+            <span className="text-parchment-light font-medieval tracking-wide">{spellDisplay}</span>
+          )}
         </div>
       )}
 

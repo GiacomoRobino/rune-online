@@ -3,6 +3,7 @@ import { card as oer } from "./cards/1/card.js";
 import { card as runeO } from "./cards/2/card.js";
 import { card as runeE } from "./cards/3/card.js";
 import { card as runeR } from "./cards/4/card.js";
+import { card as hopesKingdom } from "./cards/5/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -70,6 +71,11 @@ export function generateChaosStarterDeck(): CardDefinition[] {
     deck.push({ ...card });
     deck.push({ ...card });
   }
+  // 2 copies of each echo
+  for (const card of ECHO_POOL) {
+    deck.push({ ...card });
+    deck.push({ ...card });
+  }
   return deck;
 }
 
@@ -97,6 +103,7 @@ export function generateRunesStarterDeck(): RuneDefinition[] {
 export const ECHO_POOL: EchoDefinition[] = [
   { id: "echo_arra", name: "Arra", type: "echo", spellName: "ARRA", abilities: "", description: "+1/+1 to all friendly summonings.",
     effect: { type: "ongoing", action: { type: "buff", attack: 1, health: 1, target: "all_friendly" } } },
+  hopesKingdom,
 ];
 
 // --- TEST DECKS ---
@@ -106,6 +113,10 @@ export function generateTestChaosDeck(): CardDefinition[] {
   // 20 copies of Oer (summoning)
   for (let i = 0; i < 20; i++) {
     deck.push({ ...oer });
+  }
+  // 5 copies of Hope's Kingdom (echo)
+  for (let i = 0; i < 5; i++) {
+    deck.push({ ...hopesKingdom });
   }
   return deck;
 }

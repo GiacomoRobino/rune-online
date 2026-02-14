@@ -30,3 +30,4 @@ npm-debug.log*
 # Vite
 .vite/
 node_modules
+UI_ASSET_LIST.md
