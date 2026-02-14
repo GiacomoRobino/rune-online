@@ -1,4 +1,4 @@
-import { PlayerState } from "../../hooks/useColyseus";
+import { PlayerState, PendingEffectState } from "../../hooks/useColyseus";
 import { useGameInteractions } from "../../hooks/useGameInteractions";
 import { GameEvent } from "../../types/animations";
 import { LayoutCompact } from "./layouts/LayoutCompact";
@@ -22,6 +22,9 @@ interface GameBoardProps {
   onEndTurn: () => void;
   onLeave: () => void;
   gameEvents: GameEvent[];
+  pendingDeathEffects: PendingEffectState[];
+  onResolveDeathTarget: (targetId: string) => void;
+  onResolveDeckSearch: (cardId: string | null) => void;
 }
 
 export function GameBoard({
@@ -43,6 +46,9 @@ export function GameBoard({
   onEndTurn,
   onLeave,
   gameEvents,
+  pendingDeathEffects,
+  onResolveDeathTarget,
+  onResolveDeckSearch,
 }: GameBoardProps) {
   const interactions = useGameInteractions({
     myPlayer,
@@ -54,6 +60,10 @@ export function GameBoard({
     onPlayMemory,
     onDeclareAttackers,
     onDeclareBlockers,
+    pendingDeathEffects,
+    mySessionId,
+    onResolveDeathTarget,
+    onResolveDeckSearch,
   });
 
   // Game ended

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PlayerState, CardState } from "./useColyseus";
+import { PlayerState, CardState, PendingEffectState } from "./useColyseus";
 
 export type InteractionMode =
   | { type: "idle" }
@@ -8,7 +8,9 @@ export type InteractionMode =
   | { type: "memory"; card: CardState; selectedRuneIds: string[] }
   | { type: "targeting_memory"; card: CardState; selectedRuneIds: string[] }
   | { type: "declare_attack"; selectedAttackerIds: string[] }
-  | { type: "declare_block"; assignments: Map<string, string>; selectedBlockerId: string | null }; // blockerId -> attackerId
+  | { type: "declare_block"; assignments: Map<string, string>; selectedBlockerId: string | null } // blockerId -> attackerId
+  | { type: "targeting_death_effect"; effectId: string; cardName: string; damageAmount: number }
+  | { type: "searching_deck"; effectId: string; cardName: string; searchFilter: string };
 
 export interface GameInteractionsProps {
   myPlayer: PlayerState;
@@ -20,6 +22,10 @@ export interface GameInteractionsProps {
   onPlayMemory: (cardId: string, runeIds: string[], targetId?: string) => void;
   onDeclareAttackers: (attackerIds: string[]) => void;
   onDeclareBlockers: (assignments: string[]) => void;
+  pendingDeathEffects: PendingEffectState[];
+  mySessionId: string;
+  onResolveDeathTarget: (targetId: string) => void;
+  onResolveDeckSearch: (cardId: string | null) => void;
 }
 
 export function useGameInteractions({
@@ -32,10 +38,15 @@ export function useGameInteractions({
   onPlayMemory,
   onDeclareAttackers,
   onDeclareBlockers,
+  pendingDeathEffects,
+  mySessionId,
+  onResolveDeathTarget,
+  onResolveDeckSearch,
 }: GameInteractionsProps) {
   const [mode, setMode] = useState<InteractionMode>({ type: "idle" });
   const [inspectedCardId, setInspectedCardId] = useState<string | null>(null);
   const [showGraveyard, setShowGraveyard] = useState<"mine" | "opponent" | null>(null);
+  const [deckSearchCards, setDeckSearchCards] = useState<CardState[]>([]);
 
   const isBlockingPhase = turnPhase === "declare_blockers" && !isMyTurn;
 
@@ -105,6 +116,10 @@ export function useGameInteractions({
 
   // --- Battlefield click ---
   const handleMyCreatureClick = (card: CardState) => {
+    if (mode.type === "targeting_death_effect") {
+      handleDeathEffectTarget(card.instanceId);
+      return;
+    }
     if (mode.type === "idle") {
       setInspectedCardId((prev) => prev === card.instanceId ? null : card.instanceId);
       return;
@@ -140,6 +155,8 @@ export function useGameInteractions({
   const handleEnemyCreatureClick = (card: CardState) => {
     if (mode.type === "targeting_memory") {
       handleMemoryTarget(card.instanceId);
+    } else if (mode.type === "targeting_death_effect") {
+      handleDeathEffectTarget(card.instanceId);
     } else if (mode.type === "declare_block" && mode.selectedBlockerId && declaredAttackers.includes(card.instanceId)) {
       // Assign the pending blocker to this attacker
       const currentAssignments = new Map(mode.assignments);
@@ -153,7 +170,22 @@ export function useGameInteractions({
   const handleHeroClick = (isOwn: boolean) => {
     if (mode.type === "targeting_memory") {
       handleMemoryTarget(isOwn ? "my_hero" : "opponent_hero");
+    } else if (mode.type === "targeting_death_effect") {
+      handleDeathEffectTarget(isOwn ? "my_hero" : "opponent_hero");
     }
+  };
+
+  // --- Death effect handlers ---
+  const handleDeathEffectTarget = (targetId: string) => {
+    if (mode.type !== "targeting_death_effect") return;
+    onResolveDeathTarget(targetId);
+    setMode({ type: "idle" });
+  };
+
+  const handleDeckSearchSelect = (cardId: string | null) => {
+    onResolveDeckSearch(cardId);
+    setDeckSearchCards([]);
+    setMode({ type: "idle" });
   };
 
   // --- Attack phase controls ---
@@ -194,6 +226,44 @@ export function useGameInteractions({
       setMode({ type: "idle" });
     }
   }, [isBlockingPhase, mode.type]);
+
+  // Auto-enter death effect resolution mode
+  useEffect(() => {
+    if (turnPhase === "resolve_death_effects" && pendingDeathEffects.length > 0) {
+      const first = pendingDeathEffects[0];
+      if (first.ownerSessionId === mySessionId) {
+        if (first.effectType === "death_damage") {
+          setMode({
+            type: "targeting_death_effect",
+            effectId: first.id,
+            cardName: first.cardName,
+            damageAmount: first.damageAmount,
+          });
+        } else if (first.effectType === "search_deck") {
+          const filterValues = first.searchFilter.split(",");
+          const matching = myPlayer.chaosDeck.filter((c) => {
+            const subs = c.subtypes ? c.subtypes.split(",") : [];
+            return subs.some((st) => filterValues.includes(st));
+          });
+          setDeckSearchCards(matching);
+          setMode({
+            type: "searching_deck",
+            effectId: first.id,
+            cardName: first.cardName,
+            searchFilter: first.searchFilter,
+          });
+        }
+      }
+    }
+  }, [turnPhase, pendingDeathEffects, mySessionId, myPlayer.chaosDeck]);
+
+  // Auto-exit death effect mode when phase leaves resolve_death_effects
+  useEffect(() => {
+    if (turnPhase !== "resolve_death_effects" && (mode.type === "targeting_death_effect" || mode.type === "searching_deck")) {
+      setMode({ type: "idle" });
+      setDeckSearchCards([]);
+    }
+  }, [turnPhase, mode.type]);
 
   // Check if a card can be played
   const canSpellCard = (card: CardState) => {
@@ -306,7 +376,8 @@ export function useGameInteractions({
   const phaseLabel = turnPhase === "main" ? "Main Phase" :
     turnPhase === "declare_attackers" ? "Declaring Attackers" :
     turnPhase === "declare_blockers" ? "Blocking Phase" :
-    turnPhase === "combat_damage" ? "Combat!" : turnPhase;
+    turnPhase === "combat_damage" ? "Combat!" :
+    turnPhase === "resolve_death_effects" ? "Death Effects" : turnPhase;
 
   return {
     mode,
@@ -334,6 +405,9 @@ export function useGameInteractions({
     myUnattachedRunes,
     isRuneAvailable,
     phaseLabel,
+    handleDeathEffectTarget,
+    handleDeckSearchSelect,
+    deckSearchCards,
   };
 }
 

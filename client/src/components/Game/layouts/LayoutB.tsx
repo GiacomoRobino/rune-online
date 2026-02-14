@@ -7,6 +7,7 @@ import { SpellNameChecker } from "../SpellNameChecker";
 import { TurnBanner } from "../TurnBanner";
 import { ActionBar } from "../ActionBar";
 import { GraveyardOverlay } from "../GraveyardOverlay";
+import { DeckSearchOverlay } from "../DeckSearchOverlay";
 import { RunePicker } from "../RunePicker";
 import { AnimationOverlay } from "../AnimationOverlay";
 import { RuneAttachEffect } from "../RuneAttachEffect";
@@ -31,7 +32,7 @@ export function LayoutB({
           <div
             onClick={() => gi.handleHeroClick(false)}
             className={`w-16 h-16 rounded-full flex items-center justify-center cursor-pointer transition-colors ${
-              gi.mode.type === "targeting_memory" ? "ring-target" : ""
+              gi.mode.type === "targeting_memory" || gi.mode.type === "targeting_death_effect" ? "ring-target" : ""
             }`}
             style={{
               background: 'linear-gradient(135deg, #8b0000, #5c0000)',
@@ -61,7 +62,7 @@ export function LayoutB({
           <div
             onClick={() => gi.handleHeroClick(true)}
             className={`w-16 h-16 rounded-full flex items-center justify-center cursor-pointer ${
-              gi.mode.type === "targeting_memory" ? "ring-target" : ""
+              gi.mode.type === "targeting_memory" || gi.mode.type === "targeting_death_effect" ? "ring-target" : ""
             }`}
             style={{
               background: 'linear-gradient(135deg, #2d5a27, #1a3a15)',
@@ -109,7 +110,7 @@ export function LayoutB({
                   <Card
                     card={card}
                     onClick={() => gi.handleEnemyCreatureClick(card)}
-                    isTarget={gi.mode.type === "targeting_memory"}
+                    isTarget={gi.mode.type === "targeting_memory" || gi.mode.type === "targeting_death_effect"}
                     isAttacker={declaredAttackers.includes(card.instanceId)}
                     isSelected={gi.inspectedCardId === card.instanceId}
                     size="lg"
@@ -215,6 +216,13 @@ export function LayoutB({
           </div>
         )}
 
+        {/* Death effect targeting indicator */}
+        {gi.mode.type === "targeting_death_effect" && (
+          <div className="stone-panel metal-border rounded-lg p-2 text-center text-gold text-sm font-medieval">
+            {gi.mode.cardName}&apos;s deathstrike: Deal {gi.mode.damageAmount} damage — select a target
+          </div>
+        )}
+
         {/* Rune picker */}
         <RunePicker myPlayer={myPlayer} onWriteRune={onWriteRune} />
 
@@ -298,6 +306,15 @@ export function LayoutB({
           opponent={opponent}
           onClose={() => gi.setShowGraveyard(null)}
           cardSize="sm"
+        />
+      )}
+
+      {/* Deck search overlay */}
+      {gi.mode.type === "searching_deck" && (
+        <DeckSearchOverlay
+          cardName={gi.mode.cardName}
+          cards={gi.deckSearchCards}
+          onSelect={gi.handleDeckSearchSelect}
         />
       )}
 

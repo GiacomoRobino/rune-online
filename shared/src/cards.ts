@@ -6,12 +6,14 @@ import { card as runeR } from "./cards/4/card.js";
 import { card as hopesKingdom } from "./cards/5/card.js";
 import { card as hopesTiranny } from "./cards/6/card.js";
 import { card as he } from "./cards/7/card.js";
+import { card as oor } from "./cards/8/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
   // 2-letter (cheap)
   { id: "ox", name: "Ox", type: "summoning", spellName: "OX", attack: 2, health: 3, abilities: "", description: "A sturdy beast." },
   he,
+  oor,
   // 3-letter (medium)
   { id: "era", name: "Era", type: "summoning", spellName: "ERA", attack: 2, health: 3, abilities: "", description: "A timeless warrior." },
   { id: "fen", name: "Fen", type: "summoning", spellName: "FEN", attack: 1, health: 4, abilities: "defender", description: "Defender." },
@@ -129,6 +131,10 @@ export function generateTestChaosDeck(): CardDefinition[] {
   // 4 copies of He (summoning)
   for (let i = 0; i < 4; i++) {
     deck.push({ ...he });
+  }
+  // 4 copies of Oor (summoning)
+  for (let i = 0; i < 4; i++) {
+    deck.push({ ...oor });
   }
   return deck;
 }

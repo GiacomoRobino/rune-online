@@ -19,7 +19,8 @@ export type AbilityKeyword =
   | "warden"
   | "unbounded"
   | "bloodmaster"
-  | "lifedrinker";
+  | "lifedrinker"
+  | "deathstrike";
 
 // Card definitions
 export interface SummoningDefinition {
@@ -31,6 +32,7 @@ export interface SummoningDefinition {
   attack: number;
   health: number;
   abilities: string; // comma-separated keywords
+  subtypes?: string; // comma-separated: "Angel,Demon"
   canOverpay?: boolean; // allow extra runes matching spellName letters
   description?: string;
   effect?: CardEffect;
@@ -85,10 +87,11 @@ export type EffectAction =
   | { type: "buff"; attack: number; health: number; target: "friendly" | "all_friendly" | "all_enemy" | "all" }
   | { type: "destroy_rune"; target: "enemy" }
   | { type: "return_to_hand"; target: "any" }
-  | { type: "create_copies"; source: "extra_runes" };
+  | { type: "create_copies"; source: "extra_runes" }
+  | { type: "search_deck"; filter: "subtype"; values: string[] };
 
 // Turn phases
-export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "combat_damage";
+export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "combat_damage" | "resolve_death_effects";
 
 // Message types (client -> server)
 export type ClientMessage =
@@ -99,7 +102,9 @@ export type ClientMessage =
   | { type: "attach_rune"; runeId: string; targetId: string }
   | { type: "declare_attackers"; attackerIds: string[] }
   | { type: "declare_blockers"; assignments: string[] } // "blockerId:attackerId" pairs
-  | { type: "end_turn" };
+  | { type: "end_turn" }
+  | { type: "resolve_death_target"; targetId: string }
+  | { type: "resolve_deck_search"; cardId: string | null };
 
 // Game phases
 export type GamePhase = "waiting" | "playing" | "ended";

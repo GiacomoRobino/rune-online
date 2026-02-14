@@ -1,5 +1,6 @@
 import { Schema, MapSchema, ArraySchema, type } from "@colyseus/schema";
 import { Player } from "./Player.js";
+import { PendingEffect } from "./PendingEffect.js";
 
 export class GameState extends Schema {
   @type("string") phase: string = "waiting"; // "waiting"|"playing"|"ended"
@@ -12,4 +13,5 @@ export class GameState extends Schema {
   @type(["string"]) declaredAttackers = new ArraySchema<string>();
   @type(["string"]) blockingAssignments = new ArraySchema<string>(); // "blockerId:attackerId" pairs
   @type("boolean") isFirstTurn: boolean = true;
+  @type([PendingEffect]) pendingDeathEffects = new ArraySchema<PendingEffect>();
 }

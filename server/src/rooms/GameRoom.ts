@@ -1,7 +1,7 @@
 import { Room, Client } from "@colyseus/core";
 import { ArraySchema } from "@colyseus/schema";
 import {
-  GameState, Player, Card,
+  GameState, Player, Card, PendingEffect,
   generateTestChaosDeck, generateTestRunesDeck, shuffleArray,
   SUMMONING_POOL, MEMORY_POOL, ECHO_POOL, CARD_REGISTRY,
   type CardDefinition, type SummoningDefinition, type MemoryDefinition, type RuneDefinition, type EchoDefinition,
@@ -48,6 +48,14 @@ export class GameRoom extends Room<GameState> {
 
     this.onMessage("end_turn", (client) => {
       this.handleEndTurn(client);
+    });
+
+    this.onMessage("resolve_death_target", (client, message) => {
+      this.handleResolveDeathTarget(client, message);
+    });
+
+    this.onMessage("resolve_deck_search", (client, message) => {
+      this.handleResolveDeckSearch(client, message);
     });
   }
 
@@ -288,6 +296,10 @@ export class GameRoom extends Room<GameState> {
 
     this.recalculateOngoingEffects();
     this.checkWinCondition();
+
+    if (this.state.pendingDeathEffects.length > 0) {
+      this.state.turnPhase = "resolve_death_effects";
+    }
   }
 
   // ─── ECHO PLAY ─────────────────────────────────────────
@@ -326,6 +338,10 @@ export class GameRoom extends Room<GameState> {
 
     this.recalculateOngoingEffects();
     this.checkWinCondition();
+
+    if (this.state.pendingDeathEffects.length > 0) {
+      this.state.turnPhase = "resolve_death_effects";
+    }
   }
 
   // ─── MEMORY PLAY ───────────────────────────────────────
@@ -369,6 +385,10 @@ export class GameRoom extends Room<GameState> {
 
     this.recalculateOngoingEffects();
     this.checkWinCondition();
+
+    if (this.state.pendingDeathEffects.length > 0) {
+      this.state.turnPhase = "resolve_death_effects";
+    }
   }
 
   // ─── RUNE ATTACHMENT ───────────────────────────────────
@@ -392,6 +412,10 @@ export class GameRoom extends Room<GameState> {
 
     // Old summoning may have lost all runes → sacrifice
     this.sacrificeRunelessSummonings(player);
+
+    if (this.state.pendingDeathEffects.length > 0) {
+      this.state.turnPhase = "resolve_death_effects";
+    }
   }
 
   // ─── COMBAT: DECLARE ATTACKERS ─────────────────────────
@@ -609,9 +633,14 @@ export class GameRoom extends Room<GameState> {
     // Clear combat state
     this.state.declaredAttackers.clear();
     this.state.blockingAssignments.clear();
-    this.state.turnPhase = "main";
 
     this.checkWinCondition();
+
+    if (this.state.pendingDeathEffects.length > 0) {
+      this.state.turnPhase = "resolve_death_effects";
+    } else {
+      this.state.turnPhase = "main";
+    }
   }
 
   // ─── CREATURE DEATH & RUNE PERSISTENCE ─────────────────
@@ -750,6 +779,10 @@ export class GameRoom extends Room<GameState> {
         this.sacrificeRunelessSummonings(player);
       }
     });
+
+    if (this.state.pendingDeathEffects.length > 0) {
+      this.state.turnPhase = "resolve_death_effects";
+    }
   }
 
   // ─── EFFECTS ───────────────────────────────────────────
@@ -800,15 +833,36 @@ export class GameRoom extends Room<GameState> {
   }
 
   private handleOnDeathEffect(card: Card, owner: Player) {
-    const def = this.findDefinition(card);
-    if (!def || !('effect' in def) || !def.effect) return;
-    if (def.effect.type !== "on_death") return;
-
-    // Revenge: deal attack damage to opponent
+    // Revenge: immediate (no targeting needed)
     if (this.hasAbility(card, "revenge")) {
       const opponent = this.getOpponent(owner.sessionId);
       if (opponent) {
         opponent.health -= card.attack;
+      }
+    }
+
+    // Deathstrike: queue targeted damage
+    if (this.hasAbility(card, "deathstrike")) {
+      const effect = new PendingEffect();
+      effect.id = `de_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      effect.ownerSessionId = owner.sessionId;
+      effect.effectType = "death_damage";
+      effect.damageAmount = card.attack;
+      effect.cardName = card.name;
+      this.state.pendingDeathEffects.push(effect);
+    }
+
+    // On-death search_deck effect
+    const def = this.findDefinition(card);
+    if (def && 'effect' in def && def.effect && def.effect.type === "on_death") {
+      if (def.effect.action.type === "search_deck") {
+        const effect = new PendingEffect();
+        effect.id = `de_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        effect.ownerSessionId = owner.sessionId;
+        effect.effectType = "search_deck";
+        effect.cardName = card.name;
+        effect.searchFilter = def.effect.action.values.join(",");
+        this.state.pendingDeathEffects.push(effect);
       }
     }
   }
@@ -1069,6 +1123,90 @@ export class GameRoom extends Room<GameState> {
     return owner;
   }
 
+  // ─── DEATH EFFECT RESOLUTION ──────────────────────────
+
+  private handleResolveDeathTarget(client: Client, message: { targetId: string }) {
+    if (this.state.phase !== "playing") return;
+    if (this.state.turnPhase !== "resolve_death_effects") return;
+
+    const effect = this.state.pendingDeathEffects.at(0);
+    if (!effect || effect.effectType !== "death_damage" || effect.ownerSessionId !== client.sessionId) return;
+
+    const caster = this.state.players.get(client.sessionId);
+    if (!caster) return;
+    const opponent = this.getOpponent(client.sessionId);
+
+    const targetId = message.targetId;
+    if (targetId === "opponent_hero") {
+      if (opponent) opponent.health -= effect.damageAmount;
+    } else if (targetId === "my_hero") {
+      caster.health -= effect.damageAmount;
+    } else {
+      const target = this.findCardOnAnyBattlefield(targetId);
+      if (target) {
+        const owner = this.findOwner(targetId);
+        if (owner) {
+          this.applyDamageToCreature(target, effect.damageAmount, owner);
+          this.cleanupDeadCreatures(owner);
+          this.recalculateOngoingEffects();
+        }
+      }
+    }
+
+    this.state.pendingDeathEffects.splice(0, 1);
+    this.checkWinCondition();
+    this.advanceDeathEffectQueue();
+  }
+
+  private handleResolveDeckSearch(client: Client, message: { cardId: string | null }) {
+    if (this.state.phase !== "playing") return;
+    if (this.state.turnPhase !== "resolve_death_effects") return;
+
+    const effect = this.state.pendingDeathEffects.at(0);
+    if (!effect || effect.effectType !== "search_deck" || effect.ownerSessionId !== client.sessionId) return;
+
+    const player = this.state.players.get(client.sessionId);
+    if (!player) return;
+
+    if (message.cardId) {
+      const cardIndex = player.chaosDeck.findIndex((c) => c.instanceId === message.cardId);
+      if (cardIndex !== -1) {
+        const card = player.chaosDeck.at(cardIndex);
+        if (card) {
+          // Validate subtype match
+          const filterValues = effect.searchFilter.split(",");
+          const cardSubtypes = card.subtypes ? card.subtypes.split(",") : [];
+          const matches = cardSubtypes.some((st) => filterValues.includes(st));
+          if (matches && player.hand.length < 10) {
+            player.chaosDeck.splice(cardIndex, 1);
+            player.hand.push(card);
+          }
+        }
+      }
+    }
+
+    this.state.pendingDeathEffects.splice(0, 1);
+    this.advanceDeathEffectQueue();
+  }
+
+  private advanceDeathEffectQueue() {
+    if (this.state.pendingDeathEffects.length > 0) {
+      // Stay in resolve_death_effects; skip disconnected players' effects
+      const next = this.state.pendingDeathEffects.at(0);
+      if (next) {
+        const owner = this.state.players.get(next.ownerSessionId);
+        if (!owner || !owner.connected) {
+          this.state.pendingDeathEffects.splice(0, 1);
+          this.advanceDeathEffectQueue();
+          return;
+        }
+      }
+      this.state.turnPhase = "resolve_death_effects";
+    } else {
+      this.state.turnPhase = "main";
+    }
+  }
+
   // ─── UTILITY ───────────────────────────────────────────
 
   private getOpponent(sessionId: string): Player | undefined {
@@ -1115,6 +1253,7 @@ export class GameRoom extends Room<GameState> {
       card.bloodCost = def.bloodCost || 0;
       card.canOverpay = def.canOverpay || false;
       card.abilities = def.abilities;
+      card.subtypes = def.subtypes || "";
       card.description = def.description || "";
     } else if (def.type === "echo") {
       card.spellName = def.spellName;

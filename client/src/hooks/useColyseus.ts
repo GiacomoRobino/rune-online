@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Client, Room } from "colyseus.js";
-import { GameState, Player, Card } from "shared";
+import { GameState, Player, Card, PendingEffect } from "shared";
 import { useGameEvents } from "./useGameEvents";
 
 // Plain object types for React state
@@ -16,6 +16,7 @@ export interface CardState {
   spellName: string;
   bloodCost: number;
   abilities: string;
+  subtypes: string;
   canAttack: boolean;
   hasAttacked: boolean;
   isTapped: boolean;
@@ -27,6 +28,15 @@ export interface CardState {
   etchingCounters: number;
   attachedToId: string;
   attachedRuneIds: string[];
+}
+
+export interface PendingEffectState {
+  id: string;
+  ownerSessionId: string;
+  effectType: string;
+  damageAmount: number;
+  cardName: string;
+  searchFilter: string;
 }
 
 export interface PlayerState {
@@ -56,6 +66,7 @@ export interface GameStateData {
   declaredAttackers: string[];
   blockingAssignments: string[];
   isFirstTurn: boolean;
+  pendingDeathEffects: PendingEffectState[];
 }
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
@@ -85,6 +96,7 @@ export function useColyseus() {
     spellName: c.spellName,
     bloodCost: c.bloodCost,
     abilities: c.abilities,
+    subtypes: c.subtypes,
     canAttack: c.canAttack,
     hasAttacked: c.hasAttacked,
     isTapped: c.isTapped,
@@ -130,6 +142,16 @@ export function useColyseus() {
       declaredAttackers: Array.from(state.declaredAttackers).filter((id): id is string => id !== undefined),
       blockingAssignments: Array.from(state.blockingAssignments).filter((id): id is string => id !== undefined),
       isFirstTurn: state.isFirstTurn,
+      pendingDeathEffects: Array.from(state.pendingDeathEffects)
+        .filter((e): e is PendingEffect => e !== undefined)
+        .map((e) => ({
+          id: e.id,
+          ownerSessionId: e.ownerSessionId,
+          effectType: e.effectType,
+          damageAmount: e.damageAmount,
+          cardName: e.cardName,
+          searchFilter: e.searchFilter,
+        })),
     };
   }, []);
 
@@ -219,6 +241,16 @@ export function useColyseus() {
     room.send("end_turn", {});
   }, [room]);
 
+  const resolveDeathTarget = useCallback((targetId: string) => {
+    if (!room) return;
+    room.send("resolve_death_target", { targetId });
+  }, [room]);
+
+  const resolveDeckSearch = useCallback((cardId: string | null) => {
+    if (!room) return;
+    room.send("resolve_deck_search", { cardId });
+  }, [room]);
+
   // Derived state helpers
   const myPlayer = gameState?.players.get(mySessionId);
   const opponent = gameState
@@ -247,5 +279,7 @@ export function useColyseus() {
     declareAttackers,
     declareBlockers,
     endTurn,
+    resolveDeathTarget,
+    resolveDeckSearch,
   };
 }

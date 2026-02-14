@@ -21,6 +21,8 @@ function App() {
     declareAttackers,
     declareBlockers,
     endTurn,
+    resolveDeathTarget,
+    resolveDeckSearch,
     gameEvents,
   } = useColyseus();
 
@@ -57,6 +59,9 @@ function App() {
         onEndTurn={endTurn}
         onLeave={leaveGame}
         gameEvents={gameEvents}
+        pendingDeathEffects={gameState.pendingDeathEffects}
+        onResolveDeathTarget={resolveDeathTarget}
+        onResolveDeckSearch={resolveDeckSearch}
       />
     );
   }

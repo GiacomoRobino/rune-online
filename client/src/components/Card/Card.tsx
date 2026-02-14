@@ -58,6 +58,8 @@ const ABILITY_DESCRIPTIONS: Record<string, string> = {
   warden: "Adjacent creatures gain +0/+1",
   unbounded: "Ignores defender when attacking",
   bloodmaster: "+1/+1 for each blood rune attached to this creature",
+  lifedrinker: "Heals its owner by the amount of combat damage dealt",
+  deathstrike: "When this creature dies, deal damage equal to its power to any target",
 };
 
 export function Card({
