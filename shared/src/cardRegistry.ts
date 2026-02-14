@@ -5,8 +5,9 @@ import { card as card2 } from "./cards/2/card.js";
 import { card as card3 } from "./cards/3/card.js";
 import { card as card4 } from "./cards/4/card.js";
 import { card as card5 } from "./cards/5/card.js";
+import { card as card6 } from "./cards/6/card.js";
 
-export const CARD_REGISTRY: CardDefinition[] = [card1, card2, card3, card4, card5];
+export const CARD_REGISTRY: CardDefinition[] = [card1, card2, card3, card4, card5, card6];
 
 export function getCardById(id: string): CardDefinition | undefined {
   return CARD_REGISTRY.find((c) => c.id === id);

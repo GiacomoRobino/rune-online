@@ -641,13 +641,13 @@ export class GameRoom extends Room<GameState> {
         const def = this.findDefinition(card);
         if (!def || !("effect" in def) || !def.effect) return;
         if (def.effect.type !== "ongoing" || def.effect.action.type !== "buff") return;
-        if (def.effect.action.target === "all_friendly") {
+        if (def.effect.action.target === "all_friendly" || def.effect.action.target === "all") {
           buffAttack += def.effect.action.attack;
           buffHealth += def.effect.action.health;
         }
       });
 
-      // Sum debuffs from opponent's echoes targeting "all_enemy"
+      // Sum debuffs from opponent's echoes targeting "all_enemy" or "all"
       const opponent = this.getOpponent(player.sessionId);
       if (opponent) {
         opponent.battlefield.forEach((card) => {
@@ -655,7 +655,7 @@ export class GameRoom extends Room<GameState> {
           const def = this.findDefinition(card);
           if (!def || !("effect" in def) || !def.effect) return;
           if (def.effect.type !== "ongoing" || def.effect.action.type !== "buff") return;
-          if (def.effect.action.target === "all_enemy") {
+          if (def.effect.action.target === "all_enemy" || def.effect.action.target === "all") {
             buffAttack += def.effect.action.attack;
             buffHealth += def.effect.action.health;
           }

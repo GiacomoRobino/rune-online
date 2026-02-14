@@ -4,6 +4,7 @@ import { card as runeO } from "./cards/2/card.js";
 import { card as runeE } from "./cards/3/card.js";
 import { card as runeR } from "./cards/4/card.js";
 import { card as hopesKingdom } from "./cards/5/card.js";
+import { card as hopesTiranny } from "./cards/6/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -104,6 +105,7 @@ export const ECHO_POOL: EchoDefinition[] = [
   { id: "echo_arra", name: "Arra", type: "echo", spellName: "ARRA", abilities: "", description: "+1/+1 to all friendly summonings.",
     effect: { type: "ongoing", action: { type: "buff", attack: 1, health: 1, target: "all_friendly" } } },
   hopesKingdom,
+  hopesTiranny,
 ];
 
 // --- TEST DECKS ---
@@ -114,9 +116,13 @@ export function generateTestChaosDeck(): CardDefinition[] {
   for (let i = 0; i < 20; i++) {
     deck.push({ ...oer });
   }
-  // 5 copies of Hope's Kingdom (echo)
-  for (let i = 0; i < 5; i++) {
+  // 3 copies of Hope's Kingdom (echo)
+  for (let i = 0; i < 3; i++) {
     deck.push({ ...hopesKingdom });
+  }
+  // 3 copies of Hope's Tiranny (echo)
+  for (let i = 0; i < 3; i++) {
+    deck.push({ ...hopesTiranny });
   }
   return deck;
 }
