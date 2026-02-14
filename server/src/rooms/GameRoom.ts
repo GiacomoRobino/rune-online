@@ -308,7 +308,10 @@ export class GameRoom extends Room<GameState> {
 
     if (!this.validateRuneSpelling(player, card.spellName, message.runeIds, card.bloodCost)) return;
 
-    // Detach runes from old summonings, then attach to new one
+    player.hand.splice(cardIndex, 1);
+    player.battlefield.push(card);
+
+    // Attach runes AFTER card is on battlefield so Colyseus tracks nested changes
     for (const runeId of message.runeIds) {
       this.detachRuneFromCurrent(player, runeId);
       const rune = player.runeField.find((r) => r.instanceId === runeId);
@@ -317,9 +320,6 @@ export class GameRoom extends Room<GameState> {
         card.attachedRuneIds.push(runeId);
       }
     }
-
-    player.hand.splice(cardIndex, 1);
-    player.battlefield.push(card);
 
     // Old summonings may have lost runes → sacrifice
     this.sacrificeRunelessSummonings(player);
@@ -618,7 +618,7 @@ export class GameRoom extends Room<GameState> {
       for (let i = player.battlefield.length - 1; i >= 0; i--) {
         const card = player.battlefield.at(i);
         if (!card) continue;
-        if (card.cardType === "summoning" && card.attachedRuneIds.length === 0 && !this.hasAbility(card, "unbounded")) {
+        if ((card.cardType === "summoning" || card.cardType === "echo") && card.attachedRuneIds.length === 0 && !this.hasAbility(card, "unbounded")) {
           player.battlefield.splice(i, 1);
           player.graveyard.push(card);
           sacrificed = true;
@@ -925,7 +925,7 @@ export class GameRoom extends Room<GameState> {
       for (let i = player.battlefield.length - 1; i >= 0; i--) {
         const card = player.battlefield.at(i);
         if (!card) continue;
-        if (card.cardType === "summoning" && card.attachedRuneIds.length === 0 && !this.hasAbility(card, "unbounded")) {
+        if ((card.cardType === "summoning" || card.cardType === "echo") && card.attachedRuneIds.length === 0 && !this.hasAbility(card, "unbounded")) {
           player.battlefield.splice(i, 1);
           this.handleOnDeathEffect(card, player);
           player.graveyard.push(card);
