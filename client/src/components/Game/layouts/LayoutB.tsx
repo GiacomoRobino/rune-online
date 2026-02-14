@@ -188,6 +188,7 @@ export function LayoutB({
           <SpellNameChecker
             spellName={gi.mode.card.spellName}
             bloodCost={gi.mode.card.bloodCost}
+            canOverpay={gi.mode.card.canOverpay}
             selectedRunes={gi.selectedRuneIds
               .map((id) => myPlayer.runeField.find((r) => r.instanceId === id))
               .filter((r): r is CardState => r !== undefined)

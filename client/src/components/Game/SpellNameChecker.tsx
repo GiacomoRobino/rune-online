@@ -3,6 +3,7 @@ import { CardState } from "../../hooks/useColyseus";
 interface SpellNameCheckerProps {
   spellName: string;
   bloodCost: number;
+  canOverpay?: boolean;
   selectedRunes: CardState[];
   onConfirm: () => void;
   onCancel: () => void;
@@ -11,6 +12,7 @@ interface SpellNameCheckerProps {
 export function SpellNameChecker({
   spellName,
   bloodCost,
+  canOverpay,
   selectedRunes,
   onConfirm,
   onCancel,
@@ -70,7 +72,9 @@ export function SpellNameChecker({
     if (idx !== -1) remaining.splice(idx, 1);
   }
 
-  const isComplete = remaining.length === 0 && provided.length === needed.length;
+  const isComplete = canOverpay
+    ? remaining.length === 0
+    : remaining.length === 0 && provided.length === needed.length;
 
   return (
     <div className="stone-panel metal-border rounded-lg p-3 flex items-center gap-3">
@@ -101,6 +105,11 @@ export function SpellNameChecker({
           );
         })}
       </div>
+      {canOverpay && provided.length > needed.length && (
+        <div className="text-gold text-sm font-medieval">
+          +{provided.length - needed.length} {provided.length - needed.length === 1 ? "copy" : "copies"}
+        </div>
+      )}
       <div className="flex gap-2 ml-auto">
         <button
           onClick={onCancel}

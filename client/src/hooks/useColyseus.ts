@@ -21,6 +21,7 @@ export interface CardState {
   isTapped: boolean;
   hasAegis: boolean;
   damageMarked: number;
+  canOverpay: boolean;
   runeType: string;
   letter: string;
   etchingCounters: number;
@@ -89,6 +90,7 @@ export function useColyseus() {
     isTapped: c.isTapped,
     hasAegis: c.hasAegis,
     damageMarked: c.damageMarked,
+    canOverpay: c.canOverpay,
     runeType: c.runeType,
     letter: c.letter,
     etchingCounters: c.etchingCounters,

@@ -255,7 +255,7 @@ export class GameRoom extends Room<GameState> {
     if (player.battlefield.length >= MAX_BATTLEFIELD_SIZE) return;
 
     // Validate rune spelling
-    if (!this.validateRuneSpelling(player, card.spellName, message.runeIds, card.bloodCost)) return;
+    if (!this.validateRuneSpelling(player, card.spellName, message.runeIds, card.bloodCost, card.canOverpay)) return;
 
     // Detach runes from old summonings, then attach to new one
     for (const runeId of message.runeIds) {
@@ -526,6 +526,13 @@ export class GameRoom extends Room<GameState> {
       if (blockerIds.length === 0) {
         // Unblocked — damage to defending player
         defendingPlayer.health -= attackerCard.attack;
+        // Lifedrinker: heal attacker's owner
+        if (this.hasAbility(attackerCard, "lifedrinker")) {
+          attackingPlayer.health = Math.min(
+            attackingPlayer.health + attackerCard.attack,
+            attackingPlayer.maxHealth
+          );
+        }
       } else {
         // Blocked — combat with blockers
         let remainingAttack = attackerCard.attack;
@@ -537,16 +544,44 @@ export class GameRoom extends Room<GameState> {
 
           if (isDuelist) {
             // Duelist: attacker deals damage first
-            this.applyDamageToCreature(blocker, remainingAttack, defendingPlayer);
+            const dmgToBlocker = this.applyDamageToCreature(blocker, remainingAttack, defendingPlayer);
             remainingAttack -= blocker.health > 0 ? 0 : remainingAttack; // excess carries
+            // Lifedrinker: heal attacker's owner by damage dealt to blocker
+            if (this.hasAbility(attackerCard, "lifedrinker") && dmgToBlocker > 0) {
+              attackingPlayer.health = Math.min(
+                attackingPlayer.health + dmgToBlocker,
+                attackingPlayer.maxHealth
+              );
+            }
             // Blocker only hits back if it survives
             if (blocker.health > 0) {
-              this.applyDamageToCreature(attackerCard, blocker.attack, attackingPlayer);
+              const dmgToAttacker = this.applyDamageToCreature(attackerCard, blocker.attack, attackingPlayer);
+              // Lifedrinker: heal blocker's owner by damage dealt to attacker
+              if (this.hasAbility(blocker, "lifedrinker") && dmgToAttacker > 0) {
+                defendingPlayer.health = Math.min(
+                  defendingPlayer.health + dmgToAttacker,
+                  defendingPlayer.maxHealth
+                );
+              }
             }
           } else {
             // Simultaneous damage
-            this.applyDamageToCreature(blocker, remainingAttack, defendingPlayer);
-            this.applyDamageToCreature(attackerCard, blocker.attack, attackingPlayer);
+            const dmgToBlocker = this.applyDamageToCreature(blocker, remainingAttack, defendingPlayer);
+            const dmgToAttacker = this.applyDamageToCreature(attackerCard, blocker.attack, attackingPlayer);
+            // Lifedrinker: heal attacker's owner
+            if (this.hasAbility(attackerCard, "lifedrinker") && dmgToBlocker > 0) {
+              attackingPlayer.health = Math.min(
+                attackingPlayer.health + dmgToBlocker,
+                attackingPlayer.maxHealth
+              );
+            }
+            // Lifedrinker: heal blocker's owner
+            if (this.hasAbility(blocker, "lifedrinker") && dmgToAttacker > 0) {
+              defendingPlayer.health = Math.min(
+                defendingPlayer.health + dmgToAttacker,
+                defendingPlayer.maxHealth
+              );
+            }
           }
 
           // Track remaining damage for Fury
@@ -724,6 +759,43 @@ export class GameRoom extends Room<GameState> {
     if (!def || !('effect' in def) || !def.effect) return;
     if (def.effect.type !== "on_enter") return;
 
+    if (def.effect.action.type === "create_copies" && def.effect.action.source === "extra_runes") {
+      // Identify extra rune IDs (those beyond base cost)
+      const extraRuneIds: string[] = [];
+      const baseNeeded = card.spellName.split("");
+      for (let i = 0; i < card.attachedRuneIds.length; i++) {
+        const runeId = card.attachedRuneIds.at(i);
+        if (!runeId) continue;
+        const rune = caster.runeField.find(r => r.instanceId === runeId);
+        if (!rune) continue;
+        const idx = baseNeeded.indexOf(rune.letter);
+        if (idx !== -1) {
+          baseNeeded.splice(idx, 1); // consumed by base cost
+        } else {
+          extraRuneIds.push(runeId);
+        }
+      }
+
+      for (const extraRuneId of extraRuneIds) {
+        // Create a copy
+        const copy = this.createCard(def);
+        copy.canAttack = this.hasAbility(copy, "rage");
+        copy.hasAegis = this.hasAbility(copy, "aegis");
+
+        // Detach extra rune from original, attach to copy
+        const runeIdx = Array.from(card.attachedRuneIds).indexOf(extraRuneId);
+        if (runeIdx !== -1) card.attachedRuneIds.splice(runeIdx, 1);
+        const rune = caster.runeField.find(r => r.instanceId === extraRuneId);
+        if (rune) {
+          rune.attachedToId = copy.instanceId;
+          copy.attachedRuneIds.push(extraRuneId);
+        }
+
+        caster.battlefield.push(copy);
+      }
+      return;
+    }
+
     this.executeEffect(def.effect.action, caster);
   }
 
@@ -832,23 +904,48 @@ export class GameRoom extends Room<GameState> {
 
   // ─── DAMAGE HELPERS ────────────────────────────────────
 
-  private applyDamageToCreature(card: Card, amount: number, owner: Player) {
-    if (amount <= 0) return;
+  private applyDamageToCreature(card: Card, amount: number, _owner: Player): number {
+    if (amount <= 0) return 0;
 
     // Aegis: first damage instance is prevented
     if (card.hasAegis) {
       card.hasAegis = false;
-      return;
+      return 0;
     }
 
     // Veil check is for targeting, not damage application
 
     card.health -= amount;
+    return amount;
   }
 
   // ─── VALIDATION ────────────────────────────────────────
 
-  private validateRuneSpelling(player: Player, spellName: string, runeIds: string[], bloodCost: number = 0): boolean {
+  private validateRuneSpelling(player: Player, spellName: string, runeIds: string[], bloodCost: number = 0, canOverpay: boolean = false): boolean {
+    if (canOverpay) {
+      // Overpay: need at least base cost, extra runes must also match spellName letters
+      if (runeIds.length < spellName.length) return false;
+      const nameLetters = new Set(spellName.split(""));
+      for (const runeId of runeIds) {
+        const rune = player.runeField.find((r) => r.instanceId === runeId);
+        if (!rune) return false;
+        if (rune.etchingCounters > 0) return false;
+        if (!nameLetters.has(rune.letter)) return false;
+      }
+      // Check base frequency met
+      const neededFreq = new Map<string, number>();
+      for (const ch of spellName) neededFreq.set(ch, (neededFreq.get(ch) || 0) + 1);
+      const providedFreq = new Map<string, number>();
+      for (const runeId of runeIds) {
+        const rune = player.runeField.find((r) => r.instanceId === runeId)!;
+        providedFreq.set(rune.letter, (providedFreq.get(rune.letter) || 0) + 1);
+      }
+      for (const [letter, count] of neededFreq) {
+        if ((providedFreq.get(letter) || 0) < count) return false;
+      }
+      return true;
+    }
+
     if (bloodCost > 0) {
       // Blood cost: pick any N runes whose letters are in the spell name pool
       if (runeIds.length !== bloodCost) return false;
@@ -1016,6 +1113,7 @@ export class GameRoom extends Room<GameState> {
       card.baseHealth = def.health;
       card.spellName = def.spellName;
       card.bloodCost = def.bloodCost || 0;
+      card.canOverpay = def.canOverpay || false;
       card.abilities = def.abilities;
       card.description = def.description || "";
     } else if (def.type === "echo") {

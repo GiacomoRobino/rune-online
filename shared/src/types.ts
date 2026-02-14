@@ -18,7 +18,8 @@ export type AbilityKeyword =
   | "blink"
   | "warden"
   | "unbounded"
-  | "bloodmaster";
+  | "bloodmaster"
+  | "lifedrinker";
 
 // Card definitions
 export interface SummoningDefinition {
@@ -30,6 +31,7 @@ export interface SummoningDefinition {
   attack: number;
   health: number;
   abilities: string; // comma-separated keywords
+  canOverpay?: boolean; // allow extra runes matching spellName letters
   description?: string;
   effect?: CardEffect;
 }
@@ -82,7 +84,8 @@ export type EffectAction =
   | { type: "draw"; amount: number }
   | { type: "buff"; attack: number; health: number; target: "friendly" | "all_friendly" | "all_enemy" | "all" }
   | { type: "destroy_rune"; target: "enemy" }
-  | { type: "return_to_hand"; target: "any" };
+  | { type: "return_to_hand"; target: "any" }
+  | { type: "create_copies"; source: "extra_runes" };
 
 // Turn phases
 export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "combat_damage";

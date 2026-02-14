@@ -21,6 +21,7 @@ export class Card extends Schema {
   @type("boolean") isTapped: boolean = false;
   @type("boolean") hasAegis: boolean = false;
   @type("number") damageMarked: number = 0;
+  @type("boolean") canOverpay: boolean = false;
 
   // Rune fields
   @type("string") runeType: string = "standard"; // "standard"|"stone"|"blood"

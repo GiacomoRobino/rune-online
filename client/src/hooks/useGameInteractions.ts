@@ -70,8 +70,8 @@ export function useGameInteractions({
     if (idx !== -1) {
       ids.splice(idx, 1);
     } else {
-      // Cap at bloodCost if applicable
-      if (mode.card.bloodCost > 0 && ids.length >= mode.card.bloodCost) return;
+      // Cap at bloodCost if applicable (no cap for canOverpay — unlimited runes matching spellName)
+      if (!mode.card.canOverpay && mode.card.bloodCost > 0 && ids.length >= mode.card.bloodCost) return;
       ids.push(rune.instanceId);
     }
     setMode({ ...mode, selectedRuneIds: ids });
@@ -280,6 +280,23 @@ export function useGameInteractions({
         if (sel && sel.letter === rune.letter) usedCount++;
       }
       return usedCount < nameFreq.get(rune.letter)!;
+    }
+
+    if (mode.card.canOverpay) {
+      // Overpay: check if base spell is satisfied yet
+      const baseNeeded = mode.card.spellName.split("");
+      const tempRemaining = [...baseNeeded];
+      for (const id of mode.selectedRuneIds) {
+        const sel = myPlayer.runeField.find((r) => r.instanceId === id);
+        if (sel) {
+          const i = tempRemaining.indexOf(sel.letter);
+          if (i !== -1) tempRemaining.splice(i, 1);
+        }
+      }
+      // If base not yet met, only allow needed letters
+      if (tempRemaining.length > 0) return tempRemaining.includes(rune.letter);
+      // Base met — allow any spellName letter for extra copies
+      return mode.card.spellName.includes(rune.letter);
     }
 
     return remainingNeeded.includes(rune.letter);
