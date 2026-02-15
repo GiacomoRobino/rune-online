@@ -764,9 +764,9 @@ export class GameRoom extends Room<GameState> {
           }
         }
 
-        card.attack = Math.max(0, card.baseAttack + extraAttack);
-        card.maxHealth = Math.max(1, card.baseHealth + extraHealth);
-        card.health = Math.max(0, card.maxHealth - damageTaken);
+        card.attack = card.baseAttack + extraAttack;
+        card.maxHealth = card.baseHealth + extraHealth;
+        card.health = card.maxHealth - damageTaken;
       });
     });
 
