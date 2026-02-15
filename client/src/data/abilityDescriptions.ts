@@ -5,7 +5,7 @@ export const ABILITY_DESCRIPTIONS: Record<string, string> = {
   aegis: "Blocks the first damage or destroy effect",
   defender: "Cannot attack, but can block",
   duelist: "Deals damage before the opponent in combat",
-  shadowwalker: "Can't be blocked",
+  shadowwalker: "Can only block and be blocked by other Shadowwalkers",
   revenge: "Triggers an effect when destroyed",
   shatter: "Destroys a rune when dealing combat damage",
   pack: "Gets +1/+1 for each other friendly creature",

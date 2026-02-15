@@ -23,6 +23,7 @@ function App() {
     endTurn,
     resolveDeathTarget,
     resolveDeckSearch,
+    resolveEndTurnCancel,
     gameEvents,
   } = useColyseus();
 
@@ -62,6 +63,8 @@ function App() {
         pendingDeathEffects={gameState.pendingDeathEffects}
         onResolveDeathTarget={resolveDeathTarget}
         onResolveDeckSearch={resolveDeckSearch}
+        onResolveEndTurnCancel={resolveEndTurnCancel}
+        endTurnTargetCardId={gameState.endTurnTargetCardId}
       />
     );
   }

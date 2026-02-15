@@ -14,4 +14,5 @@ export class GameState extends Schema {
   @type(["string"]) blockingAssignments = new ArraySchema<string>(); // "blockerId:attackerId" pairs
   @type("boolean") isFirstTurn: boolean = true;
   @type([PendingEffect]) pendingDeathEffects = new ArraySchema<PendingEffect>();
+  @type("string") endTurnTargetCardId: string = "";
 }

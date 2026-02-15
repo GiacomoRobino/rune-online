@@ -13,6 +13,7 @@ const MAX_BATTLEFIELD_SIZE = 7;
 
 export class GameRoom extends Room<GameState> {
   private playerOrder: string[] = [];
+  private pendingFinishEndTurn: boolean = false;
 
   onCreate() {
     this.setState(new GameState());
@@ -56,6 +57,10 @@ export class GameRoom extends Room<GameState> {
 
     this.onMessage("resolve_deck_search", (client, message) => {
       this.handleResolveDeckSearch(client, message);
+    });
+
+    this.onMessage("resolve_end_turn_cancel", (client, message) => {
+      this.handleResolveEndTurnCancel(client, message);
     });
   }
 
@@ -170,6 +175,28 @@ export class GameRoom extends Room<GameState> {
     if (this.state.currentTurn !== client.sessionId) return;
     if (this.state.turnPhase !== "main") return;
 
+    const player = this.state.players.get(client.sessionId);
+    if (!player) return;
+
+    // Check for end-of-turn effects (cancel_rune on cards with attached runes)
+    const cardsWithEndTurnEffect = Array.from(player.battlefield)
+      .filter((c): c is Card => c !== undefined)
+      .filter((c) => {
+        const def = this.findDefinition(c);
+        if (!def || !("effect" in def) || !def.effect) return false;
+        return def.effect.type === "end_turn" && def.effect.action.type === "cancel_rune" && c.attachedRuneIds.length > 0;
+      });
+
+    if (cardsWithEndTurnEffect.length > 0) {
+      this.state.endTurnTargetCardId = cardsWithEndTurnEffect[0].instanceId;
+      this.state.turnPhase = "end_turn_cancel_rune";
+      return;
+    }
+
+    this.finishEndTurn();
+  }
+
+  private finishEndTurn() {
     // Heal all summonings for both players
     this.state.players.forEach((player) => {
       player.battlefield.forEach((card) => {
@@ -522,8 +549,10 @@ export class GameRoom extends Room<GameState> {
       // Skyrunner can only be blocked by Skyrunner
       if (this.hasAbility(attackerCard, "skyrunner") && !this.hasAbility(blocker, "skyrunner")) continue;
 
-      // Shadowwalker can't be blocked
-      if (this.hasAbility(attackerCard, "shadowwalker")) continue;
+      // Shadowwalker: can only be blocked by/block other shadowwalkers
+      const attackerIsShadow = this.hasAbility(attackerCard, "shadowwalker");
+      const blockerIsShadow = this.hasAbility(blocker, "shadowwalker");
+      if (attackerIsShadow !== blockerIsShadow) continue;
 
       this.state.blockingAssignments.push(assignment);
     }
@@ -1209,6 +1238,65 @@ export class GameRoom extends Room<GameState> {
     this.advanceDeathEffectQueue();
   }
 
+  private handleResolveEndTurnCancel(client: Client, message: { runeId: string }) {
+    if (this.state.phase !== "playing") return;
+    if (this.state.turnPhase !== "end_turn_cancel_rune") return;
+    if (this.state.currentTurn !== client.sessionId) return;
+
+    const player = this.state.players.get(client.sessionId);
+    if (!player) return;
+
+    // Find the rune on player's runeField
+    const runeIndex = player.runeField.findIndex((r) => r.instanceId === message.runeId);
+    if (runeIndex === -1) return;
+
+    const rune = player.runeField.at(runeIndex);
+    if (!rune) return;
+
+    // Validate: rune must be attached to the target card
+    if (rune.attachedToId !== this.state.endTurnTargetCardId) return;
+
+    // Remove rune from runeField
+    player.runeField.splice(runeIndex, 1);
+
+    // Remove runeId from the card's attachedRuneIds
+    const card = player.battlefield.find((c) => c.instanceId === this.state.endTurnTargetCardId);
+    if (card) {
+      const idx = card.attachedRuneIds.findIndex((id) => id === message.runeId);
+      if (idx !== -1) {
+        card.attachedRuneIds.splice(idx, 1);
+      }
+    }
+
+    // Sacrifice runeless summonings
+    this.sacrificeRunelessSummonings(player);
+
+    // Check if more cards still need rune cancellation (exclude the just-processed card)
+    const processedCardId = this.state.endTurnTargetCardId;
+    const remaining = Array.from(player.battlefield)
+      .filter((c): c is Card => c !== undefined)
+      .filter((c) => {
+        if (c.instanceId === processedCardId) return false;
+        const def = this.findDefinition(c);
+        if (!def || !("effect" in def) || !def.effect) return false;
+        return def.effect.type === "end_turn" && def.effect.action.type === "cancel_rune" && c.attachedRuneIds.length > 0;
+      });
+
+    if (remaining.length > 0) {
+      this.state.endTurnTargetCardId = remaining[0].instanceId;
+    } else {
+      this.state.endTurnTargetCardId = "";
+      // Check for pending death effects (from sacrifice)
+      if (this.state.pendingDeathEffects.length > 0) {
+        this.state.turnPhase = "resolve_death_effects";
+        // Mark that we need to finishEndTurn after death effects resolve
+        this.pendingFinishEndTurn = true;
+      } else {
+        this.finishEndTurn();
+      }
+    }
+  }
+
   private advanceDeathEffectQueue() {
     if (this.state.pendingDeathEffects.length > 0) {
       // Stay in resolve_death_effects; skip disconnected players' effects
@@ -1223,7 +1311,12 @@ export class GameRoom extends Room<GameState> {
       }
       this.state.turnPhase = "resolve_death_effects";
     } else {
-      this.state.turnPhase = "main";
+      if (this.pendingFinishEndTurn) {
+        this.pendingFinishEndTurn = false;
+        this.finishEndTurn();
+      } else {
+        this.state.turnPhase = "main";
+      }
     }
   }
 

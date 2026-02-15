@@ -25,6 +25,8 @@ interface GameBoardProps {
   pendingDeathEffects: PendingEffectState[];
   onResolveDeathTarget: (targetId: string) => void;
   onResolveDeckSearch: (cardId: string | null) => void;
+  onResolveEndTurnCancel: (runeId: string) => void;
+  endTurnTargetCardId: string;
 }
 
 export function GameBoard({
@@ -49,6 +51,8 @@ export function GameBoard({
   pendingDeathEffects,
   onResolveDeathTarget,
   onResolveDeckSearch,
+  onResolveEndTurnCancel,
+  endTurnTargetCardId,
 }: GameBoardProps) {
   const interactions = useGameInteractions({
     myPlayer,
@@ -64,6 +68,8 @@ export function GameBoard({
     mySessionId,
     onResolveDeathTarget,
     onResolveDeckSearch,
+    onResolveEndTurnCancel,
+    endTurnTargetCardId,
   });
 
   // Game ended

@@ -11,7 +11,8 @@ export type InteractionMode =
   | { type: "declare_block"; assignments: Map<string, string>; selectedBlockerId: string | null } // blockerId -> attackerId
   | { type: "targeting_death_effect"; effectId: string; cardName: string; damageAmount: number }
   | { type: "searching_deck"; effectId: string; cardName: string; searchFilter: string }
-  | { type: "choosing_subtype"; card: CardState; selectedRuneIds: string[]; options: string[] };
+  | { type: "choosing_subtype"; card: CardState; selectedRuneIds: string[]; options: string[] }
+  | { type: "cancel_rune"; cardInstanceId: string };
 
 export interface GameInteractionsProps {
   myPlayer: PlayerState;
@@ -27,6 +28,8 @@ export interface GameInteractionsProps {
   mySessionId: string;
   onResolveDeathTarget: (targetId: string) => void;
   onResolveDeckSearch: (cardId: string | null) => void;
+  onResolveEndTurnCancel: (runeId: string) => void;
+  endTurnTargetCardId: string;
 }
 
 export function useGameInteractions({
@@ -43,6 +46,8 @@ export function useGameInteractions({
   mySessionId,
   onResolveDeathTarget,
   onResolveDeckSearch,
+  onResolveEndTurnCancel,
+  endTurnTargetCardId,
 }: GameInteractionsProps) {
   const [mode, setMode] = useState<InteractionMode>({ type: "idle" });
   const [inspectedCardId, setInspectedCardId] = useState<string | null>(null);
@@ -72,8 +77,17 @@ export function useGameInteractions({
     }
   };
 
-  // --- Rune click in summoning/echo/memory mode ---
+  // --- Rune click in summoning/echo/memory/cancel_rune mode ---
   const handleRuneClick = (rune: CardState) => {
+    // Cancel rune mode: click an attached rune to cancel it
+    if (mode.type === "cancel_rune") {
+      if (rune.attachedToId === mode.cardInstanceId) {
+        onResolveEndTurnCancel(rune.instanceId);
+        setMode({ type: "idle" });
+      }
+      return;
+    }
+
     if (mode.type !== "summoning" && mode.type !== "echo" && mode.type !== "memory") return;
     if (rune.etchingCounters > 0) return;
 
@@ -281,6 +295,20 @@ export function useGameInteractions({
     }
   }, [turnPhase, mode.type]);
 
+  // Auto-enter cancel rune mode
+  useEffect(() => {
+    if (turnPhase === "end_turn_cancel_rune" && endTurnTargetCardId && isMyTurn && mode.type !== "cancel_rune") {
+      setMode({ type: "cancel_rune", cardInstanceId: endTurnTargetCardId });
+    }
+  }, [turnPhase, endTurnTargetCardId, isMyTurn, mode.type]);
+
+  // Auto-exit cancel rune mode when phase leaves end_turn_cancel_rune
+  useEffect(() => {
+    if (turnPhase !== "end_turn_cancel_rune" && mode.type === "cancel_rune") {
+      setMode({ type: "idle" });
+    }
+  }, [turnPhase, mode.type]);
+
   // Check if a card can be played
   const canSpellCard = (card: CardState) => {
     if (card.cardType !== "summoning" && card.cardType !== "echo" && card.cardType !== "memory") return false;
@@ -393,7 +421,8 @@ export function useGameInteractions({
     turnPhase === "declare_attackers" ? "Declaring Attackers" :
     turnPhase === "declare_blockers" ? "Blocking Phase" :
     turnPhase === "combat_damage" ? "Combat!" :
-    turnPhase === "resolve_death_effects" ? "Death Effects" : turnPhase;
+    turnPhase === "resolve_death_effects" ? "Death Effects" :
+    turnPhase === "end_turn_cancel_rune" ? "Cancel Rune" : turnPhase;
 
   return {
     mode,

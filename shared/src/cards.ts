@@ -8,6 +8,7 @@ import { card as hopesTiranny } from "./cards/6/card.js";
 import { card as he } from "./cards/7/card.js";
 import { card as oor } from "./cards/8/card.js";
 import { card as hope } from "./cards/9/card.js";
+import { card as hopeShadow } from "./cards/10/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -30,6 +31,7 @@ export const SUMMONING_POOL: SummoningDefinition[] = [
   { id: "lance", name: "Lance", type: "summoning", spellName: "LANCE", attack: 4, health: 2, abilities: "duelist", description: "Duelist." },
   { id: "wraith", name: "Wraith", type: "summoning", spellName: "WRAITH", attack: 3, health: 3, abilities: "shadowwalker", description: "Shadowwalker." },
   hope,
+  hopeShadow,
 ];
 
 // --- MEMORY POOL ---
@@ -141,6 +143,10 @@ export function generateTestChaosDeck(): CardDefinition[] {
   // 4 copies of Hope (summoning)
   for (let i = 0; i < 4; i++) {
     deck.push({ ...hope });
+  }
+  // 4 copies of Hope, Shadow of Greatness (summoning)
+  for (let i = 0; i < 4; i++) {
+    deck.push({ ...hopeShadow });
   }
   return deck;
 }

@@ -68,6 +68,7 @@ export interface GameStateData {
   blockingAssignments: string[];
   isFirstTurn: boolean;
   pendingDeathEffects: PendingEffectState[];
+  endTurnTargetCardId: string;
 }
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
@@ -154,6 +155,7 @@ export function useColyseus() {
           cardName: e.cardName,
           searchFilter: e.searchFilter,
         })),
+      endTurnTargetCardId: state.endTurnTargetCardId,
     };
   }, []);
 
@@ -253,6 +255,11 @@ export function useColyseus() {
     room.send("resolve_deck_search", { cardId });
   }, [room]);
 
+  const resolveEndTurnCancel = useCallback((runeId: string) => {
+    if (!room) return;
+    room.send("resolve_end_turn_cancel", { runeId });
+  }, [room]);
+
   // Derived state helpers
   const myPlayer = gameState?.players.get(mySessionId);
   const opponent = gameState
@@ -283,5 +290,6 @@ export function useColyseus() {
     endTurn,
     resolveDeathTarget,
     resolveDeckSearch,
+    resolveEndTurnCancel,
   };
 }

@@ -199,7 +199,7 @@ export function LayoutCompact({
                           card={rune}
                           onClick={() => gi.handleRuneClick(rune)}
                           isSelected={gi.selectedRuneIds.includes(rune.instanceId)}
-                          isPlayable={gi.isRuneAvailable(rune)}
+                          isPlayable={gi.isRuneAvailable(rune) || (gi.mode.type === "cancel_rune" && rune.attachedToId === gi.mode.cardInstanceId)}
                           size="sm"
                         />
                       ))}
@@ -289,6 +289,13 @@ export function LayoutCompact({
           {gi.mode.type === "targeting_death_effect" && (
             <div className="stone-panel metal-border rounded-lg p-2 text-center text-gold text-sm font-medieval">
               {gi.mode.cardName}&apos;s deathstrike: Deal {gi.mode.damageAmount} damage — select a target
+            </div>
+          )}
+
+          {/* Cancel rune indicator */}
+          {gi.mode.type === "cancel_rune" && (
+            <div className="stone-panel metal-border rounded-lg p-2 text-center text-gold text-sm font-medieval">
+              Select a rune attached to this summoning to cancel
             </div>
           )}
 

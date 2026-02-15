@@ -78,7 +78,8 @@ export type CardEffect =
   | { type: "on_enter"; action: EffectAction }
   | { type: "on_death"; action: EffectAction }
   | { type: "ongoing"; action: EffectAction }
-  | { type: "instant"; action: EffectAction };
+  | { type: "instant"; action: EffectAction }
+  | { type: "end_turn"; action: EffectAction };
 
 export type EffectAction =
   | { type: "damage"; amount: number; target: "enemy" | "all_enemies" | "random_enemy" | "any" }
@@ -89,10 +90,11 @@ export type EffectAction =
   | { type: "return_to_hand"; target: "any" }
   | { type: "create_copies"; source: "extra_runes" }
   | { type: "search_deck"; filter: "subtype"; values: string[] }
-  | { type: "choose_subtype"; options: string[]; abilities?: Record<string, string> };
+  | { type: "choose_subtype"; options: string[]; abilities?: Record<string, string> }
+  | { type: "cancel_rune"; target: "self" };
 
 // Turn phases
-export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "combat_damage" | "resolve_death_effects";
+export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "combat_damage" | "resolve_death_effects" | "end_turn_cancel_rune";
 
 // Message types (client -> server)
 export type ClientMessage =
@@ -105,7 +107,8 @@ export type ClientMessage =
   | { type: "declare_blockers"; assignments: string[] } // "blockerId:attackerId" pairs
   | { type: "end_turn" }
   | { type: "resolve_death_target"; targetId: string }
-  | { type: "resolve_deck_search"; cardId: string | null };
+  | { type: "resolve_deck_search"; cardId: string | null }
+  | { type: "resolve_end_turn_cancel"; runeId: string };
 
 // Game phases
 export type GamePhase = "waiting" | "playing" | "ended";

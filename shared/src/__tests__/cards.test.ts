@@ -13,7 +13,7 @@ const VALID_ABILITIES: AbilityKeyword[] = [
 
 const VALID_ACTION_TYPES = [
   "damage", "heal", "draw", "buff", "destroy_rune",
-  "return_to_hand", "create_copies", "search_deck", "choose_subtype",
+  "return_to_hand", "create_copies", "search_deck", "choose_subtype", "cancel_rune",
 ] as const;
 
 const ALL_POOL_CARDS: CardDefinition[] = [
@@ -160,8 +160,8 @@ describe("Card data integrity", () => {
   describe("effect types", () => {
     for (const card of SUMMONING_POOL) {
       if (card.effect) {
-        it(`${card.id} (${card.name}): summoning effect is on_enter or on_death`, () => {
-          expect(["on_enter", "on_death"]).toContain(card.effect!.type);
+        it(`${card.id} (${card.name}): summoning effect is on_enter, on_death, or end_turn`, () => {
+          expect(["on_enter", "on_death", "end_turn"]).toContain(card.effect!.type);
         });
       }
     }
