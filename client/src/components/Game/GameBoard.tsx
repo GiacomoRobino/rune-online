@@ -56,6 +56,7 @@ export function GameBoard({
 }: GameBoardProps) {
   const interactions = useGameInteractions({
     myPlayer,
+    opponentBattlefield: opponent.battlefield,
     isMyTurn,
     turnPhase,
     declaredAttackers,

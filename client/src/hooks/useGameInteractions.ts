@@ -16,6 +16,7 @@ export type InteractionMode =
 
 export interface GameInteractionsProps {
   myPlayer: PlayerState;
+  opponentBattlefield: CardState[];
   isMyTurn: boolean;
   turnPhase: string;
   declaredAttackers: string[];
@@ -34,6 +35,7 @@ export interface GameInteractionsProps {
 
 export function useGameInteractions({
   myPlayer,
+  opponentBattlefield,
   isMyTurn,
   turnPhase,
   declaredAttackers,
@@ -55,6 +57,9 @@ export function useGameInteractions({
   const [deckSearchCards, setDeckSearchCards] = useState<CardState[]>([]);
 
   const isBlockingPhase = turnPhase === "declare_blockers" && !isMyTurn;
+
+  const hasAbility = (card: CardState, keyword: string): boolean =>
+    card.abilities.split(",").some((a) => a.trim() === keyword);
 
   // --- Hand click handlers ---
   const handleCardInHandClick = (card: CardState) => {
@@ -165,7 +170,12 @@ export function useGameInteractions({
         setMode({ type: "declare_block", assignments: currentAssignments, selectedBlockerId: null });
       } else if (!card.isTapped) {
         if (declaredAttackers.length === 1) {
-          // Only one attacker — auto-assign
+          // Only one attacker — auto-assign (with ability checks)
+          const attacker = opponentBattlefield.find(c => c.instanceId === declaredAttackers[0]);
+          if (attacker) {
+            if (hasAbility(attacker, "skyrunner") && !hasAbility(card, "skyrunner")) return;
+            if (hasAbility(attacker, "shadowwalker") !== hasAbility(card, "shadowwalker")) return;
+          }
           currentAssignments.set(card.instanceId, declaredAttackers[0]);
           setMode({ type: "declare_block", assignments: currentAssignments, selectedBlockerId: null });
         } else {
@@ -182,7 +192,12 @@ export function useGameInteractions({
     } else if (mode.type === "targeting_death_effect") {
       handleDeathEffectTarget(card.instanceId);
     } else if (mode.type === "declare_block" && mode.selectedBlockerId && declaredAttackers.includes(card.instanceId)) {
-      // Assign the pending blocker to this attacker
+      // Assign the pending blocker to this attacker (with ability checks)
+      const blocker = myPlayer.battlefield.find(c => c.instanceId === mode.selectedBlockerId);
+      if (blocker) {
+        if (hasAbility(card, "skyrunner") && !hasAbility(blocker, "skyrunner")) return;
+        if (hasAbility(card, "shadowwalker") !== hasAbility(blocker, "shadowwalker")) return;
+      }
       const currentAssignments = new Map(mode.assignments);
       currentAssignments.set(mode.selectedBlockerId, card.instanceId);
       setMode({ type: "declare_block", assignments: currentAssignments, selectedBlockerId: null });
