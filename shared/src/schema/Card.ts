@@ -17,6 +17,7 @@ export class Card extends Schema {
   @type("number") bloodCost: number = 0; // pick any N runes from spellName pool (0 = normal spelling)
   @type("string") abilities: string = ""; // comma-separated keywords
   @type("string") subtypes: string = "";
+  @type("string") subtypeChoices: string = ""; // comma-separated options for choose_subtype effect
   @type("boolean") canAttack: boolean = false;
   @type("boolean") hasAttacked: boolean = false;
   @type("boolean") isTapped: boolean = false;

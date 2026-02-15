@@ -9,6 +9,7 @@ import { TurnBanner } from "../TurnBanner";
 import { ActionBar } from "../ActionBar";
 import { GraveyardOverlay } from "../GraveyardOverlay";
 import { DeckSearchOverlay } from "../DeckSearchOverlay";
+import { SubtypeChoiceOverlay } from "../SubtypeChoiceOverlay";
 import { RunePicker } from "../RunePicker";
 import { AnimationOverlay } from "../AnimationOverlay";
 import { RuneAttachEffect } from "../RuneAttachEffect";
@@ -363,6 +364,15 @@ export function LayoutCompact({
           cardName={gi.mode.cardName}
           cards={gi.deckSearchCards}
           onSelect={gi.handleDeckSearchSelect}
+        />
+      )}
+
+      {/* Subtype choice overlay */}
+      {gi.mode.type === "choosing_subtype" && (
+        <SubtypeChoiceOverlay
+          cardName={gi.mode.card.name}
+          options={gi.mode.options}
+          onSelect={gi.handleSubtypeChoice}
         />
       )}
 

@@ -88,7 +88,8 @@ export type EffectAction =
   | { type: "destroy_rune"; target: "enemy" }
   | { type: "return_to_hand"; target: "any" }
   | { type: "create_copies"; source: "extra_runes" }
-  | { type: "search_deck"; filter: "subtype"; values: string[] };
+  | { type: "search_deck"; filter: "subtype"; values: string[] }
+  | { type: "choose_subtype"; options: string[] };
 
 // Turn phases
 export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "combat_damage" | "resolve_death_effects";
@@ -96,7 +97,7 @@ export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "com
 // Message types (client -> server)
 export type ClientMessage =
   | { type: "write_rune"; runeId: string }
-  | { type: "summon"; cardId: string; runeIds: string[] }
+  | { type: "summon"; cardId: string; runeIds: string[]; chosenSubtype?: string }
   | { type: "play_echo"; cardId: string; runeIds: string[] }
   | { type: "play_memory"; cardId: string; runeIds: string[]; targetId?: string }
   | { type: "attach_rune"; runeId: string; targetId: string }

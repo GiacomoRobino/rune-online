@@ -23,6 +23,7 @@ export interface CardState {
   hasAegis: boolean;
   damageMarked: number;
   canOverpay: boolean;
+  subtypeChoices: string;
   runeType: string;
   letter: string;
   etchingCounters: number;
@@ -103,6 +104,7 @@ export function useColyseus() {
     hasAegis: c.hasAegis,
     damageMarked: c.damageMarked,
     canOverpay: c.canOverpay,
+    subtypeChoices: c.subtypeChoices,
     runeType: c.runeType,
     letter: c.letter,
     etchingCounters: c.etchingCounters,
@@ -206,9 +208,9 @@ export function useColyseus() {
     room.send("write_rune", { runeId });
   }, [room]);
 
-  const summonCreature = useCallback((cardId: string, runeIds: string[]) => {
+  const summonCreature = useCallback((cardId: string, runeIds: string[], chosenSubtype?: string) => {
     if (!room) return;
-    room.send("summon", { cardId, runeIds });
+    room.send("summon", { cardId, runeIds, chosenSubtype });
   }, [room]);
 
   const playEcho = useCallback((cardId: string, runeIds: string[]) => {

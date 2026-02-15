@@ -244,7 +244,7 @@ export class GameRoom extends Room<GameState> {
 
   // ─── SUMMONING ─────────────────────────────────────────
 
-  private handleSummon(client: Client, message: { cardId: string; runeIds: string[] }) {
+  private handleSummon(client: Client, message: { cardId: string; runeIds: string[]; chosenSubtype?: string }) {
     if (this.state.phase !== "playing") return;
     if (this.state.currentTurn !== client.sessionId) return;
     if (this.state.turnPhase !== "main") return;
@@ -284,6 +284,15 @@ export class GameRoom extends Room<GameState> {
     // Aegis
     if (this.hasAbility(card, "aegis")) {
       card.hasAegis = true;
+    }
+
+    // Handle choose_subtype before placing on battlefield
+    const summonDef = this.findDefinition(card);
+    if (summonDef && 'effect' in summonDef && summonDef.effect &&
+        summonDef.effect.type === "on_enter" && summonDef.effect.action.type === "choose_subtype") {
+      const options = summonDef.effect.action.options;
+      if (!message.chosenSubtype || !options.includes(message.chosenSubtype)) return;
+      card.subtypes = message.chosenSubtype;
     }
 
     player.battlefield.push(card);
@@ -792,6 +801,9 @@ export class GameRoom extends Room<GameState> {
     if (!def || !('effect' in def) || !def.effect) return;
     if (def.effect.type !== "on_enter") return;
 
+    // choose_subtype is handled in handleSummon before card enters
+    if (def.effect.action.type === "choose_subtype") return;
+
     if (def.effect.action.type === "create_copies" && def.effect.action.source === "extra_runes") {
       // Identify extra rune IDs (those beyond base cost)
       const extraRuneIds: string[] = [];
@@ -1255,6 +1267,9 @@ export class GameRoom extends Room<GameState> {
       card.abilities = def.abilities;
       card.subtypes = def.subtypes || "";
       card.description = def.description || "";
+      if (def.effect && def.effect.type === "on_enter" && def.effect.action.type === "choose_subtype") {
+        card.subtypeChoices = def.effect.action.options.join(",");
+      }
     } else if (def.type === "echo") {
       card.spellName = def.spellName;
       card.bloodCost = def.bloodCost || 0;

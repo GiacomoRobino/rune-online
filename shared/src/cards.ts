@@ -7,6 +7,7 @@ import { card as hopesKingdom } from "./cards/5/card.js";
 import { card as hopesTiranny } from "./cards/6/card.js";
 import { card as he } from "./cards/7/card.js";
 import { card as oor } from "./cards/8/card.js";
+import { card as hope } from "./cards/9/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -28,6 +29,7 @@ export const SUMMONING_POOL: SummoningDefinition[] = [
   { id: "thorn", name: "Thorn", type: "summoning", spellName: "THORN", attack: 4, health: 5, abilities: "fury", description: "Fury." },
   { id: "lance", name: "Lance", type: "summoning", spellName: "LANCE", attack: 4, health: 2, abilities: "duelist", description: "Duelist." },
   { id: "wraith", name: "Wraith", type: "summoning", spellName: "WRAITH", attack: 3, health: 3, abilities: "shadowwalker", description: "Shadowwalker." },
+  hope,
 ];
 
 // --- MEMORY POOL ---
@@ -136,13 +138,18 @@ export function generateTestChaosDeck(): CardDefinition[] {
   for (let i = 0; i < 4; i++) {
     deck.push({ ...oor });
   }
+  // 4 copies of Hope (summoning)
+  for (let i = 0; i < 4; i++) {
+    deck.push({ ...hope });
+  }
   return deck;
 }
 
 export function generateTestRunesDeck(): RuneDefinition[] {
   const deck: RuneDefinition[] = [];
   const runeH = RUNE_POOL.find((r) => r.letter === "H")!;
-  const testRunes = [runeO, runeE, runeR, runeH];
+  const runeP = RUNE_POOL.find((r) => r.letter === "P")!;
+  const testRunes = [runeO, runeE, runeR, runeH, runeP];
   // 10 copies of each (O, E, R, H)
   for (const rune of testRunes) {
     for (let i = 0; i < 10; i++) {

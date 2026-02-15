@@ -10,14 +10,15 @@ export type InteractionMode =
   | { type: "declare_attack"; selectedAttackerIds: string[] }
   | { type: "declare_block"; assignments: Map<string, string>; selectedBlockerId: string | null } // blockerId -> attackerId
   | { type: "targeting_death_effect"; effectId: string; cardName: string; damageAmount: number }
-  | { type: "searching_deck"; effectId: string; cardName: string; searchFilter: string };
+  | { type: "searching_deck"; effectId: string; cardName: string; searchFilter: string }
+  | { type: "choosing_subtype"; card: CardState; selectedRuneIds: string[]; options: string[] };
 
 export interface GameInteractionsProps {
   myPlayer: PlayerState;
   isMyTurn: boolean;
   turnPhase: string;
   declaredAttackers: string[];
-  onSummon: (cardId: string, runeIds: string[]) => void;
+  onSummon: (cardId: string, runeIds: string[], chosenSubtype?: string) => void;
   onPlayEcho: (cardId: string, runeIds: string[]) => void;
   onPlayMemory: (cardId: string, runeIds: string[], targetId?: string) => void;
   onDeclareAttackers: (attackerIds: string[]) => void;
@@ -91,6 +92,15 @@ export function useGameInteractions({
   // --- Confirm summoning/echo/memory ---
   const handleConfirmSummon = () => {
     if (mode.type === "summoning") {
+      if (mode.card.subtypeChoices) {
+        setMode({
+          type: "choosing_subtype",
+          card: mode.card,
+          selectedRuneIds: mode.selectedRuneIds,
+          options: mode.card.subtypeChoices.split(","),
+        });
+        return;
+      }
       onSummon(mode.card.instanceId, mode.selectedRuneIds);
     } else if (mode.type === "echo") {
       onPlayEcho(mode.card.instanceId, mode.selectedRuneIds);
@@ -185,6 +195,12 @@ export function useGameInteractions({
   const handleDeckSearchSelect = (cardId: string | null) => {
     onResolveDeckSearch(cardId);
     setDeckSearchCards([]);
+    setMode({ type: "idle" });
+  };
+
+  const handleSubtypeChoice = (subtype: string) => {
+    if (mode.type !== "choosing_subtype") return;
+    onSummon(mode.card.instanceId, mode.selectedRuneIds, subtype);
     setMode({ type: "idle" });
   };
 
@@ -407,6 +423,7 @@ export function useGameInteractions({
     phaseLabel,
     handleDeathEffectTarget,
     handleDeckSearchSelect,
+    handleSubtypeChoice,
     deckSearchCards,
   };
 }
