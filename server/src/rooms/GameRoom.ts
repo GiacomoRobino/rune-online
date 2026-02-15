@@ -290,9 +290,17 @@ export class GameRoom extends Room<GameState> {
     const summonDef = this.findDefinition(card);
     if (summonDef && 'effect' in summonDef && summonDef.effect &&
         summonDef.effect.type === "on_enter" && summonDef.effect.action.type === "choose_subtype") {
-      const options = summonDef.effect.action.options;
-      if (!message.chosenSubtype || !options.includes(message.chosenSubtype)) return;
+      const action = summonDef.effect.action;
+      if (!message.chosenSubtype || !action.options.includes(message.chosenSubtype)) return;
       card.subtypes = message.chosenSubtype;
+      // Apply abilities granted by the chosen subtype
+      if (action.abilities && action.abilities[message.chosenSubtype]) {
+        const extra = action.abilities[message.chosenSubtype];
+        card.abilities = card.abilities ? `${card.abilities},${extra}` : extra;
+        // Re-evaluate canAttack in case rage was granted
+        card.canAttack = this.hasAbility(card, "rage");
+        if (this.hasAbility(card, "aegis")) card.hasAegis = true;
+      }
     }
 
     player.battlefield.push(card);

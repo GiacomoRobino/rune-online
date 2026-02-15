@@ -12,6 +12,13 @@ export const card: SummoningDefinition = {
   description: "When you Summon Hope, you can choose if he is an Angel or a Demon. When he is not in play, he counts as both.",
   effect: {
     type: "on_enter",
-    action: { type: "choose_subtype", options: ["Angel", "Demon"] },
+    action: {
+      type: "choose_subtype",
+      options: ["Angel", "Demon"],
+      abilities: {
+        "Angel": "skyrunner,aegis,warden",
+        "Demon": "rage,fury,revenge",
+      },
+    },
   },
 };
