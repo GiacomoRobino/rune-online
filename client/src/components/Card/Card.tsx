@@ -43,8 +43,8 @@ interface CardProps {
 // Ability keyword descriptions
 const ABILITY_DESCRIPTIONS: Record<string, string> = {
   skyrunner: "Can only be blocked by other Skyrunners",
-  fury: "Can attack the turn it's summoned",
-  rage: "Deals excess combat damage to the opponent",
+  fury: "Deals excess combat damage to the opponent",
+  rage: "Can attack the turn it's summoned",
   aegis: "Blocks the first damage or destroy effect",
   defender: "Cannot attack, but can block",
   duelist: "Deals damage before the opponent in combat",
@@ -277,7 +277,7 @@ function SummoningCard({
   return (
     <div
       data-card-instance-id={card.instanceId}
-      className={`${baseClasses} overflow-hidden border-2 border-stone-700 flex flex-col`}
+      className={`${baseClasses} overflow-hidden border-2 border-stone-700 ${card.hasAegis ? "glow-aegis" : ""} flex flex-col`}
       onClick={onClick}
     >
       {/* Image fills ~80% */}

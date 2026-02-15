@@ -139,4 +139,8 @@ body {
   .ring-can-act {
     box-shadow: 0 0 6px rgba(107, 142, 35, 0.4), 0 0 12px rgba(107, 142, 35, 0.2);
   }
+
+  .glow-aegis {
+    filter: drop-shadow(0 0 6px rgba(100, 170, 240, 0.5)) drop-shadow(0 0 14px rgba(80, 140, 220, 0.3));
+  }
 }
