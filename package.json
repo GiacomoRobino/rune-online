@@ -14,7 +14,8 @@
     "dev:client2": "npm run dev --workspace=client -- --port 3001",
     "dev:multi": "concurrently -n server,client1,client2 -c blue,green,yellow \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:client2\"",
     "build": "npm run build --workspaces",
-    "start": "npm run start --workspace=server"
+    "start": "npm run start --workspace=server",
+    "test": "npm run test --workspace=shared && npm run test --workspace=client"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

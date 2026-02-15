@@ -13,9 +13,13 @@
   },
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@colyseus/schema": "^2.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.18"
   }
 }

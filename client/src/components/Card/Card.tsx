@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CardState } from "../../hooks/useColyseus";
 import { AnimatedStat } from "./AnimatedStat";
+import { ABILITY_DESCRIPTIONS } from "../../data/abilityDescriptions";
 
 export type CardSize = "sm" | "md" | "lg";
 
@@ -39,28 +40,6 @@ interface CardProps {
   showBack?: boolean;
   size?: CardSize;
 }
-
-// Ability keyword descriptions
-const ABILITY_DESCRIPTIONS: Record<string, string> = {
-  skyrunner: "Can only be blocked by other Skyrunners",
-  fury: "Deals excess combat damage to the opponent",
-  rage: "Can attack the turn it's summoned",
-  aegis: "Blocks the first damage or destroy effect",
-  defender: "Cannot attack, but can block",
-  duelist: "Deals damage before the opponent in combat",
-  shadowwalker: "Can't be blocked",
-  revenge: "Triggers an effect when destroyed",
-  shatter: "Destroys a rune when dealing combat damage",
-  pack: "Gets +1/+1 for each other friendly creature",
-  master: "Buffs all other friendly creatures",
-  veil: "Can't be targeted by spells",
-  blink: "Returns to hand at end of turn",
-  warden: "Adjacent creatures gain +0/+1",
-  unbounded: "Ignores defender when attacking",
-  bloodmaster: "+1/+1 for each blood rune attached to this creature",
-  lifedrinker: "Heals its owner by the amount of combat damage dealt",
-  deathstrike: "When this creature dies, deal damage equal to its power to any target",
-};
 
 export function Card({
   card,
