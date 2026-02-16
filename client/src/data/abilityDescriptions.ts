@@ -12,7 +12,7 @@ export const ABILITY_DESCRIPTIONS: Record<string, string> = {
   master: "Buffs all other friendly creatures",
   veil: "Can't be targeted by spells",
   blink: "Returns to hand at end of turn",
-  warden: "Adjacent creatures gain +0/+1",
+  warden: "Attacks without tapping",
   unbounded: "Ignores defender when attacking",
   bloodmaster: "+1/+1 for each blood rune attached to this creature",
   lifedrinker: "Heals its owner by the amount of combat damage dealt",

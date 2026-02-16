@@ -1,4 +1,5 @@
 import type { SummoningDefinition } from "../../types.js";
+import { buildAbilities } from "../../subtypeAbilities.js";
 
 export const card: SummoningDefinition = {
   id: "8",
@@ -7,7 +8,7 @@ export const card: SummoningDefinition = {
   spellName: "OOR",
   attack: 1,
   health: 1,
-  abilities: "skyrunner,aegis,rage,fury,deathstrike",
+  abilities: buildAbilities(["Angel", "Demon"], "deathstrike"),
   subtypes: "Angel,Demon",
   description: "I did not choose to be Harmon's voice. But choice is a luxury of those who are not destined for purpose.",
   effect: {

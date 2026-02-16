@@ -1,4 +1,5 @@
 import type { SummoningDefinition } from "../../types.js";
+import { buildAbilities } from "../../subtypeAbilities.js";
 
 export const card: SummoningDefinition = {
   id: "10",
@@ -7,7 +8,7 @@ export const card: SummoningDefinition = {
   spellName: "HOPE",
   attack: 4,
   health: 4,
-  abilities: "shadowwalker",
+  abilities: buildAbilities(["Angel"], "shadowwalker"),
   subtypes: "Angel",
   description: "For a moment, the shadow coalesced, mimicking a form long lost to the celestial wars.",
   effect: {

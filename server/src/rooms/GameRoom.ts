@@ -4,6 +4,7 @@ import {
   GameState, Player, Card, PendingEffect,
   generateTestChaosDeck, generateTestRunesDeck, shuffleArray,
   SUMMONING_POOL, MEMORY_POOL, ECHO_POOL, CARD_REGISTRY,
+  SUBTYPE_ABILITIES,
   type CardDefinition, type SummoningDefinition, type MemoryDefinition, type RuneDefinition, type EchoDefinition,
 } from "shared";
 
@@ -321,8 +322,9 @@ export class GameRoom extends Room<GameState> {
       if (!message.chosenSubtype || !action.options.includes(message.chosenSubtype)) return;
       card.subtypes = message.chosenSubtype;
       // Apply abilities granted by the chosen subtype
-      if (action.abilities && action.abilities[message.chosenSubtype]) {
-        const extra = action.abilities[message.chosenSubtype];
+      const subtypeAbilities = SUBTYPE_ABILITIES[message.chosenSubtype];
+      if (subtypeAbilities) {
+        const extra = subtypeAbilities.join(",");
         card.abilities = card.abilities ? `${card.abilities},${extra}` : extra;
         // Re-evaluate canAttack in case rage was granted
         card.canAttack = this.hasAbility(card, "rage");

@@ -90,7 +90,7 @@ export type EffectAction =
   | { type: "return_to_hand"; target: "any" }
   | { type: "create_copies"; source: "extra_runes" }
   | { type: "search_deck"; filter: "subtype"; values: string[] }
-  | { type: "choose_subtype"; options: string[]; abilities?: Record<string, string> }
+  | { type: "choose_subtype"; options: string[] }
   | { type: "cancel_rune"; target: "self" };
 
 // Turn phases

@@ -15,10 +15,6 @@ export const card: SummoningDefinition = {
     action: {
       type: "choose_subtype",
       options: ["Angel", "Demon"],
-      abilities: {
-        "Angel": "skyrunner,aegis,warden",
-        "Demon": "rage,fury,revenge",
-      },
     },
   },
 };

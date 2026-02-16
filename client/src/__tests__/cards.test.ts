@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { CARD_REGISTRY, SUMMONING_POOL, ECHO_POOL, MEMORY_POOL } from "shared";
+import { CARD_REGISTRY, SUMMONING_POOL, ECHO_POOL, MEMORY_POOL, SUBTYPE_ABILITIES } from "shared";
 import { ABILITY_DESCRIPTIONS } from "../data/abilityDescriptions";
 import type { AbilityKeyword } from "shared";
 
@@ -28,10 +28,10 @@ function getAllUsedAbilities(): Set<string> {
         abilities.add(a);
       }
     }
-    // Also check choose_subtype abilities
-    if ("effect" in card && card.effect && card.effect.action.type === "choose_subtype" && card.effect.action.abilities) {
-      for (const abilitiesStr of Object.values(card.effect.action.abilities)) {
-        for (const a of abilitiesStr.split(",").filter(Boolean)) {
+    // Also collect abilities from SUBTYPE_ABILITIES (used by choose_subtype at runtime)
+    if ("subtypes" in card && card.subtypes) {
+      for (const st of card.subtypes.split(",")) {
+        for (const a of SUBTYPE_ABILITIES[st] || []) {
           abilities.add(a);
         }
       }
