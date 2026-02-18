@@ -6,7 +6,7 @@ import {
 import { type GameContext } from "./context.js";
 import { createCard, endGame, getOpponent } from "./utils.js";
 import { handleWriteRune, handleAttachRune } from "./runeHandlers.js";
-import { startGame, handleEndTurn } from "./lifecycle.js";
+import { startGame, handleEndTurn, handleMulligan } from "./lifecycle.js";
 import { handleSummon, handlePlayEcho, handlePlayMemory } from "./cardPlay.js";
 import { handleDeclareAttackers, handleDeclareBlockers } from "./combatDeclare.js";
 import { handleResolveDeathTarget, handleResolveDeckSearch, handleResolveEndTurnCancel } from "./deathResolution.js";
@@ -27,6 +27,7 @@ export class GameRoom extends Room<GameState> {
     this.onMessage("declare_attackers", (client, message) => handleDeclareAttackers(this.ctx, client, message));
     this.onMessage("declare_blockers", (client, message) => handleDeclareBlockers(this.ctx, client, message));
     this.onMessage("end_turn", (client) => handleEndTurn(this.ctx, client));
+    this.onMessage("mulligan", (client) => handleMulligan(this.ctx, client));
     this.onMessage("resolve_death_target", (client, message) => handleResolveDeathTarget(this.ctx, client, message));
     this.onMessage("resolve_deck_search", (client, message) => handleResolveDeckSearch(this.ctx, client, message));
     this.onMessage("resolve_end_turn_cancel", (client, message) => handleResolveEndTurnCancel(this.ctx, client, message));

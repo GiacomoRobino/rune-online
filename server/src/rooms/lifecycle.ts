@@ -1,5 +1,5 @@
 import { Client } from "@colyseus/core";
-import { Card } from "shared";
+import { Card, shuffleArray } from "shared";
 import { type GameContext } from "./context.js";
 import { drawChaosCard, findDefinition, hasAbility } from "./utils.js";
 import { handleOnDeathEffect, sacrificeRunelessSummonings } from "./deathCleanup.js";
@@ -61,6 +61,40 @@ export function startTurn(ctx: GameContext) {
 
   ctx.state.turnPhase = "main";
   ctx.state.turnStartTime = new Date().toISOString();
+}
+
+export function handleMulligan(ctx: GameContext, client: Client) {
+  if (ctx.state.phase !== "playing") return;
+  if (ctx.state.currentTurn !== client.sessionId) return;
+  if (ctx.state.turnPhase !== "main") return;
+
+  const player = ctx.state.players.get(client.sessionId);
+  if (!player) return;
+  if (player.mulligansRemaining <= 0) return;
+
+  // Only allowed before any actions
+  if (player.runesWrittenThisTurn > 0 || player.battlefield.length > 0 || player.runeField.length > 0) return;
+
+  // Return all hand cards to chaos deck
+  while (player.hand.length > 0) {
+    const card = player.hand.pop();
+    if (card) player.chaosDeck.push(card);
+  }
+
+  // Shuffle chaos deck (convert to plain array, shuffle, clear, repush)
+  const cards = Array.from(player.chaosDeck).filter((c): c is Card => c !== undefined);
+  const shuffled = shuffleArray(cards);
+  player.chaosDeck.clear();
+  for (const card of shuffled) {
+    player.chaosDeck.push(card);
+  }
+
+  // Draw 3 new cards
+  for (let i = 0; i < STARTING_HAND_SIZE; i++) {
+    drawChaosCard(player);
+  }
+
+  player.mulligansRemaining--;
 }
 
 export function handleEndTurn(ctx: GameContext, client: Client) {

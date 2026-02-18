@@ -18,7 +18,7 @@ import { LayoutProps } from "./types";
 
 export function LayoutB({
   myPlayer, opponent, isMyTurn, turnPhase, turnNumber, declaredAttackers,
-  interactions: gi, onWriteRune, onEndTurn, gameEvents,
+  interactions: gi, onWriteRune, onEndTurn, onMulligan, gameEvents,
 }: LayoutProps) {
   const opponentUnattachedRunes = gi.getUnattachedRunes(opponent);
 
@@ -284,6 +284,8 @@ export function LayoutB({
             confirmBlockers={gi.confirmBlockers}
             cancelMode={gi.cancelMode}
             onEndTurn={onEndTurn}
+            mulligansRemaining={myPlayer.mulligansRemaining}
+            onMulligan={onMulligan}
           />
         </div>
       </div>

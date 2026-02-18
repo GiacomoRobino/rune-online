@@ -12,5 +12,6 @@ export interface LayoutProps {
   interactions: GameInteractions;
   onWriteRune: (runeId: string) => void;
   onEndTurn: () => void;
+  onMulligan: () => void;
   gameEvents: GameEvent[];
 }

@@ -25,6 +25,7 @@ function App() {
     resolveDeckSearch,
     resolveEndTurnCancel,
     gameEvents,
+    mulligan,
   } = useColyseus();
 
   // Show lobby if not connected or no game state
@@ -65,6 +66,7 @@ function App() {
         onResolveDeckSearch={resolveDeckSearch}
         onResolveEndTurnCancel={resolveEndTurnCancel}
         endTurnTargetCardId={gameState.endTurnTargetCardId}
+        onMulligan={mulligan}
       />
     );
   }

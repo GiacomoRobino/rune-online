@@ -110,7 +110,8 @@ export type ClientMessage =
   | { type: "end_turn" }
   | { type: "resolve_death_target"; targetId: string }
   | { type: "resolve_deck_search"; cardId: string | null }
-  | { type: "resolve_end_turn_cancel"; runeId: string };
+  | { type: "resolve_end_turn_cancel"; runeId: string }
+  | { type: "mulligan" };
 
 // Game phases
 export type GamePhase = "waiting" | "playing" | "ended";

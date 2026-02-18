@@ -55,6 +55,7 @@ export interface PlayerState {
   runesWrittenThisTurn: number;
   maxRuneWritesThisTurn: number;
   connected: boolean;
+  mulligansRemaining: number;
 }
 
 export interface GameStateData {
@@ -132,6 +133,7 @@ export function useColyseus() {
         runesWrittenThisTurn: player.runesWrittenThisTurn,
         maxRuneWritesThisTurn: player.maxRuneWritesThisTurn,
         connected: player.connected,
+        mulligansRemaining: player.mulligansRemaining,
       });
     });
 
@@ -260,6 +262,11 @@ export function useColyseus() {
     room.send("resolve_end_turn_cancel", { runeId });
   }, [room]);
 
+  const mulligan = useCallback(() => {
+    if (!room) return;
+    room.send("mulligan", {});
+  }, [room]);
+
   // Derived state helpers
   const myPlayer = gameState?.players.get(mySessionId);
   const opponent = gameState
@@ -291,5 +298,6 @@ export function useColyseus() {
     resolveDeathTarget,
     resolveDeckSearch,
     resolveEndTurnCancel,
+    mulligan,
   };
 }

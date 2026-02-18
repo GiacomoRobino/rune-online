@@ -27,6 +27,7 @@ interface GameBoardProps {
   onResolveDeckSearch: (cardId: string | null) => void;
   onResolveEndTurnCancel: (runeId: string) => void;
   endTurnTargetCardId: string;
+  onMulligan: () => void;
 }
 
 export function GameBoard({
@@ -53,6 +54,7 @@ export function GameBoard({
   onResolveDeckSearch,
   onResolveEndTurnCancel,
   endTurnTargetCardId,
+  onMulligan,
 }: GameBoardProps) {
   const interactions = useGameInteractions({
     myPlayer,
@@ -120,6 +122,7 @@ export function GameBoard({
       interactions={interactions}
       onWriteRune={onWriteRune}
       onEndTurn={onEndTurn}
+      onMulligan={onMulligan}
       gameEvents={gameEvents}
     />
   );

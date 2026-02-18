@@ -10,6 +10,8 @@ interface ActionBarProps {
   confirmBlockers: () => void;
   cancelMode: () => void;
   onEndTurn: () => void;
+  mulligansRemaining: number;
+  onMulligan: () => void;
 }
 
 export function ActionBar({
@@ -22,6 +24,8 @@ export function ActionBar({
   confirmBlockers,
   cancelMode,
   onEndTurn,
+  mulligansRemaining,
+  onMulligan,
 }: ActionBarProps) {
   return (
     <div className="flex items-center gap-2">
@@ -54,6 +58,13 @@ export function ActionBar({
       {isBlockingPhase && mode.type === "declare_block" && (
         <button onClick={confirmBlockers} className="px-4 py-2 btn-stone rounded-lg text-sm">
           Confirm Blockers ({mode.assignments.size})
+        </button>
+      )}
+
+      {/* Mulligan */}
+      {isMyTurn && turnPhase === "main" && mode.type === "idle" && mulligansRemaining > 0 && (
+        <button onClick={onMulligan} className="px-4 py-2 btn-stone rounded-lg text-sm">
+          Mulligan ({mulligansRemaining})
         </button>
       )}
 

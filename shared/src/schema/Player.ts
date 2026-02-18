@@ -16,4 +16,5 @@ export class Player extends Schema {
   @type("number") runesWrittenThisTurn: number = 0;
   @type("number") maxRuneWritesThisTurn: number = 0;
   @type("boolean") connected: boolean = true;
+  @type("number") mulligansRemaining: number = 3;
 }
