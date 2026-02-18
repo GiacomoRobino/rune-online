@@ -1,12 +1,14 @@
 import type { SummoningDefinition } from "../../types.js";
+import { buildAbilities } from "../../subtypeAbilities.js";
 
 export const card: SummoningDefinition = {
   id: "11",
-  name: "Ephero, the Red Storm",
+  name: "Eoh, Radiant Blade",
   type: "summoning",
-  spellName: "EPHERO",
-  attack: 0,
-  health: 0,
-  abilities: "bloodmaster,devour,ephemeral",
-  subtypes: "Demon",
+  spellName: "EOH",
+  attack: 3,
+  health: 1,
+  abilities: buildAbilities(["Angel"]),
+  subtypes: "Angel",
+  description: "My duty is small compared to the grand designs, but small duties, faithfully kept, build the greatest structures.",
 };

@@ -9,7 +9,8 @@ import { card as he } from "./cards/7/card.js";
 import { card as oor } from "./cards/8/card.js";
 import { card as hope } from "./cards/9/card.js";
 import { card as hopeShadow } from "./cards/10/card.js";
-import { card as ephero } from "./cards/11/card.js";
+import { card as eoh } from "./cards/11/card.js";
+import { card as ephero } from "./cards/12/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -33,6 +34,8 @@ export const SUMMONING_POOL: SummoningDefinition[] = [
   { id: "wraith", name: "Wraith", type: "summoning", spellName: "WRAITH", attack: 3, health: 3, abilities: "shadowwalker", description: "Shadowwalker." },
   hope,
   hopeShadow,
+  // 3-letter (Angel)
+  eoh,
   // 6-letter (legendary)
   ephero,
 ];
@@ -150,6 +153,10 @@ export function generateTestChaosDeck(): CardDefinition[] {
   // 4 copies of Hope, Shadow of Greatness (summoning)
   for (let i = 0; i < 4; i++) {
     deck.push({ ...hopeShadow });
+  }
+  // 4 copies of Eoh (summoning)
+  for (let i = 0; i < 4; i++) {
+    deck.push({ ...eoh });
   }
   // 4 copies of Ephero (summoning)
   for (let i = 0; i < 4; i++) {
