@@ -20,7 +20,9 @@ export type AbilityKeyword =
   | "unbounded"
   | "bloodmaster"
   | "lifedrinker"
-  | "deathstrike";
+  | "deathstrike"
+  | "devour"
+  | "ephemeral";
 
 // Card definitions
 export interface SummoningDefinition {
@@ -99,7 +101,7 @@ export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "com
 // Message types (client -> server)
 export type ClientMessage =
   | { type: "write_rune"; runeId: string }
-  | { type: "summon"; cardId: string; runeIds: string[]; chosenSubtype?: string }
+  | { type: "summon"; cardId: string; runeIds: string[]; chosenSubtype?: string; sacrificeTargetId?: string }
   | { type: "play_echo"; cardId: string; runeIds: string[] }
   | { type: "play_memory"; cardId: string; runeIds: string[]; targetId?: string }
   | { type: "attach_rune"; runeId: string; targetId: string }

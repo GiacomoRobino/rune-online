@@ -17,4 +17,6 @@ export const ABILITY_DESCRIPTIONS: Record<string, string> = {
   bloodmaster: "+1/+1 for each blood rune attached to this creature",
   lifedrinker: "Heals its owner by the amount of combat damage dealt",
   deathstrike: "When this creature dies, deal damage equal to its power to any target",
+  devour: "When summoned, sacrifice a friendly summoning and steal its runes",
+  ephemeral: "Sacrificed at the end of the turn",
 };

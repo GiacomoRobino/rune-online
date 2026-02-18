@@ -148,6 +148,7 @@ export function LayoutB({
                   <Card
                     card={card}
                     onClick={() => gi.handleMyCreatureClick(card)}
+                    isTarget={gi.mode.type === "choosing_sacrifice_target" && card.cardType === "summoning"}
                     isAttacker={
                       gi.mode.type === "declare_attack" &&
                       gi.mode.selectedAttackerIds.includes(card.instanceId)
@@ -204,6 +205,16 @@ export function LayoutB({
         {gi.mode.type === "declare_block" && gi.mode.selectedBlockerId && (
           <div className="stone-panel metal-border rounded-lg p-2 text-center text-gold text-sm font-medieval">
             Select an attacker to block
+          </div>
+        )}
+
+        {/* Sacrifice target indicator */}
+        {gi.mode.type === "choosing_sacrifice_target" && (
+          <div className="stone-panel metal-border rounded-lg p-2 text-center text-gold text-sm font-medieval">
+            Choose a summoning to sacrifice for {gi.mode.card.name}
+            <button onClick={gi.cancelMode} className="ml-3 px-2 py-0.5 btn-stone rounded text-xs">
+              Cancel
+            </button>
           </div>
         )}
 

@@ -9,7 +9,7 @@ import { card as he } from "./cards/7/card.js";
 import { card as oor } from "./cards/8/card.js";
 import { card as hope } from "./cards/9/card.js";
 import { card as hopeShadow } from "./cards/10/card.js";
-import { card as eoh } from "./cards/11/card.js";
+import { card as ephero } from "./cards/11/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -17,7 +17,6 @@ export const SUMMONING_POOL: SummoningDefinition[] = [
   { id: "ox", name: "Ox", type: "summoning", spellName: "OX", attack: 2, health: 3, abilities: "", description: "A sturdy beast." },
   he,
   oor,
-  eoh,
   // 3-letter (medium)
   { id: "era", name: "Era", type: "summoning", spellName: "ERA", attack: 2, health: 3, abilities: "", description: "A timeless warrior." },
   { id: "fen", name: "Fen", type: "summoning", spellName: "FEN", attack: 1, health: 4, abilities: "defender", description: "Defender." },
@@ -34,6 +33,8 @@ export const SUMMONING_POOL: SummoningDefinition[] = [
   { id: "wraith", name: "Wraith", type: "summoning", spellName: "WRAITH", attack: 3, health: 3, abilities: "shadowwalker", description: "Shadowwalker." },
   hope,
   hopeShadow,
+  // 6-letter (legendary)
+  ephero,
 ];
 
 // --- MEMORY POOL ---
@@ -150,9 +151,9 @@ export function generateTestChaosDeck(): CardDefinition[] {
   for (let i = 0; i < 4; i++) {
     deck.push({ ...hopeShadow });
   }
-  // 4 copies of Eoh (summoning)
+  // 4 copies of Ephero (summoning)
   for (let i = 0; i < 4; i++) {
-    deck.push({ ...eoh });
+    deck.push({ ...ephero });
   }
   return deck;
 }

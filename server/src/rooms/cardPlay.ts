@@ -3,13 +3,13 @@ import { SUBTYPE_ABILITIES } from "shared";
 import { type GameContext } from "./context.js";
 import { hasAbility, findDefinition, checkWinCondition } from "./utils.js";
 import { validateRuneSpelling, detachRuneFromCurrent } from "./runeHandlers.js";
-import { sacrificeRunelessSummonings } from "./deathCleanup.js";
+import { sacrificeRunelessSummonings, handleOnDeathEffect } from "./deathCleanup.js";
 import { handleOnEnterEffect, handleMemoryEffect } from "./effects.js";
 import { recalculateOngoingEffects } from "./ongoingEffects.js";
 
 const MAX_BATTLEFIELD_SIZE = 7;
 
-export function handleSummon(ctx: GameContext, client: Client, message: { cardId: string; runeIds: string[]; chosenSubtype?: string }) {
+export function handleSummon(ctx: GameContext, client: Client, message: { cardId: string; runeIds: string[]; chosenSubtype?: string; sacrificeTargetId?: string }) {
   if (ctx.state.phase !== "playing") return;
   if (ctx.state.currentTurn !== client.sessionId) return;
   if (ctx.state.turnPhase !== "main") return;
@@ -70,6 +70,32 @@ export function handleSummon(ctx: GameContext, client: Client, message: { cardId
   }
 
   player.battlefield.push(card);
+
+  // Handle devour: sacrifice a friendly summoning and steal its runes
+  if (hasAbility(card, "devour")) {
+    if (!message.sacrificeTargetId) return;
+    const victimIndex = player.battlefield.findIndex((c) => c.instanceId === message.sacrificeTargetId && c.cardType === "summoning" && c.instanceId !== card.instanceId);
+    if (victimIndex === -1) return;
+    const victim = player.battlefield.at(victimIndex);
+    if (!victim) return;
+
+    // Transfer all runes from victim to card
+    for (let i = 0; i < victim.attachedRuneIds.length; i++) {
+      const runeId = victim.attachedRuneIds.at(i);
+      if (!runeId) continue;
+      const rune = player.runeField.find((r) => r.instanceId === runeId);
+      if (rune) {
+        rune.attachedToId = card.instanceId;
+        card.attachedRuneIds.push(runeId);
+      }
+    }
+    victim.attachedRuneIds.clear();
+
+    // Remove victim from battlefield, fire death effects, send to graveyard
+    player.battlefield.splice(victimIndex, 1);
+    handleOnDeathEffect(ctx, victim, player);
+    player.graveyard.push(victim);
+  }
 
   // Old summonings may have lost runes -> sacrifice
   sacrificeRunelessSummonings(ctx, player);

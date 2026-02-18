@@ -12,6 +12,7 @@ export type InteractionMode =
   | { type: "targeting_death_effect"; effectId: string; cardName: string; damageAmount: number }
   | { type: "searching_deck"; effectId: string; cardName: string; searchFilter: string }
   | { type: "choosing_subtype"; card: CardState; selectedRuneIds: string[]; options: string[] }
+  | { type: "choosing_sacrifice_target"; card: CardState; selectedRuneIds: string[] }
   | { type: "cancel_rune"; cardInstanceId: string };
 
 export interface GameInteractionsProps {
@@ -20,7 +21,7 @@ export interface GameInteractionsProps {
   isMyTurn: boolean;
   turnPhase: string;
   declaredAttackers: string[];
-  onSummon: (cardId: string, runeIds: string[], chosenSubtype?: string) => void;
+  onSummon: (cardId: string, runeIds: string[], chosenSubtype?: string, sacrificeTargetId?: string) => void;
   onPlayEcho: (cardId: string, runeIds: string[]) => void;
   onPlayMemory: (cardId: string, runeIds: string[], targetId?: string) => void;
   onDeclareAttackers: (attackerIds: string[]) => void;
@@ -120,6 +121,16 @@ export function useGameInteractions({
         });
         return;
       }
+      if (hasAbility(mode.card, "devour")) {
+        const friendlySummonings = myPlayer.battlefield.filter((c) => c.cardType === "summoning");
+        if (friendlySummonings.length === 0) return;
+        setMode({
+          type: "choosing_sacrifice_target",
+          card: mode.card,
+          selectedRuneIds: mode.selectedRuneIds,
+        });
+        return;
+      }
       onSummon(mode.card.instanceId, mode.selectedRuneIds);
     } else if (mode.type === "echo") {
       onPlayEcho(mode.card.instanceId, mode.selectedRuneIds);
@@ -145,6 +156,13 @@ export function useGameInteractions({
 
   // --- Battlefield click ---
   const handleMyCreatureClick = (card: CardState) => {
+    if (mode.type === "choosing_sacrifice_target") {
+      if (card.cardType === "summoning") {
+        onSummon(mode.card.instanceId, mode.selectedRuneIds, undefined, card.instanceId);
+        setMode({ type: "idle" });
+      }
+      return;
+    }
     if (mode.type === "targeting_death_effect") {
       handleDeathEffectTarget(card.instanceId);
       return;
@@ -327,6 +345,7 @@ export function useGameInteractions({
   // Check if a card can be played
   const canSpellCard = (card: CardState) => {
     if (card.cardType !== "summoning" && card.cardType !== "echo" && card.cardType !== "memory") return false;
+    if (hasAbility(card, "devour") && !myPlayer.battlefield.some((c) => c.cardType === "summoning")) return false;
     const available = myPlayer.runeField.filter((r) => r.etchingCounters === 0);
 
     if (card.bloodCost > 0) {

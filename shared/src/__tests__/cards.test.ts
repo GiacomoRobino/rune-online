@@ -9,6 +9,7 @@ const VALID_ABILITIES: AbilityKeyword[] = [
   "skyrunner", "fury", "rage", "aegis", "defender", "duelist",
   "shadowwalker", "revenge", "shatter", "pack", "master", "veil",
   "blink", "warden", "unbounded", "bloodmaster", "lifedrinker", "deathstrike",
+  "devour", "ephemeral",
 ];
 
 const VALID_ACTION_TYPES = [
@@ -121,9 +122,11 @@ describe("Card data integrity", () => {
   // --- Summoning stats ---
   describe("summoning stats", () => {
     for (const card of SUMMONING_POOL) {
-      it(`${card.id} (${card.name}): attack >= 0 and health >= 1`, () => {
+      it(`${card.id} (${card.name}): attack >= 0 and health >= 1 (or 0 for devour)`, () => {
+        const abilities = card.abilities ? card.abilities.split(",") : [];
+        const minHealth = abilities.includes("devour") ? 0 : 1;
         expect(card.attack).toBeGreaterThanOrEqual(0);
-        expect(card.health).toBeGreaterThanOrEqual(1);
+        expect(card.health).toBeGreaterThanOrEqual(minHealth);
       });
     }
   });

@@ -14,7 +14,7 @@ interface GameBoardProps {
   mySessionId: string;
   declaredAttackers: string[];
   onWriteRune: (runeId: string) => void;
-  onSummon: (cardId: string, runeIds: string[], chosenSubtype?: string) => void;
+  onSummon: (cardId: string, runeIds: string[], chosenSubtype?: string, sacrificeTargetId?: string) => void;
   onPlayEcho: (cardId: string, runeIds: string[]) => void;
   onPlayMemory: (cardId: string, runeIds: string[], targetId?: string) => void;
   onDeclareAttackers: (attackerIds: string[]) => void;

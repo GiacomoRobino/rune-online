@@ -210,9 +210,9 @@ export function useColyseus() {
     room.send("write_rune", { runeId });
   }, [room]);
 
-  const summonCreature = useCallback((cardId: string, runeIds: string[], chosenSubtype?: string) => {
+  const summonCreature = useCallback((cardId: string, runeIds: string[], chosenSubtype?: string, sacrificeTargetId?: string) => {
     if (!room) return;
-    room.send("summon", { cardId, runeIds, chosenSubtype });
+    room.send("summon", { cardId, runeIds, chosenSubtype, sacrificeTargetId });
   }, [room]);
 
   const playEcho = useCallback((cardId: string, runeIds: string[]) => {

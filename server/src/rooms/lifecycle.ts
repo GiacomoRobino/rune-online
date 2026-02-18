@@ -1,7 +1,8 @@
 import { Client } from "@colyseus/core";
 import { Card } from "shared";
 import { type GameContext } from "./context.js";
-import { drawChaosCard, findDefinition } from "./utils.js";
+import { drawChaosCard, findDefinition, hasAbility } from "./utils.js";
+import { handleOnDeathEffect, sacrificeRunelessSummonings } from "./deathCleanup.js";
 
 const STARTING_HAND_SIZE = 3;
 const STARTING_RUNES = 3;
@@ -69,6 +70,43 @@ export function handleEndTurn(ctx: GameContext, client: Client) {
 
   const player = ctx.state.players.get(client.sessionId);
   if (!player) return;
+
+  // Handle ephemeral creatures: sacrifice at end of owner's turn
+  const ephemerals = Array.from(player.battlefield)
+    .filter((c): c is Card => c !== undefined)
+    .filter((c) => hasAbility(c, "ephemeral"));
+
+  for (const card of ephemerals) {
+    const idx = player.battlefield.findIndex((c) => c.instanceId === card.instanceId);
+    if (idx === -1) continue;
+
+    // Detach all runes (stay on runeField)
+    for (let i = 0; i < card.attachedRuneIds.length; i++) {
+      const runeId = card.attachedRuneIds.at(i);
+      if (!runeId) continue;
+      const rune = player.runeField.find((r) => r.instanceId === runeId);
+      if (rune) {
+        rune.attachedToId = "";
+      }
+    }
+    card.attachedRuneIds.clear();
+
+    // Remove from battlefield, fire death effects, send to graveyard
+    player.battlefield.splice(idx, 1);
+    handleOnDeathEffect(ctx, card, player);
+    player.graveyard.push(card);
+  }
+
+  if (ephemerals.length > 0) {
+    // Cascade: orphaned summonings may need sacrifice
+    sacrificeRunelessSummonings(ctx, player);
+
+    if (ctx.state.pendingDeathEffects.length > 0) {
+      ctx.state.turnPhase = "resolve_death_effects";
+      ctx.pendingFinishEndTurn = true;
+      return;
+    }
+  }
 
   // Check for end-of-turn effects (cancel_rune on cards with attached runes)
   const cardsWithEndTurnEffect = Array.from(player.battlefield)
