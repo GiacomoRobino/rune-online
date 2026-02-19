@@ -79,6 +79,7 @@ export type CardDefinition =
 export type CardEffect =
   | { type: "on_enter"; action: EffectAction | EffectAction[] }
   | { type: "on_death"; action: EffectAction | EffectAction[] }
+  | { type: "on_death_prevention"; condition: "has_blood_rune"; action: EffectAction | EffectAction[] }
   | { type: "ongoing"; action: EffectAction }
   | { type: "instant"; action: EffectAction }
   | { type: "end_turn"; action: EffectAction };
@@ -113,6 +114,7 @@ export type ClientMessage =
   | { type: "resolve_deck_search"; cardId: string | null }
   | { type: "resolve_end_turn_cancel"; runeId: string }
   | { type: "resolve_write_rune"; runeId: string | null }
+  | { type: "resolve_death_prevention_cancel"; runeId: string }
   | { type: "mulligan" };
 
 // Game phases

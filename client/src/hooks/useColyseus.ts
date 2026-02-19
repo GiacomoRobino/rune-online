@@ -39,6 +39,7 @@ export interface PendingEffectState {
   cardName: string;
   searchFilter: string;
   runeTypeFilter: string;
+  targetCardId: string;
 }
 
 export interface PlayerState {
@@ -164,6 +165,7 @@ export function useColyseus() {
           cardName: e.cardName,
           searchFilter: e.searchFilter,
           runeTypeFilter: e.runeTypeFilter,
+          targetCardId: e.targetCardId,
         })),
       endTurnTargetCardId: state.endTurnTargetCardId,
     };
@@ -275,6 +277,11 @@ export function useColyseus() {
     room.send("resolve_end_turn_cancel", { runeId });
   }, [room]);
 
+  const resolveDeathPreventionCancel = useCallback((runeId: string) => {
+    if (!room) return;
+    room.send("resolve_death_prevention_cancel", { runeId });
+  }, [room]);
+
   const mulligan = useCallback(() => {
     if (!room) return;
     room.send("mulligan", {});
@@ -313,6 +320,7 @@ export function useColyseus() {
     resolveDeckSearch,
     resolveWriteRune,
     resolveEndTurnCancel,
+    resolveDeathPreventionCancel,
     mulligan,
   };
 }

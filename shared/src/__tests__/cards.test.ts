@@ -163,8 +163,8 @@ describe("Card data integrity", () => {
   describe("effect types", () => {
     for (const card of SUMMONING_POOL) {
       if (card.effect) {
-        it(`${card.id} (${card.name}): summoning effect is on_enter, on_death, or end_turn`, () => {
-          expect(["on_enter", "on_death", "end_turn"]).toContain(card.effect!.type);
+        it(`${card.id} (${card.name}): summoning effect is on_enter, on_death, on_death_prevention, or end_turn`, () => {
+          expect(["on_enter", "on_death", "on_death_prevention", "end_turn"]).toContain(card.effect!.type);
         });
       }
     }

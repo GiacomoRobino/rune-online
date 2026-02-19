@@ -27,6 +27,7 @@ interface GameBoardProps {
   onResolveDeckSearch: (cardId: string | null) => void;
   onResolveWriteRune: (runeId: string | null) => void;
   onResolveEndTurnCancel: (runeId: string) => void;
+  onResolveDeathPreventionCancel: (runeId: string) => void;
   endTurnTargetCardId: string;
   onMulligan: () => void;
 }
@@ -55,6 +56,7 @@ export function GameBoard({
   onResolveDeckSearch,
   onResolveWriteRune,
   onResolveEndTurnCancel,
+  onResolveDeathPreventionCancel,
   endTurnTargetCardId,
   onMulligan,
 }: GameBoardProps) {
@@ -75,6 +77,7 @@ export function GameBoard({
     onResolveDeckSearch,
     onResolveWriteRune,
     onResolveEndTurnCancel,
+    onResolveDeathPreventionCancel,
     endTurnTargetCardId,
   });
 

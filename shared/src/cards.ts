@@ -12,6 +12,7 @@ import { card as hopeShadow } from "./cards/10/card.js";
 import { card as eoh } from "./cards/11/card.js";
 import { card as ephero } from "./cards/12/card.js";
 import { card as eo } from "./cards/15/card.js";
+import { card as phoe } from "./cards/16/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -24,6 +25,7 @@ export const SUMMONING_POOL: SummoningDefinition[] = [
   { id: "fen", name: "Fen", type: "summoning", spellName: "FEN", attack: 1, health: 4, abilities: "defender", description: "Defender." },
   { id: "axe", name: "Axe", type: "summoning", spellName: "AXE", attack: 3, health: 2, abilities: "", description: "A sharp-edged fighter." },
   // 4-letter (strong)
+  phoe,
   { id: "gust", name: "Gust", type: "summoning", spellName: "GUST", attack: 2, health: 2, abilities: "skyrunner,rage", description: "Skyrunner, Rage." },
   { id: "dusk", name: "Dusk", type: "summoning", spellName: "DUSK", attack: 2, health: 3, abilities: "aegis", description: "Aegis." },
   { id: "bane", name: "Bane", type: "summoning", spellName: "BANE", attack: 3, health: 2, abilities: "revenge", description: "Revenge.",

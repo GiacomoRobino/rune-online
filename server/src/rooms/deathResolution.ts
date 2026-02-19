@@ -1,5 +1,5 @@
 import { Client } from "@colyseus/core";
-import { Card } from "shared";
+import { Card, PendingEffect } from "shared";
 import { type GameContext } from "./context.js";
 import { findCardOnAnyBattlefield, findOwner, getOpponent, applyDamageToCreature, checkWinCondition, findDefinition, createCard } from "./utils.js";
 import { cleanupDeadCreatures, sacrificeRunelessSummonings } from "./deathCleanup.js";
@@ -36,6 +36,58 @@ export function handleResolveDeathTarget(ctx: GameContext, client: Client, messa
 
   ctx.state.pendingDeathEffects.splice(0, 1);
   checkWinCondition(ctx);
+  advanceDeathEffectQueue(ctx);
+}
+
+export function handleResolveDeathPreventionCancel(ctx: GameContext, client: Client, message: { runeId: string }) {
+  if (ctx.state.phase !== "playing") return;
+  if (ctx.state.turnPhase !== "resolve_death_effects") return;
+
+  const effect = ctx.state.pendingDeathEffects.at(0);
+  if (!effect || effect.effectType !== "death_prevention_cancel" || effect.ownerSessionId !== client.sessionId) return;
+
+  const player = ctx.state.players.get(client.sessionId);
+  if (!player) return;
+
+  // Find the rune on player's runeField
+  const runeIndex = player.runeField.findIndex((r) => r.instanceId === message.runeId);
+  if (runeIndex === -1) return;
+
+  const rune = player.runeField.at(runeIndex);
+  if (!rune) return;
+
+  // Validate: rune must be attached to the target card and be a blood rune
+  if (rune.attachedToId !== effect.targetCardId) return;
+  if (rune.runeType !== "blood") return;
+
+  // Cancel the blood rune
+  player.runeField.splice(runeIndex, 1);
+
+  // Remove runeId from the card's attachedRuneIds
+  const card = player.battlefield.find((c) => c.instanceId === effect.targetCardId);
+  if (card) {
+    const idx = card.attachedRuneIds.findIndex((id) => id === message.runeId);
+    if (idx !== -1) {
+      card.attachedRuneIds.splice(idx, 1);
+    }
+  }
+
+  // Sacrifice runeless summonings
+  sacrificeRunelessSummonings(ctx, player);
+
+  // Queue follow-up death_damage effect if there's damage to deal
+  if (effect.damageAmount > 0) {
+    const dmgEffect = new PendingEffect();
+    dmgEffect.id = `de_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    dmgEffect.ownerSessionId = client.sessionId;
+    dmgEffect.effectType = "death_damage";
+    dmgEffect.damageAmount = effect.damageAmount;
+    dmgEffect.cardName = effect.cardName;
+    ctx.state.pendingDeathEffects.push(dmgEffect);
+  }
+
+  // Remove the death_prevention_cancel effect
+  ctx.state.pendingDeathEffects.splice(0, 1);
   advanceDeathEffectQueue(ctx);
 }
 

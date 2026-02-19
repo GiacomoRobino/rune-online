@@ -14,6 +14,7 @@ export type InteractionMode =
   | { type: "choosing_subtype"; card: CardState; selectedRuneIds: string[]; options: string[] }
   | { type: "choosing_sacrifice_target"; card: CardState; selectedRuneIds: string[] }
   | { type: "cancel_rune"; cardInstanceId: string }
+  | { type: "choosing_death_prevention_rune"; effectId: string; cardName: string; cardInstanceId: string }
   | { type: "writing_rune_from_effect"; effectId: string; cardName: string; runeType: string };
 
 export interface GameInteractionsProps {
@@ -33,6 +34,7 @@ export interface GameInteractionsProps {
   onResolveDeckSearch: (cardId: string | null) => void;
   onResolveWriteRune: (runeId: string | null) => void;
   onResolveEndTurnCancel: (runeId: string) => void;
+  onResolveDeathPreventionCancel: (runeId: string) => void;
   endTurnTargetCardId: string;
 }
 
@@ -53,6 +55,7 @@ export function useGameInteractions({
   onResolveDeckSearch,
   onResolveWriteRune,
   onResolveEndTurnCancel,
+  onResolveDeathPreventionCancel,
   endTurnTargetCardId,
 }: GameInteractionsProps) {
   const [mode, setMode] = useState<InteractionMode>({ type: "idle" });
@@ -89,6 +92,15 @@ export function useGameInteractions({
 
   // --- Rune click in summoning/echo/memory/cancel_rune mode ---
   const handleRuneClick = (rune: CardState) => {
+    // Death prevention: choose a blood rune to cancel
+    if (mode.type === "choosing_death_prevention_rune") {
+      if (rune.attachedToId === mode.cardInstanceId && rune.runeType === "blood") {
+        onResolveDeathPreventionCancel(rune.instanceId);
+        setMode({ type: "idle" });
+      }
+      return;
+    }
+
     // Cancel rune mode: click an attached rune to cancel it
     if (mode.type === "cancel_rune") {
       if (rune.attachedToId === mode.cardInstanceId) {
@@ -305,7 +317,14 @@ export function useGameInteractions({
     if (turnPhase === "resolve_death_effects" && pendingDeathEffects.length > 0) {
       const first = pendingDeathEffects[0];
       if (first.ownerSessionId === mySessionId) {
-        if (first.effectType === "death_damage") {
+        if (first.effectType === "death_prevention_cancel") {
+          setMode({
+            type: "choosing_death_prevention_rune",
+            effectId: first.id,
+            cardName: first.cardName,
+            cardInstanceId: first.targetCardId,
+          });
+        } else if (first.effectType === "death_damage") {
           setMode({
             type: "targeting_death_effect",
             effectId: first.id,
@@ -341,7 +360,7 @@ export function useGameInteractions({
 
   // Auto-exit death effect mode when phase leaves resolve_death_effects
   useEffect(() => {
-    if (turnPhase !== "resolve_death_effects" && (mode.type === "targeting_death_effect" || mode.type === "searching_deck" || mode.type === "writing_rune_from_effect")) {
+    if (turnPhase !== "resolve_death_effects" && (mode.type === "targeting_death_effect" || mode.type === "searching_deck" || mode.type === "writing_rune_from_effect" || mode.type === "choosing_death_prevention_rune")) {
       setMode({ type: "idle" });
       setDeckSearchCards([]);
       setWriteRuneCards([]);

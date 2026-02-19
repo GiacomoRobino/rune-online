@@ -201,7 +201,7 @@ export function LayoutCompact({
                           card={rune}
                           onClick={() => gi.handleRuneClick(rune)}
                           isSelected={gi.selectedRuneIds.includes(rune.instanceId)}
-                          isPlayable={gi.isRuneAvailable(rune) || (gi.mode.type === "cancel_rune" && rune.attachedToId === gi.mode.cardInstanceId)}
+                          isPlayable={gi.isRuneAvailable(rune) || (gi.mode.type === "cancel_rune" && rune.attachedToId === gi.mode.cardInstanceId) || (gi.mode.type === "choosing_death_prevention_rune" && rune.attachedToId === gi.mode.cardInstanceId && rune.runeType === "blood")}
                           size="sm"
                         />
                       ))}
@@ -308,6 +308,13 @@ export function LayoutCompact({
           {gi.mode.type === "cancel_rune" && (
             <div className="stone-panel metal-border rounded-lg p-2 text-center text-gold text-sm font-medieval">
               Select a rune attached to this summoning to cancel
+            </div>
+          )}
+
+          {/* Death prevention rune cancel indicator */}
+          {gi.mode.type === "choosing_death_prevention_rune" && (
+            <div className="stone-panel metal-border rounded-lg p-2 text-center text-gold text-sm font-medieval">
+              {gi.mode.cardName}&apos;s death prevented — choose a Blood Rune to cancel
             </div>
           )}
 

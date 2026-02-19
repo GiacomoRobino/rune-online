@@ -26,6 +26,7 @@ function App() {
     resolveDeckSearch,
     resolveWriteRune,
     resolveEndTurnCancel,
+    resolveDeathPreventionCancel,
     gameEvents,
     mulligan,
   } = useColyseus();
@@ -69,6 +70,7 @@ function App() {
         onResolveDeckSearch={resolveDeckSearch}
         onResolveWriteRune={resolveWriteRune}
         onResolveEndTurnCancel={resolveEndTurnCancel}
+        onResolveDeathPreventionCancel={resolveDeathPreventionCancel}
         endTurnTargetCardId={gameState.endTurnTargetCardId}
         onMulligan={mulligan}
       />

@@ -8,4 +8,5 @@ export class PendingEffect extends Schema {
   @type("string") cardName: string = "";
   @type("string") searchFilter: string = "";    // comma-separated subtypes
   @type("string") runeTypeFilter: string = "";
+  @type("string") targetCardId: string = "";
 }
