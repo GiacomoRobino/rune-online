@@ -161,6 +161,27 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
   }
 }
 
+export function handleDamageXEffect(ctx: GameContext, caster: Player, x: number, targetIds: string[]) {
+  let totalDamage = 0;
+  const seen = new Set<string>();
+  for (const targetId of targetIds) {
+    if (seen.has(targetId)) continue;
+    if (seen.size >= x) break;
+    seen.add(targetId);
+    const target = findCardOnAnyBattlefield(ctx, targetId);
+    if (!target || target.cardType !== "summoning") continue;
+    totalDamage += applyDamageToCreature(target, x);
+  }
+  // Clean up dead creatures on both sides
+  const opponent = getOpponent(ctx, caster.sessionId);
+  cleanupDeadCreatures(ctx, caster);
+  if (opponent) cleanupDeadCreatures(ctx, opponent);
+  // Heal caster
+  if (totalDamage > 0) {
+    caster.health = Math.min(caster.health + totalDamage, caster.maxHealth);
+  }
+}
+
 export function triggerWriteRuneEffects(ctx: GameContext, player: Player, runeType: string) {
   for (let i = 0; i < player.battlefield.length; i++) {
     const card = player.battlefield.at(i);

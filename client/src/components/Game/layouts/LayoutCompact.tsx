@@ -137,7 +137,7 @@ export function LayoutCompact({
                   <Card
                     card={card}
                     onClick={() => gi.handleEnemyCreatureClick(card)}
-                    isTarget={gi.mode.type === "targeting_memory" || gi.mode.type === "targeting_death_effect"}
+                    isTarget={gi.mode.type === "targeting_memory" || gi.mode.type === "targeting_memory_multi" || gi.mode.type === "targeting_death_effect"}
                     isAttacker={declaredAttackers.includes(card.instanceId)}
                     isSelected={gi.inspectedCardId === card.instanceId}
                     size="md"
@@ -175,7 +175,7 @@ export function LayoutCompact({
                   <Card
                     card={card}
                     onClick={() => gi.handleMyCreatureClick(card)}
-                    isTarget={gi.mode.type === "choosing_sacrifice_target" && card.cardType === "summoning"}
+                    isTarget={(gi.mode.type === "choosing_sacrifice_target" || gi.mode.type === "targeting_memory_multi") && card.cardType === "summoning"}
                     isAttacker={
                       gi.mode.type === "declare_attack" &&
                       gi.mode.selectedAttackerIds.includes(card.instanceId)
@@ -260,6 +260,7 @@ export function LayoutCompact({
             <SpellNameChecker
               spellName={gi.mode.card.spellName}
               bloodCost={gi.mode.card.bloodCost}
+              bloodCostX={gi.mode.card.bloodCostX}
               canOverpay={gi.mode.card.canOverpay}
               selectedRunes={gi.selectedRuneIds
                 .map((id) => myPlayer.runeField.find((r) => r.instanceId === id))
@@ -292,6 +293,19 @@ export function LayoutCompact({
             <div className="stone-panel metal-border rounded-lg p-2 text-center text-gold text-sm font-medieval">
               Select a target for {gi.mode.card.name}
               <button onClick={gi.cancelMode} className="ml-3 px-2 py-0.5 btn-stone rounded text-xs">
+                Cancel
+              </button>
+            </div>
+          )}
+
+          {/* Multi-target indicator */}
+          {gi.mode.type === "targeting_memory_multi" && (
+            <div className="stone-panel metal-border rounded-lg p-2 text-center text-gold text-sm font-medieval">
+              Select up to {gi.mode.x} summonings ({gi.mode.targetIds.length}/{gi.mode.x} selected)
+              <button onClick={gi.handleMultiTargetDone} className="ml-3 px-2 py-0.5 btn-stone rounded text-xs">
+                Done
+              </button>
+              <button onClick={gi.cancelMode} className="ml-2 px-2 py-0.5 btn-stone rounded text-xs">
                 Cancel
               </button>
             </div>

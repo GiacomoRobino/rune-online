@@ -97,6 +97,7 @@ export function createCard(def: CardDefinition): Card {
   } else if (def.type === "memory") {
     card.spellName = def.spellName;
     card.bloodCost = def.bloodCost || 0;
+    card.bloodCostX = def.bloodCostX || false;
     card.description = def.description;
   } else if (def.type === "rune") {
     card.letter = def.letter;

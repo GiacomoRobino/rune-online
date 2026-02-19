@@ -57,6 +57,7 @@ export interface MemoryDefinition {
   type: "memory";
   spellName: string;
   bloodCost?: number; // pick any N runes from spellName pool
+  bloodCostX?: boolean; // variable blood cost — player chooses how many runes (0+)
   description: string;
   effect: CardEffect;
 }
@@ -98,7 +99,8 @@ export type EffectAction =
   | { type: "cancel_rune"; target: "self" }
   | { type: "write_rune"; runeType: RuneType }
   | { type: "grant_aegis"; target: "all_friendly" }
-  | { type: "lose_life"; amount: number };
+  | { type: "lose_life"; amount: number }
+  | { type: "damage_x"; target: "any_summoning"; healCaster: boolean };
 
 // Turn phases
 export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "combat_damage" | "resolve_death_effects" | "end_turn_cancel_rune";
@@ -108,7 +110,7 @@ export type ClientMessage =
   | { type: "write_rune"; runeId: string }
   | { type: "summon"; cardId: string; runeIds: string[]; chosenSubtype?: string; sacrificeTargetId?: string }
   | { type: "play_echo"; cardId: string; runeIds: string[] }
-  | { type: "play_memory"; cardId: string; runeIds: string[]; targetId?: string }
+  | { type: "play_memory"; cardId: string; runeIds: string[]; targetId?: string; targetIds?: string[] }
   | { type: "attach_rune"; runeId: string; targetId: string }
   | { type: "declare_attackers"; attackerIds: string[] }
   | { type: "declare_blockers"; assignments: string[] } // "blockerId:attackerId" pairs

@@ -4,7 +4,7 @@ import { type GameContext } from "./context.js";
 import { hasAbility, findDefinition, checkWinCondition } from "./utils.js";
 import { validateRuneSpelling, detachRuneFromCurrent } from "./runeHandlers.js";
 import { sacrificeRunelessSummonings, handleOnDeathEffect } from "./deathCleanup.js";
-import { handleOnEnterEffect, handleMemoryEffect } from "./effects.js";
+import { handleOnEnterEffect, handleMemoryEffect, handleDamageXEffect } from "./effects.js";
 import { recalculateOngoingEffects } from "./ongoingEffects.js";
 
 const MAX_BATTLEFIELD_SIZE = 7;
@@ -151,7 +151,7 @@ export function handlePlayEcho(ctx: GameContext, client: Client, message: { card
   }
 }
 
-export function handlePlayMemory(ctx: GameContext, client: Client, message: { cardId: string; runeIds: string[]; targetId?: string }) {
+export function handlePlayMemory(ctx: GameContext, client: Client, message: { cardId: string; runeIds: string[]; targetId?: string; targetIds?: string[] }) {
   if (ctx.state.phase !== "playing") return;
   if (ctx.state.turnPhase !== "main") return;
 
@@ -164,8 +164,14 @@ export function handlePlayMemory(ctx: GameContext, client: Client, message: { ca
   const card = player.hand.at(cardIndex);
   if (!card || card.cardType !== "memory") return;
 
-  // Validate rune spelling
-  if (!validateRuneSpelling(player, card.spellName, message.runeIds, card.bloodCost)) return;
+  // Validate rune spelling (bloodCostX: variable cost, skip validation if 0 runes)
+  if (card.bloodCostX) {
+    if (message.runeIds.length > 0) {
+      if (!validateRuneSpelling(player, card.spellName, message.runeIds, message.runeIds.length)) return;
+    }
+  } else {
+    if (!validateRuneSpelling(player, card.spellName, message.runeIds, card.bloodCost)) return;
+  }
 
   // Cancel (remove) selected runes from rune field
   for (const runeId of message.runeIds) {
@@ -183,7 +189,12 @@ export function handlePlayMemory(ctx: GameContext, client: Client, message: { ca
   player.hand.splice(cardIndex, 1);
 
   // Execute effect
-  handleMemoryEffect(ctx, card, player, message.targetId);
+  const def = findDefinition(card);
+  if (def && 'effect' in def && def.effect && !Array.isArray(def.effect.action) && def.effect.action.type === "damage_x") {
+    handleDamageXEffect(ctx, player, message.runeIds.length, message.targetIds || []);
+  } else {
+    handleMemoryEffect(ctx, card, player, message.targetId);
+  }
 
   // Send to graveyard
   player.graveyard.push(card);

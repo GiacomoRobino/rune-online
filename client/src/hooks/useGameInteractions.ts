@@ -7,6 +7,7 @@ export type InteractionMode =
   | { type: "echo"; card: CardState; selectedRuneIds: string[] }
   | { type: "memory"; card: CardState; selectedRuneIds: string[] }
   | { type: "targeting_memory"; card: CardState; selectedRuneIds: string[] }
+  | { type: "targeting_memory_multi"; card: CardState; selectedRuneIds: string[]; x: number; targetIds: string[] }
   | { type: "declare_attack"; selectedAttackerIds: string[] }
   | { type: "declare_block"; assignments: Map<string, string>; selectedBlockerId: string | null } // blockerId -> attackerId
   | { type: "targeting_death_effect"; effectId: string; cardName: string; damageAmount: number }
@@ -25,7 +26,7 @@ export interface GameInteractionsProps {
   declaredAttackers: string[];
   onSummon: (cardId: string, runeIds: string[], chosenSubtype?: string, sacrificeTargetId?: string) => void;
   onPlayEcho: (cardId: string, runeIds: string[]) => void;
-  onPlayMemory: (cardId: string, runeIds: string[], targetId?: string) => void;
+  onPlayMemory: (cardId: string, runeIds: string[], targetId?: string, targetIds?: string[]) => void;
   onDeclareAttackers: (attackerIds: string[]) => void;
   onDeclareBlockers: (assignments: string[]) => void;
   pendingDeathEffects: PendingEffectState[];
@@ -118,8 +119,8 @@ export function useGameInteractions({
     if (idx !== -1) {
       ids.splice(idx, 1);
     } else {
-      // Cap at bloodCost if applicable (no cap for canOverpay — unlimited runes matching spellName)
-      if (!mode.card.canOverpay && mode.card.bloodCost > 0 && ids.length >= mode.card.bloodCost) return;
+      // Cap at bloodCost if applicable (no cap for canOverpay or bloodCostX — unlimited runes matching spellName)
+      if (!mode.card.canOverpay && !mode.card.bloodCostX && mode.card.bloodCost > 0 && ids.length >= mode.card.bloodCost) return;
       ids.push(rune.instanceId);
     }
     setMode({ ...mode, selectedRuneIds: ids });
@@ -151,13 +152,23 @@ export function useGameInteractions({
     } else if (mode.type === "echo") {
       onPlayEcho(mode.card.instanceId, mode.selectedRuneIds);
     } else if (mode.type === "memory") {
-      const needsTarget = mode.card.description.toLowerCase().includes("any target") ||
-        mode.card.description.toLowerCase().includes("damage");
-      if (needsTarget) {
-        setMode({ type: "targeting_memory", card: mode.card, selectedRuneIds: mode.selectedRuneIds });
-        return;
+      if (mode.card.bloodCostX) {
+        const x = mode.selectedRuneIds.length;
+        if (x === 0) {
+          onPlayMemory(mode.card.instanceId, mode.selectedRuneIds);
+        } else {
+          setMode({ type: "targeting_memory_multi", card: mode.card, selectedRuneIds: mode.selectedRuneIds, x, targetIds: [] });
+          return;
+        }
       } else {
-        onPlayMemory(mode.card.instanceId, mode.selectedRuneIds);
+        const needsTarget = mode.card.description.toLowerCase().includes("any target") ||
+          mode.card.description.toLowerCase().includes("damage");
+        if (needsTarget) {
+          setMode({ type: "targeting_memory", card: mode.card, selectedRuneIds: mode.selectedRuneIds });
+          return;
+        } else {
+          onPlayMemory(mode.card.instanceId, mode.selectedRuneIds);
+        }
       }
     }
     setMode({ type: "idle" });
@@ -171,7 +182,29 @@ export function useGameInteractions({
   };
 
   // --- Battlefield click ---
+  const handleMultiTargetSelect = (cardInstanceId: string) => {
+    if (mode.type !== "targeting_memory_multi") return;
+    if (mode.targetIds.includes(cardInstanceId)) return;
+    const newTargetIds = [...mode.targetIds, cardInstanceId];
+    if (newTargetIds.length >= mode.x) {
+      onPlayMemory(mode.card.instanceId, mode.selectedRuneIds, undefined, newTargetIds);
+      setMode({ type: "idle" });
+    } else {
+      setMode({ ...mode, targetIds: newTargetIds });
+    }
+  };
+
+  const handleMultiTargetDone = () => {
+    if (mode.type !== "targeting_memory_multi") return;
+    onPlayMemory(mode.card.instanceId, mode.selectedRuneIds, undefined, mode.targetIds);
+    setMode({ type: "idle" });
+  };
+
   const handleMyCreatureClick = (card: CardState) => {
+    if (mode.type === "targeting_memory_multi") {
+      if (card.cardType === "summoning") handleMultiTargetSelect(card.instanceId);
+      return;
+    }
     if (mode.type === "choosing_sacrifice_target") {
       if (card.cardType === "summoning") {
         onSummon(mode.card.instanceId, mode.selectedRuneIds, undefined, card.instanceId);
@@ -221,6 +254,10 @@ export function useGameInteractions({
   };
 
   const handleEnemyCreatureClick = (card: CardState) => {
+    if (mode.type === "targeting_memory_multi") {
+      if (card.cardType === "summoning") handleMultiTargetSelect(card.instanceId);
+      return;
+    }
     if (mode.type === "targeting_memory") {
       handleMemoryTarget(card.instanceId);
     } else if (mode.type === "targeting_death_effect") {
@@ -385,6 +422,7 @@ export function useGameInteractions({
   const canSpellCard = (card: CardState) => {
     if (card.cardType !== "summoning" && card.cardType !== "echo" && card.cardType !== "memory") return false;
     if (hasAbility(card, "devour") && !myPlayer.battlefield.some((c) => c.cardType === "summoning")) return false;
+    if (card.bloodCostX) return true; // X=0 is valid
     const available = myPlayer.runeField.filter((r) => r.etchingCounters === 0);
 
     if (card.bloodCost > 0) {
@@ -423,6 +461,7 @@ export function useGameInteractions({
   const selectedRuneIds = isSpelling ? mode.selectedRuneIds : [];
   const remainingNeeded = (() => {
     if (!isSpelling) return [];
+    if (mode.card.bloodCostX) return [];
     if (mode.card.bloodCost > 0) {
       // For blood cost, return placeholder slots for remaining picks
       const remaining = mode.card.bloodCost - mode.selectedRuneIds.length;
@@ -451,6 +490,21 @@ export function useGameInteractions({
     if (rune.etchingCounters > 0) return false;
     if (!isSpelling) return false;
     if (selectedRuneIds.includes(rune.instanceId)) return true;
+
+    if (mode.card.bloodCostX) {
+      // Blood cost X: rune letter must be in spellName, respecting frequency, no count cap
+      const nameFreq = new Map<string, number>();
+      for (const ch of mode.card.spellName) {
+        nameFreq.set(ch, (nameFreq.get(ch) || 0) + 1);
+      }
+      if (!nameFreq.has(rune.letter)) return false;
+      let usedCount = 0;
+      for (const id of mode.selectedRuneIds) {
+        const sel = myPlayer.runeField.find((r) => r.instanceId === id);
+        if (sel && sel.letter === rune.letter) usedCount++;
+      }
+      return usedCount < nameFreq.get(rune.letter)!;
+    }
 
     if (mode.card.bloodCost > 0) {
       // Blood cost: rune letter must be in spellName, respecting frequency
@@ -524,6 +578,7 @@ export function useGameInteractions({
     isRuneAvailable,
     phaseLabel,
     handleDeathEffectTarget,
+    handleMultiTargetDone,
     handleDeckSearchSelect,
     handleWriteRuneSelect,
     handleSubtypeChoice,

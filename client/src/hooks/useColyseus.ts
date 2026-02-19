@@ -23,6 +23,7 @@ export interface CardState {
   hasAegis: boolean;
   damageMarked: number;
   canOverpay: boolean;
+  bloodCostX: boolean;
   subtypeChoices: string;
   runeType: string;
   letter: string;
@@ -114,6 +115,7 @@ export function useColyseus() {
     hasAegis: c.hasAegis,
     damageMarked: c.damageMarked,
     canOverpay: c.canOverpay,
+    bloodCostX: c.bloodCostX,
     subtypeChoices: c.subtypeChoices,
     runeType: c.runeType,
     letter: c.letter,
@@ -232,9 +234,9 @@ export function useColyseus() {
     room.send("play_echo", { cardId, runeIds });
   }, [room]);
 
-  const playMemory = useCallback((cardId: string, runeIds: string[], targetId?: string) => {
+  const playMemory = useCallback((cardId: string, runeIds: string[], targetId?: string, targetIds?: string[]) => {
     if (!room) return;
-    room.send("play_memory", { cardId, runeIds, targetId });
+    room.send("play_memory", { cardId, runeIds, targetId, targetIds });
   }, [room]);
 
   const attachRune = useCallback((runeId: string, targetId: string) => {

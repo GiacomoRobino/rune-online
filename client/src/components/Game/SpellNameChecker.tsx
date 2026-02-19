@@ -3,6 +3,7 @@ import { CardState } from "../../hooks/useColyseus";
 interface SpellNameCheckerProps {
   spellName: string;
   bloodCost: number;
+  bloodCostX?: boolean;
   canOverpay?: boolean;
   selectedRunes: CardState[];
   onConfirm: () => void;
@@ -12,12 +13,46 @@ interface SpellNameCheckerProps {
 export function SpellNameChecker({
   spellName,
   bloodCost,
+  bloodCostX,
   canOverpay,
   selectedRunes,
   onConfirm,
   onCancel,
 }: SpellNameCheckerProps) {
   const provided = selectedRunes.map((r) => r.letter);
+
+  if (bloodCostX) {
+    const validLetters = [...new Set(spellName.split(""))].join(", ");
+    const x = selectedRunes.length;
+
+    return (
+      <div className="stone-panel metal-border rounded-lg p-3 flex items-center gap-3">
+        <div className="text-gold-dim text-sm font-medieval">Blood X:</div>
+        <div className="flex gap-1">
+          {selectedRunes.map((rune, i) => (
+            <div
+              key={i}
+              className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg font-medieval text-red-400 border-red-700 shadow-metal border"
+              style={{ background: 'linear-gradient(135deg, #3a1010, #2a0808)' }}
+            >
+              {rune.letter}
+            </div>
+          ))}
+        </div>
+        <div className="text-parchment text-sm font-medieval">X = {x}</div>
+        <div className="text-stone-500 text-xs font-body">({validLetters})</div>
+        <div className="flex gap-2 ml-auto">
+          <button onClick={onCancel} className="px-3 py-1 btn-stone rounded text-sm">Cancel</button>
+          <button
+            onClick={onConfirm}
+            className="px-3 py-1 rounded text-sm font-semibold btn-stone shadow-gold-glow"
+          >
+            Cast (X={x})
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (bloodCost > 0) {
     // Blood cost mode: generic rune slots
