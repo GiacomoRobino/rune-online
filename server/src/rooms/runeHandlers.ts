@@ -3,6 +3,7 @@ import { Player } from "shared";
 import { type GameContext } from "./context.js";
 import { checkWinCondition } from "./utils.js";
 import { sacrificeRunelessSummonings } from "./deathCleanup.js";
+import { triggerWriteRuneEffects } from "./effects.js";
 
 export function validateRuneSpelling(player: Player, spellName: string, runeIds: string[], bloodCost: number = 0, canOverpay: boolean = false): boolean {
   if (canOverpay) {
@@ -130,6 +131,7 @@ export function handleWriteRune(ctx: GameContext, client: Client, message: { run
   player.runeField.push(rune);
   player.runesWrittenThisTurn++;
 
+  triggerWriteRuneEffects(ctx, player, rune.runeType);
   checkWinCondition(ctx);
 }
 

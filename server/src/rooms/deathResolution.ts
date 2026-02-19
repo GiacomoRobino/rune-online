@@ -1,10 +1,11 @@
 import { Client } from "@colyseus/core";
 import { Card, PendingEffect } from "shared";
 import { type GameContext } from "./context.js";
-import { findCardOnAnyBattlefield, findOwner, getOpponent, applyDamageToCreature, checkWinCondition, findDefinition, createCard } from "./utils.js";
+import { findCardOnAnyBattlefield, findOwner, getOpponent, applyDamageToCreature, checkWinCondition, findDefinition } from "./utils.js";
 import { cleanupDeadCreatures, sacrificeRunelessSummonings } from "./deathCleanup.js";
 import { recalculateOngoingEffects } from "./ongoingEffects.js";
 import { finishEndTurn } from "./lifecycle.js";
+import { triggerWriteRuneEffects } from "./effects.js";
 
 export function handleResolveDeathTarget(ctx: GameContext, client: Client, message: { targetId: string }) {
   if (ctx.state.phase !== "playing") return;
@@ -150,6 +151,7 @@ export function handleResolveWriteRune(ctx: GameContext, client: Client, message
         }
 
         player.runeField.push(rune);
+        triggerWriteRuneEffects(ctx, player, rune.runeType);
         checkWinCondition(ctx);
       }
     }

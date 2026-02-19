@@ -14,6 +14,7 @@ import { card as ephero } from "./cards/12/card.js";
 import { card as eo } from "./cards/15/card.js";
 import { card as phoe } from "./cards/16/card.js";
 import { card as blessedRiver } from "./cards/17/card.js";
+import { card as cauldron } from "./cards/18/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -127,6 +128,7 @@ export const ECHO_POOL: EchoDefinition[] = [
     effect: { type: "ongoing", action: { type: "buff", attack: 1, health: 1, target: "all_friendly" } } },
   hopesKingdom,
   hopesTiranny,
+  cauldron,
 ];
 
 // --- TEST DECKS ---

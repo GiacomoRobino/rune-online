@@ -81,6 +81,7 @@ export type CardEffect =
   | { type: "on_death"; action: EffectAction | EffectAction[] }
   | { type: "on_death_prevention"; condition: "has_blood_rune"; action: EffectAction | EffectAction[] }
   | { type: "ongoing"; action: EffectAction }
+  | { type: "on_write_rune"; runeType: RuneType; action: EffectAction | EffectAction[] }
   | { type: "instant"; action: EffectAction }
   | { type: "end_turn"; action: EffectAction };
 
@@ -96,7 +97,8 @@ export type EffectAction =
   | { type: "choose_subtype"; options: string[] }
   | { type: "cancel_rune"; target: "self" }
   | { type: "write_rune"; runeType: RuneType }
-  | { type: "grant_aegis"; target: "all_friendly" };
+  | { type: "grant_aegis"; target: "all_friendly" }
+  | { type: "lose_life"; amount: number };
 
 // Turn phases
 export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "combat_damage" | "resolve_death_effects" | "end_turn_cancel_rune";

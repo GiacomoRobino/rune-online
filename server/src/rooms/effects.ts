@@ -154,5 +154,24 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
       }
       break;
     }
+    case "lose_life": {
+      caster.health -= action.amount as number;
+      break;
+    }
+  }
+}
+
+export function triggerWriteRuneEffects(ctx: GameContext, player: Player, runeType: string) {
+  for (let i = 0; i < player.battlefield.length; i++) {
+    const card = player.battlefield.at(i);
+    if (!card || card.cardType !== "echo") continue;
+    const def = findDefinition(card);
+    if (!def || !("effect" in def) || !def.effect) continue;
+    if (def.effect.type !== "on_write_rune") continue;
+    if (def.effect.runeType !== runeType) continue;
+    const actions = Array.isArray(def.effect.action) ? def.effect.action : [def.effect.action];
+    for (const action of actions) {
+      executeEffect(ctx, action, player);
+    }
   }
 }
