@@ -35,6 +35,7 @@ export function handleOnEnterEffect(ctx: GameContext, card: Card, caster: Player
     for (const extraRuneId of extraRuneIds) {
       // Create a copy
       const copy = createCard(def);
+      copy.abilities = copy.abilities ? copy.abilities + ",unbounded" : "unbounded";
       copy.canAttack = hasAbility(copy, "rage");
       copy.hasAegis = hasAbility(copy, "aegis");
 

@@ -13,7 +13,7 @@ export const ABILITY_DESCRIPTIONS: Record<string, string> = {
   veil: "Can't be targeted by spells",
   blink: "Returns to hand at end of turn",
   warden: "Attacks without tapping",
-  unbounded: "Ignores defender when attacking",
+  unbounded: "Stays on the field even without runes attached",
   bloodmaster: "+1/+1 for each blood rune attached to this creature",
   lifedrinker: "Heals its owner by the amount of combat damage dealt",
   deathstrike: "When this creature dies, deal damage equal to its power to any target",
