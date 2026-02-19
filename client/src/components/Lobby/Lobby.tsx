@@ -1,18 +1,21 @@
 import { useState } from "react";
 
 interface LobbyProps {
-  onJoin: (nickname: string) => void;
+  onJoin: (nickname: string, deckName: string) => void;
   connectionState: "disconnected" | "connecting" | "connected";
   error: string;
+  decks: string[];
 }
 
-export function Lobby({ onJoin, connectionState, error }: LobbyProps) {
+export function Lobby({ onJoin, connectionState, error, decks }: LobbyProps) {
   const [nickname, setNickname] = useState("");
+  const [selectedDeck, setSelectedDeck] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (nickname.trim()) {
-      onJoin(nickname.trim());
+    const deckName = selectedDeck || decks[0] || "";
+    if (nickname.trim() && deckName) {
+      onJoin(nickname.trim(), deckName);
     }
   };
 
@@ -42,6 +45,25 @@ export function Lobby({ onJoin, connectionState, error }: LobbyProps) {
               maxLength={20}
             />
           </div>
+
+          {decks.length > 0 && (
+            <div>
+              <label htmlFor="deck" className="block text-sm font-medium text-parchment-muted mb-2 font-medieval">
+                Select your deck
+              </label>
+              <select
+                id="deck"
+                value={selectedDeck || decks[0]}
+                onChange={(e) => setSelectedDeck(e.target.value)}
+                className="w-full px-4 py-3 bg-stone-850 border border-stone-600 rounded-lg text-parchment-light focus:outline-none focus:ring-2 focus:ring-gold-dark focus:border-gold-dark font-body"
+                disabled={connectionState === "connecting"}
+              >
+                {decks.map((deck) => (
+                  <option key={deck} value={deck}>{deck}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {error && (
             <div className="text-blood-light text-sm text-center font-body">{error}</div>

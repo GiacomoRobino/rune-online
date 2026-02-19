@@ -1,7 +1,8 @@
 import { Room, Client } from "@colyseus/core";
 import {
   GameState, Player,
-  generateTestChaosDeck, generateTestRunesDeck, shuffleArray,
+  shuffleArray, buildDecksFromList,
+  type JoinOptions,
 } from "shared";
 import { type GameContext } from "./context.js";
 import { createCard, endGame, getOpponent } from "./utils.js";
@@ -10,6 +11,7 @@ import { startGame, handleEndTurn, handleMulligan } from "./lifecycle.js";
 import { handleSummon, handlePlayEcho, handlePlayMemory } from "./cardPlay.js";
 import { handleDeclareAttackers, handleDeclareBlockers } from "./combatDeclare.js";
 import { handleResolveDeathTarget, handleResolveDeckSearch, handleResolveEndTurnCancel } from "./deathResolution.js";
+import { getDeck, getAvailableDecks } from "../deckLoader.js";
 
 export class GameRoom extends Room<GameState> {
   private ctx: GameContext = { state: null as any, playerOrder: [], pendingFinishEndTurn: false };
@@ -33,8 +35,8 @@ export class GameRoom extends Room<GameState> {
     this.onMessage("resolve_end_turn_cancel", (client, message) => handleResolveEndTurnCancel(this.ctx, client, message));
   }
 
-  onJoin(client: Client, options: { nickname?: string }) {
-    console.log(`${client.sessionId} joined as ${options.nickname || "Anonymous"}`);
+  onJoin(client: Client, options: JoinOptions) {
+    console.log(`${client.sessionId} joined as ${options.nickname || "Anonymous"} with deck "${options.deckName}"`);
 
     const player = new Player();
     player.id = client.sessionId;
@@ -43,14 +45,19 @@ export class GameRoom extends Room<GameState> {
     player.health = 20;
     player.maxHealth = 20;
 
-    // Generate and shuffle Chaos deck (using test deck)
-    const chaosDefs = shuffleArray(generateTestChaosDeck());
-    for (const def of chaosDefs) {
+    // Look up selected deck, fall back to first available
+    const deckEntries = getDeck(options.deckName) ?? getDeck(getAvailableDecks()[0]!);
+    if (!deckEntries) {
+      throw new Error("No decks available");
+    }
+    const { chaosDeck: chaosDefs, runesDeck: runeDefs } = buildDecksFromList(deckEntries);
+
+    // Shuffle and load chaos deck
+    for (const def of shuffleArray(chaosDefs)) {
       player.chaosDeck.push(createCard(def));
     }
 
-    // Generate Runes deck (using test deck)
-    const runeDefs = generateTestRunesDeck();
+    // Load runes deck
     for (const def of runeDefs) {
       player.runesDeck.push(createCard(def));
     }

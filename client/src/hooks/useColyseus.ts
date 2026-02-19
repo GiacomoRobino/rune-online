@@ -73,6 +73,7 @@ export interface GameStateData {
 }
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
+const API_URL = SERVER_URL.replace(/^ws/, "http");
 
 export function useColyseus() {
   const [room, setRoom] = useState<Room<GameState> | null>(null);
@@ -80,11 +81,16 @@ export function useColyseus() {
   const [mySessionId, setMySessionId] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [connectionState, setConnectionState] = useState<"disconnected" | "connecting" | "connected">("disconnected");
+  const [decks, setDecks] = useState<string[]>([]);
 
   const clientRef = useRef<Client | null>(null);
 
   useEffect(() => {
     clientRef.current = new Client(SERVER_URL);
+    fetch(`${API_URL}/api/decks`)
+      .then((res) => res.json())
+      .then((data: string[]) => setDecks(data))
+      .catch((err) => console.error("Failed to fetch decks:", err));
   }, []);
 
   const cardToPlain = (c: Card): CardState => ({
@@ -161,14 +167,14 @@ export function useColyseus() {
     };
   }, []);
 
-  const joinGame = useCallback(async (nickname: string) => {
+  const joinGame = useCallback(async (nickname: string, deckName: string) => {
     if (!clientRef.current) return;
 
     setConnectionState("connecting");
     setError("");
 
     try {
-      const joinedRoom = await clientRef.current.joinOrCreate<GameState>("game", { nickname });
+      const joinedRoom = await clientRef.current.joinOrCreate<GameState>("game", { nickname, deckName });
 
       setRoom(joinedRoom);
       setMySessionId(joinedRoom.sessionId);
@@ -281,6 +287,7 @@ export function useColyseus() {
     error,
     joinGame,
     leaveGame,
+    decks,
     mySessionId,
     gameState,
     myPlayer,

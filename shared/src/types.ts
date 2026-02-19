@@ -119,4 +119,5 @@ export type GamePhase = "waiting" | "playing" | "ended";
 // Join options
 export interface JoinOptions {
   nickname: string;
+  deckName: string;
 }

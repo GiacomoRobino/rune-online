@@ -9,6 +9,7 @@ function App() {
     error,
     joinGame,
     leaveGame,
+    decks,
     mySessionId,
     gameState,
     myPlayer,
@@ -35,6 +36,7 @@ function App() {
         onJoin={joinGame}
         connectionState={connectionState}
         error={error}
+        decks={decks}
       />
     );
   }
