@@ -15,6 +15,7 @@ const VALID_ABILITIES: AbilityKeyword[] = [
   "skyrunner", "fury", "rage", "aegis", "defender", "duelist",
   "shadowwalker", "revenge", "shatter", "pack", "master", "veil",
   "blink", "warden", "unbounded", "bloodmaster", "lifedrinker", "deathstrike",
+  "devour", "ephemeral",
 ];
 
 // Collect all ability keywords used by any card
