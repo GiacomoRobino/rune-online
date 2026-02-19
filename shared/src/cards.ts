@@ -11,6 +11,7 @@ import { card as hope } from "./cards/9/card.js";
 import { card as hopeShadow } from "./cards/10/card.js";
 import { card as eoh } from "./cards/11/card.js";
 import { card as ephero } from "./cards/12/card.js";
+import { card as eo } from "./cards/15/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -34,6 +35,8 @@ export const SUMMONING_POOL: SummoningDefinition[] = [
   { id: "wraith", name: "Wraith", type: "summoning", spellName: "WRAITH", attack: 3, health: 3, abilities: "shadowwalker", description: "Shadowwalker." },
   hope,
   hopeShadow,
+  // 2-letter (Angel)
+  eo,
   // 3-letter (Angel)
   eoh,
   // 6-letter (legendary)

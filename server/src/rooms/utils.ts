@@ -86,7 +86,7 @@ export function createCard(def: CardDefinition): Card {
     card.abilities = def.abilities;
     card.subtypes = def.subtypes || "";
     card.description = def.description || "";
-    if (def.effect && def.effect.type === "on_enter" && def.effect.action.type === "choose_subtype") {
+    if (def.effect && def.effect.type === "on_enter" && !Array.isArray(def.effect.action) && def.effect.action.type === "choose_subtype") {
       card.subtypeChoices = def.effect.action.options.join(",");
     }
   } else if (def.type === "echo") {

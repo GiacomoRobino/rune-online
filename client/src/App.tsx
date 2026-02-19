@@ -24,6 +24,7 @@ function App() {
     endTurn,
     resolveDeathTarget,
     resolveDeckSearch,
+    resolveWriteRune,
     resolveEndTurnCancel,
     gameEvents,
     mulligan,
@@ -66,6 +67,7 @@ function App() {
         pendingDeathEffects={gameState.pendingDeathEffects}
         onResolveDeathTarget={resolveDeathTarget}
         onResolveDeckSearch={resolveDeckSearch}
+        onResolveWriteRune={resolveWriteRune}
         onResolveEndTurnCancel={resolveEndTurnCancel}
         endTurnTargetCardId={gameState.endTurnTargetCardId}
         onMulligan={mulligan}

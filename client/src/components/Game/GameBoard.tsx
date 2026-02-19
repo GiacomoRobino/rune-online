@@ -25,6 +25,7 @@ interface GameBoardProps {
   pendingDeathEffects: PendingEffectState[];
   onResolveDeathTarget: (targetId: string) => void;
   onResolveDeckSearch: (cardId: string | null) => void;
+  onResolveWriteRune: (runeId: string | null) => void;
   onResolveEndTurnCancel: (runeId: string) => void;
   endTurnTargetCardId: string;
   onMulligan: () => void;
@@ -52,6 +53,7 @@ export function GameBoard({
   pendingDeathEffects,
   onResolveDeathTarget,
   onResolveDeckSearch,
+  onResolveWriteRune,
   onResolveEndTurnCancel,
   endTurnTargetCardId,
   onMulligan,
@@ -71,6 +73,7 @@ export function GameBoard({
     mySessionId,
     onResolveDeathTarget,
     onResolveDeckSearch,
+    onResolveWriteRune,
     onResolveEndTurnCancel,
     endTurnTargetCardId,
   });

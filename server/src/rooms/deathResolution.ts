@@ -1,7 +1,7 @@
 import { Client } from "@colyseus/core";
 import { Card } from "shared";
 import { type GameContext } from "./context.js";
-import { findCardOnAnyBattlefield, findOwner, getOpponent, applyDamageToCreature, checkWinCondition, findDefinition } from "./utils.js";
+import { findCardOnAnyBattlefield, findOwner, getOpponent, applyDamageToCreature, checkWinCondition, findDefinition, createCard } from "./utils.js";
 import { cleanupDeadCreatures, sacrificeRunelessSummonings } from "./deathCleanup.js";
 import { recalculateOngoingEffects } from "./ongoingEffects.js";
 import { finishEndTurn } from "./lifecycle.js";
@@ -62,6 +62,43 @@ export function handleResolveDeckSearch(ctx: GameContext, client: Client, messag
           player.chaosDeck.splice(cardIndex, 1);
           player.hand.push(card);
         }
+      }
+    }
+  }
+
+  ctx.state.pendingDeathEffects.splice(0, 1);
+  advanceDeathEffectQueue(ctx);
+}
+
+export function handleResolveWriteRune(ctx: GameContext, client: Client, message: { runeId: string | null }) {
+  if (ctx.state.phase !== "playing") return;
+  if (ctx.state.turnPhase !== "resolve_death_effects") return;
+
+  const effect = ctx.state.pendingDeathEffects.at(0);
+  if (!effect || effect.effectType !== "write_rune" || effect.ownerSessionId !== client.sessionId) return;
+
+  const player = ctx.state.players.get(client.sessionId);
+  if (!player) return;
+
+  if (message.runeId) {
+    const runeIndex = player.runesDeck.findIndex((r) => r.instanceId === message.runeId);
+    if (runeIndex !== -1) {
+      const rune = player.runesDeck.at(runeIndex);
+      if (rune && rune.runeType === effect.runeTypeFilter) {
+        player.runesDeck.splice(runeIndex, 1);
+
+        // Blood runes cost 1 life
+        if (rune.runeType === "blood") {
+          player.health -= 1;
+        }
+
+        // Stone runes enter with 1 etching counter
+        if (rune.runeType === "stone") {
+          rune.etchingCounters = 1;
+        }
+
+        player.runeField.push(rune);
+        checkWinCondition(ctx);
       }
     }
   }

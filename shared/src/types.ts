@@ -77,8 +77,8 @@ export type CardDefinition =
 
 // Effects
 export type CardEffect =
-  | { type: "on_enter"; action: EffectAction }
-  | { type: "on_death"; action: EffectAction }
+  | { type: "on_enter"; action: EffectAction | EffectAction[] }
+  | { type: "on_death"; action: EffectAction | EffectAction[] }
   | { type: "ongoing"; action: EffectAction }
   | { type: "instant"; action: EffectAction }
   | { type: "end_turn"; action: EffectAction };
@@ -93,7 +93,8 @@ export type EffectAction =
   | { type: "create_copies"; source: "extra_runes" }
   | { type: "search_deck"; filter: "subtype"; values: string[] }
   | { type: "choose_subtype"; options: string[] }
-  | { type: "cancel_rune"; target: "self" };
+  | { type: "cancel_rune"; target: "self" }
+  | { type: "write_rune"; runeType: RuneType };
 
 // Turn phases
 export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "combat_damage" | "resolve_death_effects" | "end_turn_cancel_rune";
@@ -111,6 +112,7 @@ export type ClientMessage =
   | { type: "resolve_death_target"; targetId: string }
   | { type: "resolve_deck_search"; cardId: string | null }
   | { type: "resolve_end_turn_cancel"; runeId: string }
+  | { type: "resolve_write_rune"; runeId: string | null }
   | { type: "mulligan" };
 
 // Game phases

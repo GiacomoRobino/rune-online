@@ -8,6 +8,7 @@ import { TurnBanner } from "../TurnBanner";
 import { ActionBar } from "../ActionBar";
 import { GraveyardOverlay } from "../GraveyardOverlay";
 import { DeckSearchOverlay } from "../DeckSearchOverlay";
+import { WriteRuneOverlay } from "../WriteRuneOverlay";
 import { SubtypeChoiceOverlay } from "../SubtypeChoiceOverlay";
 import { RunePicker } from "../RunePicker";
 import { AnimationOverlay } from "../AnimationOverlay";
@@ -336,6 +337,16 @@ export function LayoutB({
           cardName={gi.mode.cardName}
           cards={gi.deckSearchCards}
           onSelect={gi.handleDeckSearchSelect}
+        />
+      )}
+
+      {/* Write rune overlay */}
+      {gi.mode.type === "writing_rune_from_effect" && (
+        <WriteRuneOverlay
+          cardName={gi.mode.cardName}
+          runeType={gi.mode.runeType}
+          runes={gi.writeRuneCards}
+          onSelect={gi.handleWriteRuneSelect}
         />
       )}
 

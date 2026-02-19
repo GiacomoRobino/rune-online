@@ -54,7 +54,7 @@ export function handleSummon(ctx: GameContext, client: Client, message: { cardId
   // Handle choose_subtype before placing on battlefield
   const summonDef = findDefinition(card);
   if (summonDef && 'effect' in summonDef && summonDef.effect &&
-      summonDef.effect.type === "on_enter" && summonDef.effect.action.type === "choose_subtype") {
+      summonDef.effect.type === "on_enter" && !Array.isArray(summonDef.effect.action) && summonDef.effect.action.type === "choose_subtype") {
     const action = summonDef.effect.action;
     if (!message.chosenSubtype || !action.options.includes(message.chosenSubtype)) return;
     card.subtypes = message.chosenSubtype;

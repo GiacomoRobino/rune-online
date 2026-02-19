@@ -22,17 +22,28 @@ export function handleOnDeathEffect(ctx: GameContext, card: Card, owner: Player)
     ctx.state.pendingDeathEffects.push(effect);
   }
 
-  // On-death search_deck effect
+  // On-death effect(s)
   const def = findDefinition(card);
   if (def && 'effect' in def && def.effect && def.effect.type === "on_death") {
-    if (def.effect.action.type === "search_deck") {
-      const effect = new PendingEffect();
-      effect.id = `de_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      effect.ownerSessionId = owner.sessionId;
-      effect.effectType = "search_deck";
-      effect.cardName = card.name;
-      effect.searchFilter = def.effect.action.values.join(",");
-      ctx.state.pendingDeathEffects.push(effect);
+    const actions = Array.isArray(def.effect.action) ? def.effect.action : [def.effect.action];
+    for (const action of actions) {
+      if (action.type === "search_deck") {
+        const effect = new PendingEffect();
+        effect.id = `de_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        effect.ownerSessionId = owner.sessionId;
+        effect.effectType = "search_deck";
+        effect.cardName = card.name;
+        effect.searchFilter = action.values.join(",");
+        ctx.state.pendingDeathEffects.push(effect);
+      } else if (action.type === "write_rune") {
+        const effect = new PendingEffect();
+        effect.id = `de_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        effect.ownerSessionId = owner.sessionId;
+        effect.effectType = "write_rune";
+        effect.cardName = card.name;
+        effect.runeTypeFilter = action.runeType;
+        ctx.state.pendingDeathEffects.push(effect);
+      }
     }
   }
 }

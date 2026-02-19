@@ -14,7 +14,7 @@ const VALID_ABILITIES: AbilityKeyword[] = [
 
 const VALID_ACTION_TYPES = [
   "damage", "heal", "draw", "buff", "destroy_rune",
-  "return_to_hand", "create_copies", "search_deck", "choose_subtype", "cancel_rune",
+  "return_to_hand", "create_copies", "search_deck", "choose_subtype", "cancel_rune", "write_rune",
 ] as const;
 
 const ALL_POOL_CARDS: CardDefinition[] = [
@@ -195,7 +195,10 @@ describe("Card data integrity", () => {
       const effect = "effect" in card ? card.effect : undefined;
       if (effect) {
         it(`${card.id} (${card.name}): effect action type is valid`, () => {
-          expect(VALID_ACTION_TYPES as readonly string[]).toContain(effect.action.type);
+          const actions = Array.isArray(effect.action) ? effect.action : [effect.action];
+          for (const action of actions) {
+            expect(VALID_ACTION_TYPES as readonly string[]).toContain(action.type);
+          }
         });
       }
     }

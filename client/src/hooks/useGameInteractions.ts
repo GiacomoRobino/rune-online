@@ -13,7 +13,8 @@ export type InteractionMode =
   | { type: "searching_deck"; effectId: string; cardName: string; searchFilter: string }
   | { type: "choosing_subtype"; card: CardState; selectedRuneIds: string[]; options: string[] }
   | { type: "choosing_sacrifice_target"; card: CardState; selectedRuneIds: string[] }
-  | { type: "cancel_rune"; cardInstanceId: string };
+  | { type: "cancel_rune"; cardInstanceId: string }
+  | { type: "writing_rune_from_effect"; effectId: string; cardName: string; runeType: string };
 
 export interface GameInteractionsProps {
   myPlayer: PlayerState;
@@ -30,6 +31,7 @@ export interface GameInteractionsProps {
   mySessionId: string;
   onResolveDeathTarget: (targetId: string) => void;
   onResolveDeckSearch: (cardId: string | null) => void;
+  onResolveWriteRune: (runeId: string | null) => void;
   onResolveEndTurnCancel: (runeId: string) => void;
   endTurnTargetCardId: string;
 }
@@ -49,6 +51,7 @@ export function useGameInteractions({
   mySessionId,
   onResolveDeathTarget,
   onResolveDeckSearch,
+  onResolveWriteRune,
   onResolveEndTurnCancel,
   endTurnTargetCardId,
 }: GameInteractionsProps) {
@@ -56,6 +59,7 @@ export function useGameInteractions({
   const [inspectedCardId, setInspectedCardId] = useState<string | null>(null);
   const [showGraveyard, setShowGraveyard] = useState<"mine" | "opponent" | null>(null);
   const [deckSearchCards, setDeckSearchCards] = useState<CardState[]>([]);
+  const [writeRuneCards, setWriteRuneCards] = useState<CardState[]>([]);
 
   const isBlockingPhase = turnPhase === "declare_blockers" && !isMyTurn;
 
@@ -245,6 +249,12 @@ export function useGameInteractions({
     setMode({ type: "idle" });
   };
 
+  const handleWriteRuneSelect = (runeId: string | null) => {
+    onResolveWriteRune(runeId);
+    setWriteRuneCards([]);
+    setMode({ type: "idle" });
+  };
+
   const handleSubtypeChoice = (subtype: string) => {
     if (mode.type !== "choosing_subtype") return;
     onSummon(mode.card.instanceId, mode.selectedRuneIds, subtype);
@@ -315,16 +325,26 @@ export function useGameInteractions({
             cardName: first.cardName,
             searchFilter: first.searchFilter,
           });
+        } else if (first.effectType === "write_rune") {
+          const matching = myPlayer.runesDeck.filter((r) => r.runeType === first.runeTypeFilter);
+          setWriteRuneCards(matching);
+          setMode({
+            type: "writing_rune_from_effect",
+            effectId: first.id,
+            cardName: first.cardName,
+            runeType: first.runeTypeFilter,
+          });
         }
       }
     }
-  }, [turnPhase, pendingDeathEffects, mySessionId, myPlayer.chaosDeck]);
+  }, [turnPhase, pendingDeathEffects, mySessionId, myPlayer.chaosDeck, myPlayer.runesDeck]);
 
   // Auto-exit death effect mode when phase leaves resolve_death_effects
   useEffect(() => {
-    if (turnPhase !== "resolve_death_effects" && (mode.type === "targeting_death_effect" || mode.type === "searching_deck")) {
+    if (turnPhase !== "resolve_death_effects" && (mode.type === "targeting_death_effect" || mode.type === "searching_deck" || mode.type === "writing_rune_from_effect")) {
       setMode({ type: "idle" });
       setDeckSearchCards([]);
+      setWriteRuneCards([]);
     }
   }, [turnPhase, mode.type]);
 
@@ -486,8 +506,10 @@ export function useGameInteractions({
     phaseLabel,
     handleDeathEffectTarget,
     handleDeckSearchSelect,
+    handleWriteRuneSelect,
     handleSubtypeChoice,
     deckSearchCards,
+    writeRuneCards,
   };
 }
 

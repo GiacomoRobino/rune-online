@@ -10,7 +10,7 @@ import { handleWriteRune, handleAttachRune } from "./runeHandlers.js";
 import { startGame, handleEndTurn, handleMulligan } from "./lifecycle.js";
 import { handleSummon, handlePlayEcho, handlePlayMemory } from "./cardPlay.js";
 import { handleDeclareAttackers, handleDeclareBlockers } from "./combatDeclare.js";
-import { handleResolveDeathTarget, handleResolveDeckSearch, handleResolveEndTurnCancel } from "./deathResolution.js";
+import { handleResolveDeathTarget, handleResolveDeckSearch, handleResolveWriteRune, handleResolveEndTurnCancel } from "./deathResolution.js";
 import { getDeck, getAvailableDecks } from "../deckLoader.js";
 
 export class GameRoom extends Room<GameState> {
@@ -32,6 +32,7 @@ export class GameRoom extends Room<GameState> {
     this.onMessage("mulligan", (client) => handleMulligan(this.ctx, client));
     this.onMessage("resolve_death_target", (client, message) => handleResolveDeathTarget(this.ctx, client, message));
     this.onMessage("resolve_deck_search", (client, message) => handleResolveDeckSearch(this.ctx, client, message));
+    this.onMessage("resolve_write_rune", (client, message) => handleResolveWriteRune(this.ctx, client, message));
     this.onMessage("resolve_end_turn_cancel", (client, message) => handleResolveEndTurnCancel(this.ctx, client, message));
   }
 

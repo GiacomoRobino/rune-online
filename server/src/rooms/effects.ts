@@ -13,6 +13,7 @@ export function handleOnEnterEffect(ctx: GameContext, card: Card, caster: Player
   if (def.effect.type !== "on_enter") return;
 
   // choose_subtype is handled in handleSummon before card enters
+  if (Array.isArray(def.effect.action)) return;
   if (def.effect.action.type === "choose_subtype") return;
 
   if (def.effect.action.type === "create_copies" && def.effect.action.source === "extra_runes") {
@@ -59,6 +60,7 @@ export function handleOnEnterEffect(ctx: GameContext, card: Card, caster: Player
 export function handleMemoryEffect(ctx: GameContext, card: Card, caster: Player, targetId?: string) {
   const def = findDefinition(card);
   if (!def || !('effect' in def) || !def.effect) return;
+  if (Array.isArray(def.effect.action)) return;
 
   executeEffect(ctx, def.effect.action, caster, targetId);
 }

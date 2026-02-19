@@ -38,6 +38,7 @@ export interface PendingEffectState {
   damageAmount: number;
   cardName: string;
   searchFilter: string;
+  runeTypeFilter: string;
 }
 
 export interface PlayerState {
@@ -162,6 +163,7 @@ export function useColyseus() {
           damageAmount: e.damageAmount,
           cardName: e.cardName,
           searchFilter: e.searchFilter,
+          runeTypeFilter: e.runeTypeFilter,
         })),
       endTurnTargetCardId: state.endTurnTargetCardId,
     };
@@ -263,6 +265,11 @@ export function useColyseus() {
     room.send("resolve_deck_search", { cardId });
   }, [room]);
 
+  const resolveWriteRune = useCallback((runeId: string | null) => {
+    if (!room) return;
+    room.send("resolve_write_rune", { runeId });
+  }, [room]);
+
   const resolveEndTurnCancel = useCallback((runeId: string) => {
     if (!room) return;
     room.send("resolve_end_turn_cancel", { runeId });
@@ -304,6 +311,7 @@ export function useColyseus() {
     endTurn,
     resolveDeathTarget,
     resolveDeckSearch,
+    resolveWriteRune,
     resolveEndTurnCancel,
     mulligan,
   };
