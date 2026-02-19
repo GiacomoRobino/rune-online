@@ -14,7 +14,7 @@ const VALID_ABILITIES: AbilityKeyword[] = [
 
 const VALID_ACTION_TYPES = [
   "damage", "heal", "draw", "buff", "destroy_rune",
-  "return_to_hand", "create_copies", "search_deck", "choose_subtype", "cancel_rune", "write_rune",
+  "return_to_hand", "create_copies", "search_deck", "choose_subtype", "cancel_rune", "write_rune", "grant_aegis",
 ] as const;
 
 const ALL_POOL_CARDS: CardDefinition[] = [

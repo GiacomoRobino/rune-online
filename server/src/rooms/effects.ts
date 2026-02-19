@@ -144,5 +144,15 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
       }
       break;
     }
+    case "grant_aegis": {
+      if (action.target === "all_friendly") {
+        caster.battlefield.forEach((c) => {
+          if (c.cardType === "summoning") {
+            c.hasAegis = true;
+          }
+        });
+      }
+      break;
+    }
   }
 }

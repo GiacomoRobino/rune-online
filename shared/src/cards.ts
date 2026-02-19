@@ -13,6 +13,7 @@ import { card as eoh } from "./cards/11/card.js";
 import { card as ephero } from "./cards/12/card.js";
 import { card as eo } from "./cards/15/card.js";
 import { card as phoe } from "./cards/16/card.js";
+import { card as blessedRiver } from "./cards/17/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -53,6 +54,7 @@ export const MEMORY_POOL: MemoryDefinition[] = [
     effect: { type: "instant", action: { type: "heal", amount: 4, target: "self" } } },
   { id: "mem_insight", name: "Insight", type: "memory", spellName: "INSIGHT", description: "Draw 2 cards from your Chaos deck.",
     effect: { type: "instant", action: { type: "draw", amount: 2 } } },
+  blessedRiver,
 ];
 
 // --- RUNE POOL ---

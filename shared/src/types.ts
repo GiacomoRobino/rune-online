@@ -95,7 +95,8 @@ export type EffectAction =
   | { type: "search_deck"; filter: "subtype"; values: string[] }
   | { type: "choose_subtype"; options: string[] }
   | { type: "cancel_rune"; target: "self" }
-  | { type: "write_rune"; runeType: RuneType };
+  | { type: "write_rune"; runeType: RuneType }
+  | { type: "grant_aegis"; target: "all_friendly" };
 
 // Turn phases
 export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "combat_damage" | "resolve_death_effects" | "end_turn_cancel_rune";
