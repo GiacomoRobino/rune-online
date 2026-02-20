@@ -123,6 +123,20 @@ export function useGameInteractions({
     } else {
       // Cap at bloodCost if applicable (no cap for canOverpay or bloodCostX — unlimited runes matching spellName)
       if (!mode.card.canOverpay && !mode.card.bloodCostX && mode.card.bloodCost > 0 && ids.length >= mode.card.bloodCost) return;
+      // Blood cost: also enforce letter frequency from spellName
+      if (mode.card.bloodCost > 0 && !mode.card.canOverpay && !mode.card.bloodCostX) {
+        const nameFreq = new Map<string, number>();
+        for (const ch of mode.card.spellName) {
+          nameFreq.set(ch, (nameFreq.get(ch) || 0) + 1);
+        }
+        if (!nameFreq.has(rune.letter)) return;
+        let usedCount = 0;
+        for (const id of ids) {
+          const sel = myPlayer.runeField.find((r) => r.instanceId === id);
+          if (sel && sel.letter === rune.letter) usedCount++;
+        }
+        if (usedCount >= nameFreq.get(rune.letter)!) return;
+      }
       ids.push(rune.instanceId);
     }
     setMode({ ...mode, selectedRuneIds: ids });
@@ -492,9 +506,16 @@ export function useGameInteractions({
     if (!isSpelling) return [];
     if (mode.card.bloodCostX) return [];
     if (mode.card.bloodCost > 0) {
-      // For blood cost, return placeholder slots for remaining picks
-      const remaining = mode.card.bloodCost - mode.selectedRuneIds.length;
-      return Array(Math.max(0, remaining)).fill("*");
+      if (mode.selectedRuneIds.length >= mode.card.bloodCost) return [];
+      const available = [...mode.card.spellName.split("")];
+      for (const id of mode.selectedRuneIds) {
+        const rune = myPlayer.runeField.find((r) => r.instanceId === id);
+        if (rune) {
+          const idx = available.indexOf(rune.letter);
+          if (idx !== -1) available.splice(idx, 1);
+        }
+      }
+      return available;
     }
     const needed = [...mode.card.spellName.split("")];
     for (const id of mode.selectedRuneIds) {
