@@ -1,7 +1,7 @@
 import { Card } from "shared";
 import { type GameContext } from "./context.js";
 import { hasAbility, findDefinition, getOpponent } from "./utils.js";
-import { handleOnDeathEffect, sacrificeRunelessSummonings } from "./deathCleanup.js";
+import { handleOnDeathEffect, sacrificeRunelessSummonings, tryDeathPrevention } from "./deathCleanup.js";
 
 /** Recalculate all ongoing buff effects from echoes on the battlefield. */
 export function recalculateOngoingEffects(ctx: GameContext) {
@@ -70,6 +70,7 @@ export function recalculateOngoingEffects(ctx: GameContext) {
       const card = player.battlefield.at(i);
       if (!card || card.cardType !== "summoning") continue;
       if (card.health <= 0) {
+        if (tryDeathPrevention(ctx, card, player)) continue;
         dead.push(card);
         player.battlefield.splice(i, 1);
       }

@@ -85,9 +85,13 @@ export function handleDeclareBlockers(ctx: GameContext, client: Client, message:
 
   // Validate assignments
   ctx.state.blockingAssignments.clear();
+  const usedBlockers = new Set<string>();
   for (const assignment of message.assignments) {
     const [blockerId, attackerId] = assignment.split(":");
     if (!blockerId || !attackerId) continue;
+
+    // Each blocker can only block one attacker
+    if (usedBlockers.has(blockerId)) continue;
 
     const blocker = defender.battlefield.find((c) => c.instanceId === blockerId);
     if (!blocker || blocker.cardType !== "summoning" || blocker.isTapped) continue;
@@ -103,6 +107,7 @@ export function handleDeclareBlockers(ctx: GameContext, client: Client, message:
     const blockerIsShadow = hasAbility(blocker, "shadowwalker");
     if (attackerIsShadow !== blockerIsShadow) continue;
 
+    usedBlockers.add(blockerId);
     ctx.state.blockingAssignments.push(assignment);
   }
 

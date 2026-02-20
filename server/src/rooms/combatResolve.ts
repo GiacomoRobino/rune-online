@@ -57,7 +57,6 @@ export function resolveCombatDamage(ctx: GameContext) {
         if (isDuelist) {
           // Duelist: attacker deals damage first
           const dmgToBlocker = applyDamageToCreature(blocker, remainingAttack);
-          remainingAttack -= blocker.health > 0 ? 0 : remainingAttack; // excess carries
           // Lifedrinker: heal attacker's owner by damage dealt to blocker
           if (hasAbility(attackerCard, "lifedrinker") && dmgToBlocker > 0) {
             attackingPlayer.health = Math.min(

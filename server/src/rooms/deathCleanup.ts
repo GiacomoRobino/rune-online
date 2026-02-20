@@ -28,7 +28,15 @@ export function handleOnDeathEffect(ctx: GameContext, card: Card, owner: Player)
   if (def && 'effect' in def && def.effect && def.effect.type === "on_death") {
     const actions = Array.isArray(def.effect.action) ? def.effect.action : [def.effect.action];
     for (const action of actions) {
-      if (action.type === "search_deck") {
+      if (action.type === "damage" && action.target === "any") {
+        const effect = new PendingEffect();
+        effect.id = `de_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        effect.ownerSessionId = owner.sessionId;
+        effect.effectType = "death_damage";
+        effect.damageAmount = action.amount;
+        effect.cardName = card.name;
+        ctx.state.pendingDeathEffects.push(effect);
+      } else if (action.type === "search_deck") {
         const effect = new PendingEffect();
         effect.id = `de_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         effect.ownerSessionId = owner.sessionId;
@@ -54,7 +62,7 @@ export function handleOnDeathEffect(ctx: GameContext, card: Card, owner: Player)
  * If so, prevent the death (cancel a blood rune, restore health, queue damage effect).
  * Returns true if death was prevented.
  */
-function tryDeathPrevention(ctx: GameContext, card: Card, owner: Player): boolean {
+export function tryDeathPrevention(ctx: GameContext, card: Card, owner: Player): boolean {
   const def = findDefinition(card);
   if (!def || !('effect' in def) || !def.effect || def.effect.type !== "on_death_prevention") return false;
 

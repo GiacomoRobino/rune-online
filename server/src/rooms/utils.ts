@@ -51,8 +51,11 @@ export function getOpponent(ctx: GameContext, sessionId: string): Player | undef
 }
 
 export function checkWinCondition(ctx: GameContext) {
+  if (ctx.state.phase === "ended") return;
+
   ctx.state.players.forEach((player, sessionId) => {
     if (player.health <= 0) {
+      if (ctx.state.phase === "ended") return;
       const opp = getOpponent(ctx, sessionId);
       if (opp) {
         endGame(ctx, opp.sessionId);

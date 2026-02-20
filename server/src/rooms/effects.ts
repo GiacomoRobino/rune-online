@@ -7,6 +7,8 @@ import {
 } from "./utils.js";
 import { cleanupDeadCreatures } from "./deathCleanup.js";
 
+const MAX_BATTLEFIELD_SIZE = 7;
+
 export function handleOnEnterEffect(ctx: GameContext, card: Card, caster: Player) {
   const def = findDefinition(card);
   if (!def || !('effect' in def) || !def.effect) return;
@@ -102,7 +104,7 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
           }
         }
       } else if (action.target === "random_enemy") {
-        const targets = [...opponent.battlefield.map((c) => c.instanceId), "hero"];
+        const targets = [...opponent.battlefield.filter((c) => c.cardType === "summoning").map((c) => c.instanceId), "hero"];
         const pick = targets[Math.floor(Math.random() * targets.length)];
         if (pick === "hero") {
           opponent.health -= amount;
@@ -118,7 +120,7 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
         opponent.health -= amount;
         opponent.lifeLostThisTurn += amount;
         opponent.battlefield.forEach((c) => {
-          applyDamageToCreature(c, amount);
+          if (c.cardType === "summoning") applyDamageToCreature(c, amount);
         });
         cleanupDeadCreatures(ctx, opponent);
       }
@@ -171,6 +173,7 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
         count = caster.lifeLostThisTurn;
       }
       for (let i = 0; i < count; i++) {
+        if (caster.battlefield.length >= MAX_BATTLEFIELD_SIZE) break;
         const tokenDef = {
           id: "token_" + action.tokenName.toLowerCase().replace(/\s+/g, "_"),
           name: action.tokenName,
@@ -181,6 +184,7 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
           abilities: action.abilities,
         };
         const token = createCard(tokenDef);
+        token.abilities = token.abilities ? token.abilities + ",unbounded" : "unbounded";
         token.canAttack = hasAbility(token, "rage");
         token.hasAegis = hasAbility(token, "aegis");
         caster.battlefield.push(token);
@@ -189,6 +193,7 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
     }
     case "reanimate": {
       if (!targetId) break;
+      if (caster.battlefield.length >= MAX_BATTLEFIELD_SIZE) break;
       const gravIdx = caster.graveyard.findIndex(c => c.instanceId === targetId && c.cardType === "summoning");
       if (gravIdx === -1) break;
       const target = caster.graveyard.at(gravIdx);

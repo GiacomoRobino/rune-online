@@ -98,6 +98,7 @@ export function detachRuneFromCurrent(player: Player, runeId: string) {
 
 export function handleWriteRune(ctx: GameContext, client: Client, message: { runeId: string }) {
   if (ctx.state.phase !== "playing") return;
+  if (ctx.state.turnPhase !== "main") return;
 
   const player = ctx.state.players.get(client.sessionId);
   if (!player) return;
@@ -139,6 +140,7 @@ export function handleWriteRune(ctx: GameContext, client: Client, message: { run
 export function handleAttachRune(ctx: GameContext, client: Client, message: { runeId: string; targetId: string }) {
   if (ctx.state.phase !== "playing") return;
   if (ctx.state.currentTurn !== client.sessionId) return;
+  if (ctx.state.turnPhase !== "main") return;
 
   const player = ctx.state.players.get(client.sessionId);
   if (!player) return;

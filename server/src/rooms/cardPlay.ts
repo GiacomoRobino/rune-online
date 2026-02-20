@@ -30,6 +30,13 @@ export function handleSummon(ctx: GameContext, client: Client, message: { cardId
   // Validate rune spelling
   if (!validateRuneSpelling(player, card.spellName, message.runeIds, card.bloodCost, card.canOverpay)) return;
 
+  // Validate devour before any state mutation
+  if (hasAbility(card, "devour")) {
+    if (!message.sacrificeTargetId) return;
+    const victimExists = player.battlefield.some((c) => c.instanceId === message.sacrificeTargetId && c.cardType === "summoning");
+    if (!victimExists) return;
+  }
+
   // Detach runes from old summonings, then attach to new one
   for (const runeId of message.runeIds) {
     detachRuneFromCurrent(player, runeId);
@@ -73,11 +80,9 @@ export function handleSummon(ctx: GameContext, client: Client, message: { cardId
 
   // Handle devour: sacrifice a friendly summoning and steal its runes
   if (hasAbility(card, "devour")) {
-    if (!message.sacrificeTargetId) return;
     const victimIndex = player.battlefield.findIndex((c) => c.instanceId === message.sacrificeTargetId && c.cardType === "summoning" && c.instanceId !== card.instanceId);
-    if (victimIndex === -1) return;
     const victim = player.battlefield.at(victimIndex);
-    if (!victim) return;
+    if (victimIndex === -1 || !victim) return; // should not happen — validated above
 
     // Transfer all runes from victim to card
     for (let i = 0; i < victim.attachedRuneIds.length; i++) {
@@ -153,6 +158,7 @@ export function handlePlayEcho(ctx: GameContext, client: Client, message: { card
 
 export function handlePlayMemory(ctx: GameContext, client: Client, message: { cardId: string; runeIds: string[]; targetId?: string; targetIds?: string[] }) {
   if (ctx.state.phase !== "playing") return;
+  if (ctx.state.currentTurn !== client.sessionId) return;
   if (ctx.state.turnPhase !== "main") return;
 
   const player = ctx.state.players.get(client.sessionId);
