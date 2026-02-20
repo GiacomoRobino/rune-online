@@ -6,7 +6,7 @@ export type InteractionMode =
   | { type: "summoning"; card: CardState; selectedRuneIds: string[] }
   | { type: "echo"; card: CardState; selectedRuneIds: string[] }
   | { type: "memory"; card: CardState; selectedRuneIds: string[] }
-  | { type: "targeting_memory"; card: CardState; selectedRuneIds: string[] }
+  | { type: "targeting_memory"; card: CardState; selectedRuneIds: string[]; summoningOnly?: boolean }
   | { type: "targeting_memory_multi"; card: CardState; selectedRuneIds: string[]; x: number; targetIds: string[] }
   | { type: "declare_attack"; selectedAttackerIds: string[] }
   | { type: "declare_block"; assignments: Map<string, string>; selectedBlockerId: string | null } // blockerId -> attackerId
@@ -161,10 +161,12 @@ export function useGameInteractions({
           return;
         }
       } else {
-        const needsTarget = mode.card.description.toLowerCase().includes("any target") ||
+        const needsSummoningTarget = mode.card.description.toLowerCase().includes("target summoning");
+        const needsTarget = needsSummoningTarget ||
+          mode.card.description.toLowerCase().includes("any target") ||
           mode.card.description.toLowerCase().includes("damage");
         if (needsTarget) {
-          setMode({ type: "targeting_memory", card: mode.card, selectedRuneIds: mode.selectedRuneIds });
+          setMode({ type: "targeting_memory", card: mode.card, selectedRuneIds: mode.selectedRuneIds, summoningOnly: needsSummoningTarget });
           return;
         } else {
           onPlayMemory(mode.card.instanceId, mode.selectedRuneIds);
@@ -203,6 +205,10 @@ export function useGameInteractions({
   const handleMyCreatureClick = (card: CardState) => {
     if (mode.type === "targeting_memory_multi") {
       if (card.cardType === "summoning") handleMultiTargetSelect(card.instanceId);
+      return;
+    }
+    if (mode.type === "targeting_memory") {
+      handleMemoryTarget(card.instanceId);
       return;
     }
     if (mode.type === "choosing_sacrifice_target") {
@@ -278,7 +284,7 @@ export function useGameInteractions({
   };
 
   const handleHeroClick = (isOwn: boolean) => {
-    if (mode.type === "targeting_memory") {
+    if (mode.type === "targeting_memory" && !mode.summoningOnly) {
       handleMemoryTarget(isOwn ? "my_hero" : "opponent_hero");
     } else if (mode.type === "targeting_death_effect") {
       handleDeathEffectTarget(isOwn ? "my_hero" : "opponent_hero");
@@ -361,7 +367,7 @@ export function useGameInteractions({
             cardName: first.cardName,
             cardInstanceId: first.targetCardId,
           });
-        } else if (first.effectType === "death_damage") {
+        } else if (first.effectType === "death_damage" || first.effectType === "attack_damage") {
           setMode({
             type: "targeting_death_effect",
             effectId: first.id,

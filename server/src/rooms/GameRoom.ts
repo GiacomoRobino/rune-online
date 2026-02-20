@@ -14,7 +14,7 @@ import { handleResolveDeathTarget, handleResolveDeckSearch, handleResolveWriteRu
 import { getDeck, getAvailableDecks } from "../deckLoader.js";
 
 export class GameRoom extends Room<GameState> {
-  private ctx: GameContext = { state: null as any, playerOrder: [], pendingFinishEndTurn: false };
+  private ctx: GameContext = { state: null as any, playerOrder: [], pendingFinishEndTurn: false, pendingCombatContinue: false };
 
   onCreate() {
     this.setState(new GameState());

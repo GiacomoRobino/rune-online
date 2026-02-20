@@ -121,6 +121,7 @@ export function handleWriteRune(ctx: GameContext, client: Client, message: { run
   // Blood runes cost 1 life to write
   if (rune.runeType === "blood") {
     player.health -= 1;
+    player.lifeLostThisTurn += 1;
   }
 
   // Stone runes enter with 1 etching counter

@@ -37,6 +37,7 @@ export function resolveCombatDamage(ctx: GameContext) {
     if (blockerIds.length === 0) {
       // Unblocked — damage to defending player
       defendingPlayer.health -= attackerCard.attack;
+      defendingPlayer.lifeLostThisTurn += attackerCard.attack;
       // Lifedrinker: heal attacker's owner
       if (hasAbility(attackerCard, "lifedrinker")) {
         attackingPlayer.health = Math.min(
@@ -106,6 +107,7 @@ export function resolveCombatDamage(ctx: GameContext) {
       // Fury: excess damage goes to defending player
       if (hasAbility(attackerCard, "fury") && remainingAttack > 0) {
         defendingPlayer.health -= remainingAttack;
+        defendingPlayer.lifeLostThisTurn += remainingAttack;
       }
     }
   }

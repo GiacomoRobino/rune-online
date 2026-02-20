@@ -16,6 +16,9 @@ import { card as phoe } from "./cards/16/card.js";
 import { card as blessedRiver } from "./cards/17/card.js";
 import { card as cauldron } from "./cards/18/card.js";
 import { card as unravelingDance } from "./cards/19/card.js";
+import { card as sparkOfCorruption } from "./cards/20/card.js";
+import { card as burningNightmare } from "./cards/21/card.js";
+import { card as riverOfMassacre } from "./cards/22/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -58,6 +61,8 @@ export const MEMORY_POOL: MemoryDefinition[] = [
     effect: { type: "instant", action: { type: "draw", amount: 2 } } },
   blessedRiver,
   unravelingDance,
+  sparkOfCorruption,
+  burningNightmare,
 ];
 
 // --- RUNE POOL ---
@@ -131,6 +136,7 @@ export const ECHO_POOL: EchoDefinition[] = [
   hopesKingdom,
   hopesTiranny,
   cauldron,
+  riverOfMassacre,
 ];
 
 // --- TEST DECKS ---

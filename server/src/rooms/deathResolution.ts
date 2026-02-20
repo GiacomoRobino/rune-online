@@ -6,13 +6,14 @@ import { cleanupDeadCreatures, sacrificeRunelessSummonings } from "./deathCleanu
 import { recalculateOngoingEffects } from "./ongoingEffects.js";
 import { finishEndTurn } from "./lifecycle.js";
 import { triggerWriteRuneEffects } from "./effects.js";
+import { continueCombatAfterAttackers } from "./combatDeclare.js";
 
 export function handleResolveDeathTarget(ctx: GameContext, client: Client, message: { targetId: string }) {
   if (ctx.state.phase !== "playing") return;
   if (ctx.state.turnPhase !== "resolve_death_effects") return;
 
   const effect = ctx.state.pendingDeathEffects.at(0);
-  if (!effect || effect.effectType !== "death_damage" || effect.ownerSessionId !== client.sessionId) return;
+  if (!effect || (effect.effectType !== "death_damage" && effect.effectType !== "attack_damage") || effect.ownerSessionId !== client.sessionId) return;
 
   const caster = ctx.state.players.get(client.sessionId);
   if (!caster) return;
@@ -20,9 +21,13 @@ export function handleResolveDeathTarget(ctx: GameContext, client: Client, messa
 
   const targetId = message.targetId;
   if (targetId === "opponent_hero") {
-    if (opponent) opponent.health -= effect.damageAmount;
+    if (opponent) {
+      opponent.health -= effect.damageAmount;
+      opponent.lifeLostThisTurn += effect.damageAmount;
+    }
   } else if (targetId === "my_hero") {
     caster.health -= effect.damageAmount;
+    caster.lifeLostThisTurn += effect.damageAmount;
   } else {
     const target = findCardOnAnyBattlefield(ctx, targetId);
     if (target) {
@@ -143,6 +148,7 @@ export function handleResolveWriteRune(ctx: GameContext, client: Client, message
         // Blood runes cost 1 life
         if (rune.runeType === "blood") {
           player.health -= 1;
+          player.lifeLostThisTurn += 1;
         }
 
         // Stone runes enter with 1 etching counter
@@ -234,7 +240,10 @@ export function advanceDeathEffectQueue(ctx: GameContext) {
     }
     ctx.state.turnPhase = "resolve_death_effects";
   } else {
-    if (ctx.pendingFinishEndTurn) {
+    if (ctx.pendingCombatContinue) {
+      ctx.pendingCombatContinue = false;
+      continueCombatAfterAttackers(ctx);
+    } else if (ctx.pendingFinishEndTurn) {
       ctx.pendingFinishEndTurn = false;
       finishEndTurn(ctx);
     } else {

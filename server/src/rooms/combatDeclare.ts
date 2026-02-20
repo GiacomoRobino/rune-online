@@ -2,6 +2,7 @@ import { Client } from "@colyseus/core";
 import { type GameContext } from "./context.js";
 import { hasAbility, getOpponent } from "./utils.js";
 import { resolveCombatDamage } from "./combatResolve.js";
+import { triggerAttackEffects } from "./effects.js";
 
 export function handleDeclareAttackers(ctx: GameContext, client: Client, message: { attackerIds: string[] }) {
   if (ctx.state.phase !== "playing") return;
@@ -41,8 +42,20 @@ export function handleDeclareAttackers(ctx: GameContext, client: Client, message
     ctx.state.declaredAttackers.push(id);
   }
 
-  // Check if opponent has any creatures that can block
-  const opponent = getOpponent(ctx, client.sessionId);
+  // Trigger on_attack echo effects
+  triggerAttackEffects(ctx, player);
+
+  if (ctx.state.pendingDeathEffects.length > 0) {
+    ctx.pendingCombatContinue = true;
+    ctx.state.turnPhase = "resolve_death_effects";
+    return;
+  }
+
+  continueCombatAfterAttackers(ctx);
+}
+
+export function continueCombatAfterAttackers(ctx: GameContext) {
+  const opponent = getOpponent(ctx, ctx.state.currentTurn);
   if (!opponent) return;
 
   const canAnyBlock = opponent.battlefield.some(
@@ -52,7 +65,6 @@ export function handleDeclareAttackers(ctx: GameContext, client: Client, message
   if (canAnyBlock) {
     ctx.state.turnPhase = "declare_blockers";
   } else {
-    // No blockers possible, resolve immediately
     ctx.state.blockingAssignments.clear();
     resolveCombatDamage(ctx);
   }

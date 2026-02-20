@@ -51,7 +51,7 @@ export function LayoutCompact({
           <div
             onClick={() => gi.handleHeroClick(false)}
             className={`w-16 h-16 rounded-full flex items-center justify-center cursor-pointer transition-colors ${
-              gi.mode.type === "targeting_memory" || gi.mode.type === "targeting_death_effect" ? "ring-target" : ""
+              (gi.mode.type === "targeting_memory" && !gi.mode.summoningOnly) || gi.mode.type === "targeting_death_effect" ? "ring-target" : ""
             }`}
             style={{
               background: 'linear-gradient(135deg, #8b0000, #5c0000)',
@@ -81,7 +81,7 @@ export function LayoutCompact({
           <div
             onClick={() => gi.handleHeroClick(true)}
             className={`w-16 h-16 rounded-full flex items-center justify-center cursor-pointer ${
-              gi.mode.type === "targeting_memory" || gi.mode.type === "targeting_death_effect" ? "ring-target" : ""
+              (gi.mode.type === "targeting_memory" && !gi.mode.summoningOnly) || gi.mode.type === "targeting_death_effect" ? "ring-target" : ""
             }`}
             style={{
               background: 'linear-gradient(135deg, #2d5a27, #1a3a15)',
@@ -175,7 +175,7 @@ export function LayoutCompact({
                   <Card
                     card={card}
                     onClick={() => gi.handleMyCreatureClick(card)}
-                    isTarget={(gi.mode.type === "choosing_sacrifice_target" || gi.mode.type === "targeting_memory_multi") && card.cardType === "summoning"}
+                    isTarget={(gi.mode.type === "choosing_sacrifice_target" || gi.mode.type === "targeting_memory_multi" || (gi.mode.type === "targeting_memory" && gi.mode.summoningOnly)) && card.cardType === "summoning"}
                     isAttacker={
                       gi.mode.type === "declare_attack" &&
                       gi.mode.selectedAttackerIds.includes(card.instanceId)

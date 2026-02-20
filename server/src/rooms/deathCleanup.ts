@@ -8,6 +8,7 @@ export function handleOnDeathEffect(ctx: GameContext, card: Card, owner: Player)
     const opponent = getOpponent(ctx, owner.sessionId);
     if (opponent) {
       opponent.health -= card.attack;
+      opponent.lifeLostThisTurn += card.attack;
     }
   }
 

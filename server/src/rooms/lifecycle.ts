@@ -27,6 +27,7 @@ export function startGame(ctx: GameContext) {
   if (firstPlayer) {
     firstPlayer.runesWrittenThisTurn = 0;
     firstPlayer.maxRuneWritesThisTurn = STARTING_RUNES;
+    firstPlayer.lifeLostThisTurn = 0;
   }
 
   ctx.state.turnPhase = "main";
@@ -54,6 +55,9 @@ export function startTurn(ctx: GameContext) {
 
   // Draw 1 from Chaos deck
   drawChaosCard(currentPlayer);
+
+  // Reset life-loss tracking
+  currentPlayer.lifeLostThisTurn = 0;
 
   // Allow rune writes: 3 on player's first turn, 1 otherwise
   currentPlayer.runesWrittenThisTurn = 0;

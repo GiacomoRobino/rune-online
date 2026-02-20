@@ -1,4 +1,4 @@
-import { Player, Card } from "shared";
+import { Player, Card, SUBTYPE_ABILITIES, PendingEffect } from "shared";
 import { type GameContext } from "./context.js";
 import {
   createCard, hasAbility, findDefinition,
@@ -75,8 +75,10 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
       if (action.target === "any" && targetId) {
         if (targetId === "opponent_hero") {
           opponent.health -= amount;
+          opponent.lifeLostThisTurn += amount;
         } else if (targetId === "my_hero") {
           caster.health -= amount;
+          caster.lifeLostThisTurn += amount;
         } else {
           // Try to find on either battlefield
           const target = findCardOnAnyBattlefield(ctx, targetId);
@@ -91,6 +93,7 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
       } else if (action.target === "enemy") {
         if (targetId === "opponent_hero" || targetId === "hero") {
           opponent.health -= amount;
+          opponent.lifeLostThisTurn += amount;
         } else if (targetId) {
           const target = opponent.battlefield.find((c) => c.instanceId === targetId);
           if (target) {
@@ -103,6 +106,7 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
         const pick = targets[Math.floor(Math.random() * targets.length)];
         if (pick === "hero") {
           opponent.health -= amount;
+          opponent.lifeLostThisTurn += amount;
         } else {
           const target = opponent.battlefield.find((c) => c.instanceId === pick);
           if (target) {
@@ -112,6 +116,7 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
         }
       } else if (action.target === "all_enemies") {
         opponent.health -= amount;
+        opponent.lifeLostThisTurn += amount;
         opponent.battlefield.forEach((c) => {
           applyDamageToCreature(c, amount);
         });
@@ -155,7 +160,50 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
       break;
     }
     case "lose_life": {
-      caster.health -= action.amount as number;
+      const loseAmount = action.amount as number;
+      caster.health -= loseAmount;
+      caster.lifeLostThisTurn += loseAmount;
+      break;
+    }
+    case "create_token": {
+      let count = 0;
+      if (action.count === "life_lost_this_turn") {
+        count = caster.lifeLostThisTurn;
+      }
+      for (let i = 0; i < count; i++) {
+        const tokenDef = {
+          id: "token_" + action.tokenName.toLowerCase().replace(/\s+/g, "_"),
+          name: action.tokenName,
+          type: "summoning" as const,
+          spellName: "",
+          attack: action.attack,
+          health: action.health,
+          abilities: action.abilities,
+        };
+        const token = createCard(tokenDef);
+        token.canAttack = hasAbility(token, "rage");
+        token.hasAegis = hasAbility(token, "aegis");
+        caster.battlefield.push(token);
+      }
+      break;
+    }
+    case "grant_subtype": {
+      if (targetId) {
+        const target = findCardOnAnyBattlefield(ctx, targetId);
+        if (target && target.cardType === "summoning") {
+          target.subtypes = target.subtypes ? target.subtypes + "," + action.subtype : action.subtype;
+          const subtypeAbilities = SUBTYPE_ABILITIES[action.subtype];
+          if (subtypeAbilities) {
+            for (const ability of subtypeAbilities) {
+              if (!hasAbility(target, ability)) {
+                target.abilities = target.abilities ? target.abilities + "," + ability : ability;
+              }
+            }
+            if (hasAbility(target, "rage")) target.canAttack = true;
+            if (hasAbility(target, "aegis")) target.hasAegis = true;
+          }
+        }
+      }
       break;
     }
   }
@@ -179,6 +227,38 @@ export function handleDamageXEffect(ctx: GameContext, caster: Player, x: number,
   // Heal caster
   if (totalDamage > 0) {
     caster.health = Math.min(caster.health + totalDamage, caster.maxHealth);
+  }
+}
+
+export function triggerAttackEffects(ctx: GameContext, player: Player) {
+  const attackerCount = ctx.state.declaredAttackers.length;
+  if (attackerCount === 0) return;
+
+  for (let i = 0; i < player.battlefield.length; i++) {
+    const card = player.battlefield.at(i);
+    if (!card || card.cardType !== "echo") continue;
+    const def = findDefinition(card);
+    if (!def || !("effect" in def) || !def.effect) continue;
+    if (def.effect.type !== "on_attack") continue;
+
+    const actions = Array.isArray(def.effect.action) ? def.effect.action : [def.effect.action];
+    for (const action of actions) {
+      if (action.type === "damage" && action.target === "any") {
+        for (let a = 0; a < attackerCount; a++) {
+          const effect = new PendingEffect();
+          effect.id = `ae_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          effect.ownerSessionId = player.sessionId;
+          effect.effectType = "attack_damage";
+          effect.damageAmount = action.amount;
+          effect.cardName = card.name;
+          ctx.state.pendingDeathEffects.push(effect);
+        }
+      } else {
+        for (let a = 0; a < attackerCount; a++) {
+          executeEffect(ctx, action, player);
+        }
+      }
+    }
   }
 }
 

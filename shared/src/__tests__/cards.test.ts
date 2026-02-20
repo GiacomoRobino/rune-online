@@ -14,7 +14,7 @@ const VALID_ABILITIES: AbilityKeyword[] = [
 
 const VALID_ACTION_TYPES = [
   "damage", "heal", "draw", "buff", "destroy_rune",
-  "return_to_hand", "create_copies", "search_deck", "choose_subtype", "cancel_rune", "write_rune", "grant_aegis", "lose_life", "damage_x",
+  "return_to_hand", "create_copies", "search_deck", "choose_subtype", "cancel_rune", "write_rune", "grant_aegis", "lose_life", "damage_x", "grant_subtype", "create_token",
 ] as const;
 
 const ALL_POOL_CARDS: CardDefinition[] = [
@@ -171,8 +171,8 @@ describe("Card data integrity", () => {
 
     for (const card of ECHO_POOL) {
       if (card.effect) {
-        it(`${card.id} (${card.name}): echo effect is ongoing or on_write_rune`, () => {
-          expect(["ongoing", "on_write_rune"]).toContain(card.effect!.type);
+        it(`${card.id} (${card.name}): echo effect is ongoing, on_write_rune, or on_attack`, () => {
+          expect(["ongoing", "on_write_rune", "on_attack"]).toContain(card.effect!.type);
         });
       }
     }
