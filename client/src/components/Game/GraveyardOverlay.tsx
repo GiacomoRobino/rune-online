@@ -8,9 +8,11 @@ interface GraveyardOverlayProps {
   opponent: PlayerState;
   onClose: () => void;
   cardSize?: CardSize;
+  onCardClick?: (cardId: string) => void;
+  filterType?: string;
 }
 
-export function GraveyardOverlay({ which, myPlayer, opponent, onClose, cardSize = "sm" }: GraveyardOverlayProps) {
+export function GraveyardOverlay({ which, myPlayer, opponent, onClose, cardSize = "sm", onCardClick, filterType }: GraveyardOverlayProps) {
   const cards: CardState[] = which === "mine" ? myPlayer.graveyard : opponent.graveyard;
   const title = which === "mine" ? "Your Graveyard" : "Opponent's Graveyard";
 
@@ -33,9 +35,18 @@ export function GraveyardOverlay({ which, myPlayer, opponent, onClose, cardSize 
           <p className="text-stone-400 text-sm text-center py-8 font-body italic">No cards in graveyard</p>
         ) : (
           <div className="flex flex-wrap gap-3 justify-center">
-            {cards.map((card) => (
-              <Card key={card.instanceId} card={card} size={cardSize} />
-            ))}
+            {cards.map((card) => {
+              const isClickable = onCardClick && (!filterType || card.cardType === filterType);
+              return (
+                <div
+                  key={card.instanceId}
+                  className={isClickable ? "cursor-pointer hover:scale-105 transition-transform" : ""}
+                  onClick={isClickable ? () => onCardClick(card.instanceId) : undefined}
+                >
+                  <Card card={card} size={cardSize} isPlayable={!!isClickable} />
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

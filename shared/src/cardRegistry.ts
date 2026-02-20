@@ -22,8 +22,9 @@ import { card as card19 } from "./cards/19/card.js";
 import { card as card20 } from "./cards/20/card.js";
 import { card as card21 } from "./cards/21/card.js";
 import { card as card22 } from "./cards/22/card.js";
+import { card as card23 } from "./cards/23/card.js";
 
-export const CARD_REGISTRY: CardDefinition[] = [card1, card2, card3, card4, card5, card6, card7, card8, card9, card10, card11, card12, card13, card14, card15, card16, card17, card18, card19, card20, card21, card22];
+export const CARD_REGISTRY: CardDefinition[] = [card1, card2, card3, card4, card5, card6, card7, card8, card9, card10, card11, card12, card13, card14, card15, card16, card17, card18, card19, card20, card21, card22, card23];
 
 export function getCardById(id: string): CardDefinition | undefined {
   return CARD_REGISTRY.find((c) => c.id === id);

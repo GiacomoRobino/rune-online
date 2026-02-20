@@ -19,6 +19,7 @@ import { card as unravelingDance } from "./cards/19/card.js";
 import { card as sparkOfCorruption } from "./cards/20/card.js";
 import { card as burningNightmare } from "./cards/21/card.js";
 import { card as riverOfMassacre } from "./cards/22/card.js";
+import { card as ascensionToTheSkyThrone } from "./cards/23/card.js";
 
 // --- SUMMONING POOL ---
 export const SUMMONING_POOL: SummoningDefinition[] = [
@@ -63,6 +64,7 @@ export const MEMORY_POOL: MemoryDefinition[] = [
   unravelingDance,
   sparkOfCorruption,
   burningNightmare,
+  ascensionToTheSkyThrone,
 ];
 
 // --- RUNE POOL ---

@@ -332,6 +332,14 @@ export function LayoutCompact({
             </div>
           )}
 
+          {/* Graveyard targeting indicator */}
+          {gi.mode.type === "targeting_memory_graveyard" && (
+            <div className="stone-panel metal-border rounded-lg p-2 text-center text-gold text-sm font-medieval">
+              Choose a Summoning from your graveyard for {gi.mode.card.name}
+              <button onClick={gi.cancelMode} className="ml-3 px-2 py-0.5 btn-stone rounded text-xs">Cancel</button>
+            </div>
+          )}
+
           {/* Rune picker */}
           <RunePicker myPlayer={myPlayer} onWriteRune={onWriteRune} />
 
@@ -396,6 +404,19 @@ export function LayoutCompact({
           myPlayer={myPlayer}
           opponent={opponent}
           onClose={() => gi.setShowGraveyard(null)}
+          cardSize="sm"
+        />
+      )}
+
+      {/* Graveyard targeting overlay */}
+      {gi.mode.type === "targeting_memory_graveyard" && (
+        <GraveyardOverlay
+          which="mine"
+          myPlayer={myPlayer}
+          opponent={opponent}
+          onClose={gi.cancelMode}
+          onCardClick={gi.handleGraveyardTargetSelect}
+          filterType="summoning"
           cardSize="sm"
         />
       )}

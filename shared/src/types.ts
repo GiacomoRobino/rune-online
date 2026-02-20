@@ -103,7 +103,8 @@ export type EffectAction =
   | { type: "lose_life"; amount: number }
   | { type: "damage_x"; target: "any_summoning"; healCaster: boolean }
   | { type: "grant_subtype"; subtype: string; target: "any_summoning" }
-  | { type: "create_token"; tokenName: string; attack: number; health: number; abilities: string; count: "life_lost_this_turn" };
+  | { type: "create_token"; tokenName: string; attack: number; health: number; abilities: string; count: "life_lost_this_turn" }
+  | { type: "reanimate"; target: "own_graveyard_summoning" };
 
 // Turn phases
 export type TurnPhase = "main" | "declare_attackers" | "declare_blockers" | "combat_damage" | "resolve_death_effects" | "end_turn_cancel_rune";

@@ -187,6 +187,25 @@ export function executeEffect(ctx: GameContext, action: { type: string; [key: st
       }
       break;
     }
+    case "reanimate": {
+      if (!targetId) break;
+      const gravIdx = caster.graveyard.findIndex(c => c.instanceId === targetId && c.cardType === "summoning");
+      if (gravIdx === -1) break;
+      const target = caster.graveyard.at(gravIdx);
+      if (!target) break;
+      caster.graveyard.splice(gravIdx, 1);
+      // Grant unbounded
+      target.abilities = target.abilities ? target.abilities + ",unbounded" : "unbounded";
+      // Reset combat state for fresh entry
+      target.canAttack = hasAbility(target, "rage");
+      target.hasAttacked = false;
+      target.isTapped = false;
+      target.hasAegis = hasAbility(target, "aegis");
+      target.health = target.maxHealth;
+      target.damageMarked = 0;
+      caster.battlefield.push(target);
+      break;
+    }
     case "grant_subtype": {
       if (targetId) {
         const target = findCardOnAnyBattlefield(ctx, targetId);

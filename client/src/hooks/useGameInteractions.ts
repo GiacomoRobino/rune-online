@@ -16,7 +16,8 @@ export type InteractionMode =
   | { type: "choosing_sacrifice_target"; card: CardState; selectedRuneIds: string[] }
   | { type: "cancel_rune"; cardInstanceId: string }
   | { type: "choosing_death_prevention_rune"; effectId: string; cardName: string; cardInstanceId: string }
-  | { type: "writing_rune_from_effect"; effectId: string; cardName: string; runeType: string };
+  | { type: "writing_rune_from_effect"; effectId: string; cardName: string; runeType: string }
+  | { type: "targeting_memory_graveyard"; card: CardState; selectedRuneIds: string[] };
 
 export interface GameInteractionsProps {
   myPlayer: PlayerState;
@@ -64,6 +65,7 @@ export function useGameInteractions({
   const [showGraveyard, setShowGraveyard] = useState<"mine" | "opponent" | null>(null);
   const [deckSearchCards, setDeckSearchCards] = useState<CardState[]>([]);
   const [writeRuneCards, setWriteRuneCards] = useState<CardState[]>([]);
+  const [graveyardTargetCards, setGraveyardTargetCards] = useState<CardState[]>([]);
 
   const isBlockingPhase = turnPhase === "declare_blockers" && !isMyTurn;
 
@@ -161,6 +163,11 @@ export function useGameInteractions({
           return;
         }
       } else {
+        const needsGraveyardTarget = mode.card.description.toLowerCase().includes("your graveyard");
+        if (needsGraveyardTarget) {
+          setMode({ type: "targeting_memory_graveyard", card: mode.card, selectedRuneIds: mode.selectedRuneIds });
+          return;
+        }
         const needsSummoningTarget = mode.card.description.toLowerCase().includes("target summoning");
         const needsTarget = needsSummoningTarget ||
           mode.card.description.toLowerCase().includes("any target") ||
@@ -310,6 +317,13 @@ export function useGameInteractions({
     setMode({ type: "idle" });
   };
 
+  const handleGraveyardTargetSelect = (cardId: string) => {
+    if (mode.type !== "targeting_memory_graveyard") return;
+    onPlayMemory(mode.card.instanceId, mode.selectedRuneIds, cardId);
+    setGraveyardTargetCards([]);
+    setMode({ type: "idle" });
+  };
+
   const handleSubtypeChoice = (subtype: string) => {
     if (mode.type !== "choosing_subtype") return;
     onSummon(mode.card.instanceId, mode.selectedRuneIds, subtype);
@@ -409,6 +423,15 @@ export function useGameInteractions({
       setWriteRuneCards([]);
     }
   }, [turnPhase, mode.type]);
+
+  // Populate/clear graveyard target cards
+  useEffect(() => {
+    if (mode.type === "targeting_memory_graveyard") {
+      setGraveyardTargetCards(myPlayer.graveyard.filter((c) => c.cardType === "summoning"));
+    } else {
+      setGraveyardTargetCards([]);
+    }
+  }, [mode.type, myPlayer.graveyard]);
 
   // Auto-enter cancel rune mode
   useEffect(() => {
@@ -590,6 +613,8 @@ export function useGameInteractions({
     handleSubtypeChoice,
     deckSearchCards,
     writeRuneCards,
+    graveyardTargetCards,
+    handleGraveyardTargetSelect,
   };
 }
 
