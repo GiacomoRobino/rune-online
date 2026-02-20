@@ -2,6 +2,7 @@ import { PlayerState, PendingEffectState } from "../../hooks/useColyseus";
 import { useGameInteractions } from "../../hooks/useGameInteractions";
 import { GameEvent } from "../../types/animations";
 import { LayoutCompact } from "./layouts/LayoutCompact";
+import { MulliganScreen } from "./MulliganScreen";
 
 interface GameBoardProps {
   myPlayer: PlayerState;
@@ -29,7 +30,8 @@ interface GameBoardProps {
   onResolveEndTurnCancel: (runeId: string) => void;
   onResolveDeathPreventionCancel: (runeId: string) => void;
   endTurnTargetCardId: string;
-  onMulligan: () => void;
+  onMulliganKeep: () => void;
+  onMulliganRedraw: () => void;
 }
 
 export function GameBoard({
@@ -58,7 +60,8 @@ export function GameBoard({
   onResolveEndTurnCancel,
   onResolveDeathPreventionCancel,
   endTurnTargetCardId,
-  onMulligan,
+  onMulliganKeep,
+  onMulliganRedraw,
 }: GameBoardProps) {
   const interactions = useGameInteractions({
     myPlayer,
@@ -103,6 +106,18 @@ export function GameBoard({
     );
   }
 
+  // Mulligan phase
+  if (phase === "mulligan") {
+    return (
+      <MulliganScreen
+        myPlayer={myPlayer}
+        opponent={opponent}
+        onKeep={onMulliganKeep}
+        onRedraw={onMulliganRedraw}
+      />
+    );
+  }
+
   // Waiting for opponent
   if (phase === "waiting") {
     return (
@@ -128,7 +143,6 @@ export function GameBoard({
       interactions={interactions}
       onWriteRune={onWriteRune}
       onEndTurn={onEndTurn}
-      onMulligan={onMulligan}
       gameEvents={gameEvents}
     />
   );

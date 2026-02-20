@@ -28,7 +28,8 @@ function App() {
     resolveEndTurnCancel,
     resolveDeathPreventionCancel,
     gameEvents,
-    mulligan,
+    mulliganKeep,
+    mulliganRedraw,
   } = useColyseus();
 
   // Show lobby if not connected or no game state
@@ -72,7 +73,8 @@ function App() {
         onResolveEndTurnCancel={resolveEndTurnCancel}
         onResolveDeathPreventionCancel={resolveDeathPreventionCancel}
         endTurnTargetCardId={gameState.endTurnTargetCardId}
-        onMulligan={mulligan}
+        onMulliganKeep={mulliganKeep}
+        onMulliganRedraw={mulliganRedraw}
       />
     );
   }

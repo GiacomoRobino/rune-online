@@ -3,7 +3,7 @@ import { Player } from "./Player.js";
 import { PendingEffect } from "./PendingEffect.js";
 
 export class GameState extends Schema {
-  @type("string") phase: string = "waiting"; // "waiting"|"playing"|"ended"
+  @type("string") phase: string = "waiting"; // "waiting"|"mulligan"|"playing"|"ended"
   @type("string") currentTurn: string = ""; // player session id
   @type("number") turnNumber: number = 0;
   @type({ map: Player }) players = new MapSchema<Player>();

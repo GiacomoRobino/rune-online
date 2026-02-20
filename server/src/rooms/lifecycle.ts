@@ -8,19 +8,24 @@ const STARTING_HAND_SIZE = 3;
 const STARTING_RUNES = 3;
 
 export function startGame(ctx: GameContext) {
+  // Draw starting hands for both players
+  ctx.state.players.forEach((player) => {
+    for (let i = 0; i < STARTING_HAND_SIZE; i++) {
+      drawChaosCard(player);
+    }
+  });
+
+  ctx.state.phase = "mulligan";
+  console.log("Mulligan phase started");
+}
+
+function beginPlaying(ctx: GameContext) {
   ctx.state.phase = "playing";
   ctx.state.turnNumber = 1;
 
   // Random first player
   const firstPlayerIndex = Math.floor(Math.random() * 2);
   ctx.state.currentTurn = ctx.playerOrder[firstPlayerIndex];
-
-  // Both players: draw 3 from Chaos deck
-  ctx.state.players.forEach((player) => {
-    for (let i = 0; i < STARTING_HAND_SIZE; i++) {
-      drawChaosCard(player);
-    }
-  });
 
   // First player gets 3 starting rune writes
   const firstPlayer = ctx.state.players.get(ctx.state.currentTurn);
@@ -33,6 +38,16 @@ export function startGame(ctx: GameContext) {
   ctx.state.turnPhase = "main";
   ctx.state.turnStartTime = new Date().toISOString();
   console.log(`Game started! ${ctx.state.currentTurn} goes first`);
+}
+
+function checkMulliganComplete(ctx: GameContext) {
+  let allKept = true;
+  ctx.state.players.forEach((player) => {
+    if (!player.hasKeptHand) allKept = false;
+  });
+  if (allKept) {
+    beginPlaying(ctx);
+  }
 }
 
 export function startTurn(ctx: GameContext) {
@@ -67,17 +82,13 @@ export function startTurn(ctx: GameContext) {
   ctx.state.turnStartTime = new Date().toISOString();
 }
 
-export function handleMulligan(ctx: GameContext, client: Client) {
-  if (ctx.state.phase !== "playing") return;
-  if (ctx.state.currentTurn !== client.sessionId) return;
-  if (ctx.state.turnPhase !== "main") return;
+export function handleMulliganRedraw(ctx: GameContext, client: Client) {
+  if (ctx.state.phase !== "mulligan") return;
 
   const player = ctx.state.players.get(client.sessionId);
   if (!player) return;
+  if (player.hasKeptHand) return;
   if (player.mulligansRemaining <= 0) return;
-
-  // Only allowed before any actions
-  if (player.runesWrittenThisTurn > 0 || player.battlefield.length > 0 || player.runeField.length > 0) return;
 
   // Return all hand cards to chaos deck
   while (player.hand.length > 0) {
@@ -85,7 +96,7 @@ export function handleMulligan(ctx: GameContext, client: Client) {
     if (card) player.chaosDeck.push(card);
   }
 
-  // Shuffle chaos deck (convert to plain array, shuffle, clear, repush)
+  // Shuffle chaos deck
   const cards = Array.from(player.chaosDeck).filter((c): c is Card => c !== undefined);
   const shuffled = shuffleArray(cards);
   player.chaosDeck.clear();
@@ -99,6 +110,23 @@ export function handleMulligan(ctx: GameContext, client: Client) {
   }
 
   player.mulligansRemaining--;
+
+  // Auto-keep if no mulligans left
+  if (player.mulligansRemaining <= 0) {
+    player.hasKeptHand = true;
+    checkMulliganComplete(ctx);
+  }
+}
+
+export function handleMulliganKeep(ctx: GameContext, client: Client) {
+  if (ctx.state.phase !== "mulligan") return;
+
+  const player = ctx.state.players.get(client.sessionId);
+  if (!player) return;
+  if (player.hasKeptHand) return;
+
+  player.hasKeptHand = true;
+  checkMulliganComplete(ctx);
 }
 
 export function handleEndTurn(ctx: GameContext, client: Client) {

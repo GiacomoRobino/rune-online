@@ -20,7 +20,7 @@ import { LayoutProps } from "./types";
 
 export function LayoutCompact({
   myPlayer, opponent, isMyTurn, turnPhase, turnNumber, declaredAttackers,
-  interactions: gi, onWriteRune, onEndTurn, onMulligan, gameEvents,
+  interactions: gi, onWriteRune, onEndTurn, gameEvents,
 }: LayoutProps) {
   const opponentUnattachedRunes = gi.getUnattachedRunes(opponent);
 
@@ -355,8 +355,6 @@ export function LayoutCompact({
               confirmBlockers={gi.confirmBlockers}
               cancelMode={gi.cancelMode}
               onEndTurn={onEndTurn}
-              mulligansRemaining={myPlayer.mulligansRemaining}
-              onMulligan={onMulligan}
             />
             <button
               onClick={() => setHandOpen((o) => !o)}

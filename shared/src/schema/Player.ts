@@ -18,4 +18,5 @@ export class Player extends Schema {
   @type("number") lifeLostThisTurn: number = 0;
   @type("boolean") connected: boolean = true;
   @type("number") mulligansRemaining: number = 3;
+  @type("boolean") hasKeptHand: boolean = false;
 }

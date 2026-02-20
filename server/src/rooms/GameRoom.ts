@@ -7,7 +7,7 @@ import {
 import { type GameContext } from "./context.js";
 import { createCard, endGame, getOpponent } from "./utils.js";
 import { handleWriteRune, handleAttachRune } from "./runeHandlers.js";
-import { startGame, handleEndTurn, handleMulligan } from "./lifecycle.js";
+import { startGame, handleEndTurn, handleMulliganKeep, handleMulliganRedraw } from "./lifecycle.js";
 import { handleSummon, handlePlayEcho, handlePlayMemory } from "./cardPlay.js";
 import { handleDeclareAttackers, handleDeclareBlockers } from "./combatDeclare.js";
 import { handleResolveDeathTarget, handleResolveDeckSearch, handleResolveWriteRune, handleResolveEndTurnCancel, handleResolveDeathPreventionCancel } from "./deathResolution.js";
@@ -29,7 +29,8 @@ export class GameRoom extends Room<GameState> {
     this.onMessage("declare_attackers", (client, message) => handleDeclareAttackers(this.ctx, client, message));
     this.onMessage("declare_blockers", (client, message) => handleDeclareBlockers(this.ctx, client, message));
     this.onMessage("end_turn", (client) => handleEndTurn(this.ctx, client));
-    this.onMessage("mulligan", (client) => handleMulligan(this.ctx, client));
+    this.onMessage("mulligan_keep", (client) => handleMulliganKeep(this.ctx, client));
+    this.onMessage("mulligan_redraw", (client) => handleMulliganRedraw(this.ctx, client));
     this.onMessage("resolve_death_target", (client, message) => handleResolveDeathTarget(this.ctx, client, message));
     this.onMessage("resolve_deck_search", (client, message) => handleResolveDeckSearch(this.ctx, client, message));
     this.onMessage("resolve_write_rune", (client, message) => handleResolveWriteRune(this.ctx, client, message));
@@ -80,7 +81,7 @@ export class GameRoom extends Room<GameState> {
       player.connected = false;
     }
 
-    if (this.state.phase === "playing") {
+    if (this.state.phase === "playing" || this.state.phase === "mulligan") {
       const opponent = getOpponent(this.ctx, client.sessionId);
       if (opponent) {
         endGame(this.ctx, opponent.sessionId);
