@@ -107,7 +107,7 @@ export function cleanupDeadCreatures(ctx: GameContext, player: Player) {
   for (let i = player.battlefield.length - 1; i >= 0; i--) {
     const card = player.battlefield.at(i);
     if (!card) continue;
-    if (card.health <= 0) {
+    if (card.cardType === "summoning" && card.health <= 0) {
       // Check for death prevention
       if (tryDeathPrevention(ctx, card, player)) continue;
 
